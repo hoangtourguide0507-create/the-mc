@@ -660,6 +660,137 @@
 
   #sheet, #modalCard > div { border-radius:1.6rem; }
 
+  /* ---------- Sổ tay · Cửa hàng · Modal: kính tối neon ---------- */
+  #sheetRoot, #modalRoot { background: rgba(6,3,20,.62); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+  #sheet { background: linear-gradient(180deg, #23164F 0%, #160E36 100%) !important; color:#F4F2FF;
+           border:1px solid rgba(255,255,255,.14); border-bottom:0; box-shadow: 0 -20px 60px -20px rgba(124,58,237,.6); }
+  #modalCard > div { background: linear-gradient(180deg, #24174F, #150D33) !important; color:#F4F2FF;
+           border:1px solid rgba(255,255,255,.16) !important; box-shadow: 0 30px 70px -20px rgba(0,0,0,.8), 0 0 50px -16px rgba(255,79,216,.45); }
+  :is(#sheet,#modalCard) .border-line { border-color: rgba(255,255,255,.12) !important; }
+  :is(#sheet,#modalCard) .bg-white { background: rgba(255,255,255,.08) !important; }
+  :is(#sheet,#modalCard) .bg-snow { background: rgba(255,255,255,.04) !important; }
+  :is(#sheet,#modalCard) .bg-line { background: rgba(255,255,255,.14) !important; }
+  :is(#sheet,#modalCard) .text-mute { color: rgba(226,220,255,.6) !important; }
+  :is(#sheet,#modalCard) .text-ink, :is(#sheet,#modalCard) .text-\[\#777\] { color:#F4F2FF !important; }
+  :is(#sheet,#modalCard) .text-mint-dark { color:#7CFF6B !important; }
+  :is(#sheet,#modalCard) .text-blu-dark { color:#5FD4FF !important; }
+  :is(#sheet,#modalCard) .text-sun-dark { color:#FFD84D !important; }
+  :is(#sheet,#modalCard) .text-coral-dark { color:#FF7A8A !important; }
+  :is(#sheet,#modalCard) .bg-sun-light { background: rgba(255,200,0,.14) !important; color:#FFE27A !important; }
+  :is(#sheet,#modalCard) .bg-blu-light { background: rgba(28,176,246,.16) !important; color:#9BE3FF !important; }
+  :is(#sheet,#modalCard) .bg-blu-light.border-blu { border-color:#5FD4FF !important; }
+  :is(#sheet,#modalCard) .bg-\[\#F3EDFF\] { background: rgba(167,139,250,.18) !important; border-color: rgba(167,139,250,.45) !important; }
+  :is(#sheet,#modalCard) .bg-mint-light\/40 { background: rgba(124,255,107,.10) !important; }
+  :is(#sheet,#modalCard) input, :is(#sheet,#modalCard) textarea, :is(#sheet,#modalCard) select {
+    background: rgba(255,255,255,.08) !important; color:#fff !important; border-color: rgba(255,255,255,.2) !important; }
+  :is(#sheet,#modalCard) ::placeholder { color: rgba(226,220,255,.45); }
+  :is(#sheet,#modalCard) .weak-row.is-rec { background: rgba(255,75,75,.14) !important; }
+  :is(#sheet,#modalCard) .weak-row.is-mastered { background: rgba(124,255,107,.12) !important; }
+
+  /* Cửa hàng: thẻ 3D */
+  .shop-grid { display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:10px; }
+  @media (min-width:640px){ .shop-grid { grid-template-columns: repeat(3, minmax(0,1fr)); } }
+  .shop-card { position:relative; border-radius:22px; padding:12px 10px 10px; text-align:center; overflow:hidden; isolation:isolate;
+               background: linear-gradient(180deg, rgba(255,255,255,.13), rgba(255,255,255,.04)); border:1px solid rgba(255,255,255,.16);
+               box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 14px 30px -16px rgba(0,0,0,.8); display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .shop-card::before { content:''; position:absolute; inset:-30% -20% auto; height:80%; z-index:-1; background: radial-gradient(closest-side, var(--halo), transparent); opacity:.55; }
+  .shop-card .orb { width:72px; height:72px; border-radius:50%; display:grid; place-items:center; font-size:40px; margin-bottom:2px;
+                    background: radial-gradient(circle at 32% 26%, rgba(255,255,255,.9), rgba(255,255,255,.18) 30%, rgba(255,255,255,.06) 62%), var(--halo);
+                    box-shadow: inset 0 -6px 14px rgba(0,0,0,.25), 0 10px 20px -8px var(--halo); animation: bubFloat 3.6s ease-in-out infinite; }
+  .shop-card:nth-child(2n) .orb { animation-delay:-1.2s; } .shop-card:nth-child(3n) .orb { animation-delay:-2.4s; }
+  .shop-card .orb span { filter: drop-shadow(0 4px 4px rgba(0,0,0,.3)); }
+  .shop-card.owned { border-color: rgba(124,255,107,.6); box-shadow: 0 0 0 1px rgba(124,255,107,.35), 0 0 26px -8px rgba(124,255,107,.7); }
+  .shop-card .s-name { font-family:'Baloo 2',sans-serif; font-weight:700; font-size:15px; line-height:1.15; }
+  .shop-card .s-desc { font-size:11.5px; font-weight:700; color: rgba(226,220,255,.65); line-height:1.3; min-height:2.6em; }
+  .price-btn { margin-top:4px; width:100%; height:38px; border-radius:999px; font-family:'Baloo 2',sans-serif; font-weight:800; font-size:16px; color:#06341A;
+               background: linear-gradient(180deg,#9DFF6B,#19C46A); border:1.5px solid rgba(190,255,170,.9); position:relative; isolation:isolate;
+               box-shadow: 0 0 16px -4px rgba(124,255,107,.8), inset 0 -3px 6px rgba(0,80,30,.25); transition: transform .15s; }
+  .price-btn::after { content:''; position:absolute; left:10%; right:10%; top:2px; height:42%; border-radius:999px; z-index:-1; background: linear-gradient(180deg, rgba(255,255,255,.55), transparent); }
+  .price-btn:active { transform: scale(.95); }
+  .price-btn.poor { background: rgba(255,255,255,.1); color: rgba(255,255,255,.55); border-color: rgba(255,255,255,.2); box-shadow:none; }
+  .sect-title { font-family:'Baloo 2',sans-serif; font-weight:700; font-size:12px; letter-spacing:.08em; text-transform:uppercase; color: rgba(226,220,255,.7); margin-top:6px; }
+
+  /* ---------- Lịch show: poster vuốt ngang ---------- */
+  .gig-rail { display:flex; gap:12px; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch;
+              margin:0 -12px; padding:4px 12px 14px; scroll-padding:0 12px; overscroll-behavior-x:contain; }
+  .gig-rail::-webkit-scrollbar { display:none; }
+  .poster { position:relative; flex:none; width:210px; height:290px; border-radius:24px; overflow:hidden; scroll-snap-align:start; text-align:left; isolation:isolate;
+            border:1px solid rgba(255,255,255,.22); color:#fff; transition: transform .2s cubic-bezier(.2,1.4,.4,1);
+            box-shadow: 0 18px 36px -16px rgba(0,0,0,.85), 0 0 30px -12px var(--gl, rgba(255,79,216,.6)); }
+  .poster:active { transform: scale(.96); }
+  @media (min-width:768px){ .poster { width:236px; height:320px; } }
+  .poster .p-art { position:absolute; inset:0; z-index:-2; }
+  .poster .p-art svg { width:100%; height:100%; }
+  .poster .p-npc { position:absolute; right:-14%; bottom:22%; height:62%; aspect-ratio:160/222; z-index:-1; filter: drop-shadow(0 8px 14px rgba(0,0,0,.45)); }
+  .poster .p-npc.duo { aspect-ratio:270/222; right:-30%; }
+  .poster::before { content:''; position:absolute; inset:0; z-index:-1; pointer-events:none;
+                    background: linear-gradient(180deg, rgba(10,6,30,.55) 0%, transparent 26%, transparent 46%, rgba(12,6,34,.88) 72%, rgba(12,6,34,.97) 100%); }
+  .poster::after { content:''; position:absolute; inset:0; pointer-events:none; border-radius:inherit;
+                   background: linear-gradient(115deg, transparent 40%, rgba(255,255,255,.18) 50%, transparent 60%); background-size:250% 100%; animation: sheen 5s ease-in-out infinite; }
+  @keyframes sheen { 0%,60%{ background-position:150% 0; } 100%{ background-position:-60% 0; } }
+  .poster .p-top { position:absolute; left:10px; right:10px; top:10px; display:flex; align-items:center; gap:6px; }
+  .poster .p-bot { position:absolute; left:12px; right:12px; bottom:12px; }
+  .poster .p-title { font-family:'Baloo 2',sans-serif; font-weight:800; font-size:19px; line-height:1.08; text-shadow: 0 2px 10px rgba(0,0,0,.6); }
+  .poster .p-sub { font-size:11px; font-weight:800; color: rgba(255,255,255,.72); margin-top:3px; line-height:1.25;
+                   display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .poster .p-rw { display:flex; align-items:center; gap:6px; margin-top:8px; }
+  .poster .p-cash { font-family:'Baloo 2',sans-serif; font-weight:800; font-size:20px; color:#7CFF6B; text-shadow: 0 0 12px rgba(124,255,107,.5); line-height:1; }
+  .poster .p-chip { font-size:10.5px; font-weight:900; padding:3px 7px; border-radius:999px; background: rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.2); }
+  .poster .p-lv { font-family:'Baloo 2',sans-serif; font-weight:700; font-size:11px; padding:2px 8px; border-radius:999px; background: rgba(10,6,30,.55); border:1px solid rgba(255,255,255,.25); }
+  .poster .p-best { margin-left:auto; font-size:12px; letter-spacing:-1px; }
+  .poster.locked .p-art, .poster.locked .p-npc { filter: grayscale(1) brightness(.45) blur(1.5px); }
+  .poster.locked::after { display:none; }
+  .poster .p-lock { position:absolute; left:50%; top:38%; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center; gap:6px; }
+  .poster .p-lock b { width:58px; height:58px; border-radius:50%; display:grid; place-items:center; font-size:26px;
+                      background: rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.35); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+  .poster .p-lock span { font-family:'Baloo 2',sans-serif; font-weight:700; font-size:13px; padding:3px 10px; border-radius:999px; background: rgba(10,6,30,.7); }
+  .rail-hint { font-size:11px; font-weight:800; color: rgba(226,220,255,.5); }
+
+  /* ---------- Streak 🔥 ---------- */
+  .streak-pill { height:44px; padding:0 12px 0 8px; border-radius:999px; display:inline-flex; align-items:center; gap:4px; flex:none; position:relative; isolation:isolate;
+                 font-family:'Baloo 2',sans-serif; font-weight:800; font-size:18px; color:#fff;
+                 background: linear-gradient(180deg,#FFB65C,#F2541D); border:1px solid rgba(255,220,180,.7);
+                 box-shadow: 0 0 18px -4px rgba(255,120,40,.85), inset 0 -3px 6px rgba(120,30,0,.3); }
+  .streak-pill::after { content:''; position:absolute; left:10%; right:10%; top:2px; height:42%; border-radius:999px; z-index:-1; background: linear-gradient(180deg, rgba(255,255,255,.5), transparent); }
+  .streak-pill .fl { font-size:22px; display:inline-block; transform-origin:50% 90%; animation: flame 1.1s ease-in-out infinite alternate; }
+  .streak-pill.cold { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.25); box-shadow:none; }
+  .streak-pill.cold .fl { filter: grayscale(1); animation:none; }
+  @media (max-width:480px){
+    .streak-pill { height:36px; font-size:15px; padding:0 9px 0 6px; gap:2px; } .streak-pill .fl { font-size:17px; }
+    #view-hub .room-btn { width:38px !important; height:38px !important; font-size:16px; }
+    #view-hub .hub-room .font-display.text-\[17px\] { font-size:16px; }
+  }
+  @keyframes flame { from{ transform: scale(1) rotate(-4deg); } to{ transform: scale(1.12) rotate(4deg); } }
+
+  /* ---------- Màn tổng kết show ---------- */
+  .res-card { position:relative; overflow:hidden; isolation:isolate; }
+  .res-rays { position:absolute; left:50%; top:118px; width:520px; height:520px; transform:translate(-50%,-50%); z-index:-1; opacity:.55; pointer-events:none;
+              background: repeating-conic-gradient(from 0deg, rgba(255,216,77,.28) 0 10deg, transparent 10deg 24deg);
+              -webkit-mask: radial-gradient(circle, #000 0, transparent 62%); mask: radial-gradient(circle, #000 0, transparent 62%); animation: raySpin 14s linear infinite; }
+  @keyframes raySpin { to { transform: translate(-50%,-50%) rotate(360deg); } }
+  .res-stars { display:flex; justify-content:center; align-items:flex-end; gap:6px; margin-top:6px; height:86px; }
+  .res-stars .rs { width:62px; height:62px; opacity:0; transform: scale(.2) rotate(-40deg); }
+  .res-stars .rs:nth-child(2) { width:80px; height:80px; }
+  .res-stars .rs.pop { animation: starPop .6s cubic-bezier(.2,1.8,.4,1) forwards; }
+  .res-stars .rs.dim { filter: grayscale(1) brightness(.6) opacity(.45); }
+  @keyframes starPop { 0%{ opacity:0; transform: scale(.2) rotate(-40deg); } 100%{ opacity:1; transform: none; } }
+  .res-title { font-family:'Baloo 2',sans-serif; font-weight:800; font-size:26px; line-height:1.1; margin-top:8px;
+               background: linear-gradient(90deg,#FFE873,#FF8AE2,#7CE8FF); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .res-tile { border-radius:18px; padding:10px 4px; background: rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.14); }
+  .res-tile .rv { font-family:'Baloo 2',sans-serif; font-weight:800; font-size:22px; line-height:1.1; }
+  .res-tile .rl { font-size:10px; font-weight:900; letter-spacing:.05em; text-transform:uppercase; color: rgba(226,220,255,.6); }
+  .res-tile.big { grid-column: 1 / -1; padding:12px; background: linear-gradient(180deg, rgba(124,255,107,.16), rgba(124,255,107,.05)); border-color: rgba(124,255,107,.4); }
+  .res-tile.big .rv { font-size:34px; color:#7CFF6B; text-shadow: 0 0 18px rgba(124,255,107,.55); }
+
+  /* ---------- Banner cập nhật ---------- */
+  #updateBar { position:fixed; left:50%; z-index:96; bottom:calc(var(--safe-b) + 16px); transform: translate(-50%,160%); opacity:0;
+               transition: transform .5s cubic-bezier(.2,1.4,.4,1), opacity .3s; pointer-events:none; }
+  #updateBar.show { transform: translate(-50%,0); opacity:1; pointer-events:auto; }
+  #updateBar button { display:flex; align-items:center; gap:8px; white-space:nowrap; padding:9px 16px; border-radius:999px; color:#fff;
+                      font-family:'Baloo 2',sans-serif; font-weight:700; font-size:14px; background: linear-gradient(90deg,#7C3AED,#FF4FD8);
+                      border:1px solid rgba(255,255,255,.4); box-shadow: 0 10px 30px -8px rgba(255,79,216,.8); }
+
+
   @media (prefers-reduced-motion: reduce){
     *, *::before, *::after { animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
   }
@@ -719,13 +850,14 @@
           <!-- Phòng của MC -->
           <div class="hub-room bg-white rounded-2xl border-2 border-line border-b-4 overflow-hidden pop-in">
             <div class="flex items-center gap-2 px-3 pt-3 pb-2">
-              <span class="text-xl">🏠</span>
+              <span class="text-xl hidden sm:inline">🏠</span>
               <div class="min-w-0 flex-1">
                 <div class="font-display font-semibold text-[17px] leading-tight truncate">Phòng của <span class="playerName"></span></div>
-                <div class="text-[12px] font-extrabold text-mute" id="dayLabel">Ngày 1 trong sự nghiệp MC</div>
+                <div class="text-[12px] font-extrabold text-mute truncate" id="dayLabel">Ngày 1 trong sự nghiệp MC</div>
               </div>
-              <button id="btnVoice" class="btn3d border-2 border-line border-b-4 active:border-b-0 active:translate-y-1 bg-white rounded-2xl w-11 h-11 grid place-items-center text-lg" aria-label="Chọn giọng đọc">🗣️</button>
-              <button id="btnMute" class="btn3d border-2 border-line border-b-4 active:border-b-0 active:translate-y-1 bg-white rounded-2xl w-11 h-11 grid place-items-center text-lg" aria-label="Bật/tắt hiệu ứng âm thanh">🔔</button>
+              <span id="streakPill" class="streak-pill cold" title="Chuỗi ngày luyện liên tiếp"><span class="fl">🔥</span><span id="vStreak">0</span></span>
+              <button id="btnVoice" class="room-btn btn3d border-2 border-line border-b-4 active:border-b-0 active:translate-y-1 bg-white rounded-2xl w-11 h-11 grid place-items-center text-lg" aria-label="Chọn giọng đọc">🗣️</button>
+              <button id="btnMute" class="room-btn btn3d border-2 border-line border-b-4 active:border-b-0 active:translate-y-1 bg-white rounded-2xl w-11 h-11 grid place-items-center text-lg" aria-label="Bật/tắt hiệu ứng âm thanh">🔔</button>
             </div>
             <div class="room relative mx-3 mb-3 rounded-2xl overflow-hidden" id="room">
               <div class="absolute inset-0" id="roomBg"></div>
@@ -790,7 +922,8 @@
                   <div class="text-[12px] font-extrabold text-mute">Wedding / Gala Stage · tăng Charisma để mở khoá</div>
                 </div>
               </div>
-              <div id="gigList" class="flex flex-col gap-2.5"></div>
+              <div id="gigList" class="gig-rail"></div>
+              <div class="rail-hint text-center -mt-1">← Vuốt để xem thêm show →</div>
             </div>
           </div>
         </div>
@@ -939,6 +1072,7 @@
 </div>
 
 <!-- Toast / Modal / Sheet -->
+<div id="updateBar"><button id="btnUpdate" type="button">✨ Có bản mới — Chạm để cập nhật <span aria-hidden="true">↻</span></button></div>
 <div id="toast"><div id="toastInner" class="rounded-2xl border-b-4 px-4 py-2.5 font-extrabold text-[14px] text-white text-center"></div></div>
 <div id="modalRoot"><div id="modalCard" class="m-card w-full max-w-sm"></div></div>
 <div id="sheetRoot"><div id="sheet" class="bg-white"></div></div>
@@ -987,7 +1121,8 @@ const DEFAULT_STATE = {
   weak: [],                    // [{ key, word, ctx, status, misses, scene, at }]
   items: {},                   // { goldmic:true, gown:true, inear:true }
   gigsDone: {},                // { sceneId: số lần hoàn thành }
-  stats: { shows: 0, daily: 0, mastered: 0, bestStars: {} }
+  stats: { shows: 0, daily: 0, mastered: 0, bestStars: {} },
+  streak: { count: 0, best: 0, last: '' }   // chuỗi ngày mở app luyện tập liên tiếp (theo lịch thật)
 };
 const chaNeed = lv => 40 + (lv - 1) * 50;     // Lv2: 40 · Lv3: 90 · Lv4: 140…
 
@@ -2631,6 +2766,23 @@ async function goTo(view, { title = 'Đang di chuyển…', tip } = {}) {
               → 💰 Cát-xê + ✨ Charisma  →  🛍️ Mua đồ hồi ⚡ / nâng cấp %
               → ✨ Lên cấp mở show khó hơn  →  🎯 Luyện Weak Words lấy XP
    ========================================================= */
+/* ---------- Streak 🔥: chuỗi ngày luyện liên tiếp ---------- */
+const dayKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+function touchStreak() {
+  const st = state.streak, today = dayKey(), y = new Date(); y.setDate(y.getDate() - 1);
+  if (st.last === today) return 0;
+  st.count = st.last === dayKey(y) ? st.count + 1 : 1;
+  st.best = Math.max(st.best || 0, st.count); st.last = today; save();
+  return st.count;
+}
+function renderStreak() {
+  const st = state.streak, y = new Date(); y.setDate(y.getDate() - 1);
+  const alive = st.last === dayKey() || st.last === dayKey(y);
+  $('#vStreak').textContent = alive ? st.count : 0;
+  $('#streakPill').classList.toggle('cold', st.last !== dayKey());
+  $('#streakPill').title = `Chuỗi ${alive ? st.count : 0} ngày · kỷ lục ${st.best || 0} ngày`;
+}
+
 function renderMood() {
   const e = state.energy;
   $('#moodBubble').textContent =
@@ -2648,24 +2800,33 @@ function renderAvatar() {
   $('#roomItems').innerHTML = SHOP.upgrades.filter(u => it[u.id])
     .map(u => `<span class="bg-white/90 rounded-xl border-b-4 border-black/10 px-2 py-1 text-[13px] font-extrabold" title="${esc(u.name)}">${u.icon}</span>`).join('');
 }
+/** SVG bối cảnh dùng nhiều lần trên 1 trang → đổi id gradient/filter cho khỏi trùng */
+function uniqIds(svg, sfx) {
+  const ids = [...svg.matchAll(/id="([^"]+)"/g)].map(m => m[1]);
+  ids.forEach(id => { svg = svg.split(`id="${id}"`).join(`id="${id}${sfx}"`).split(`url(#${id})`).join(`url(#${id}${sfx})`); });
+  return svg;
+}
+const GIG_GLOW = { backstage: '#22D3EE', wedding: '#FF7FA5', beach: '#FF9E4A', gala: '#A78BFA', interview: '#2EE6A8' };
 function renderGigs() {
   $('#gigList').innerHTML = GIG_ORDER.map((id, i) => {
     const sc = SCENES[id];
     const locked = state.charisma.lv < sc.reqLv;
     const done = state.gigsDone[id] || 0, best = state.stats.bestStars[id] || 0;
+    const npc = NPCS[sc.npc];
     return `
-    <button data-gig="${id}" class="gig btn3d pop-in w-full text-left bg-white border-2 border-line border-b-4 active:border-b-0 active:translate-y-1 rounded-2xl p-2.5 md:p-3 flex items-center gap-3 ${locked ? 'opacity-60' : ''}" style="animation-delay:${.22 + i * .06}s">
-      <span class="w-12 h-12 md:w-14 md:h-14 rounded-xl grid place-items-center text-2xl md:text-3xl shrink-0 ${locked ? 'grayscale' : ''}" style="background:${sc.tint};--gl:${sc.glow || sc.tint}">${locked ? '🔒' : sc.icon}</span>
-      <span class="flex-1 min-w-0">
-        <span class="flex items-center gap-1.5 flex-wrap"><span class="tag ${sc.tagCls}">${sc.tag}</span><span class="text-[10px] font-black text-mute uppercase">${sc.level}</span>${done ? `<span class="text-[11px] font-black text-mint-dark">✓${done} ${'⭐'.repeat(best)}</span>` : ''}</span>
-        <span class="block font-display font-semibold text-[15px] md:text-[17px] leading-tight mt-0.5">${esc(sc.title)}</span>
-        <span class="block text-[12px] font-extrabold text-mute truncate">${esc(sc.sub)}</span>
-      </span>
-      <span class="text-right shrink-0">
-        ${locked
-          ? `<span class="block tag bg-line text-[#777]">Lv.${sc.reqLv}</span>`
-          : `<span class="block font-display font-bold text-[17px] text-mint-dark">$${sc.reward.cash}</span>
-             <span class="block text-[11px] font-black text-mute">−${sc.energy}⚡ · +${sc.reward.charisma}✨</span>`}
+    <button data-gig="${id}" class="gig poster pop-in ${locked ? 'locked' : ''}" style="--gl:${GIG_GLOW[id] || '#FF4FD8'};animation-delay:${.15 + i * .06}s" aria-label="${esc(sc.title)}">
+      <span class="p-art">${uniqIds(SCENE_ART[sc.art](), '_p' + i)}</span>
+      ${npc ? `<span class="p-npc ${npc.duo ? 'duo' : ''}">${npcSVG(npc)}</span>` : ''}
+      <span class="p-top"><span class="tag ${sc.tagCls}">${sc.tag}</span><span class="p-lv">${sc.level}</span></span>
+      ${locked ? `<span class="p-lock"><b>🔒</b><span>Cần Charisma Lv.${sc.reqLv}</span></span>` : ''}
+      <span class="p-bot">
+        <span class="block p-title">${esc(sc.title)}</span>
+        <span class="block p-sub">${esc(sc.sub)}</span>
+        <span class="p-rw">
+          <span class="p-cash">$${sc.reward.cash}</span>
+          <span class="p-chip">−${sc.energy}⚡</span><span class="p-chip">+${sc.reward.charisma}✨</span>
+          ${done ? `<span class="p-best" title="Đã dẫn ${done} lần">${'⭐'.repeat(best) || '✓'}</span>` : ''}
+        </span>
       </span>
     </button>`;
   }).join('');
@@ -2854,28 +3015,27 @@ function renderBook() {
 }
 
 function renderShop() {
-  const row = (it, kind) => {
+  const HALO = { icecoffee: '#C08552', pho: '#FF9E4A', spa: '#7CE8FF', goldmic: '#FFD84D', gown: '#FF7FA5', inear: '#A78BFA' };
+  const card = (it, kind) => {
     const owned = kind === 'up' && state.items[it.id];
     const afford = state.cash >= it.price;
     return `
-      <div class="rounded-2xl border-2 ${owned ? 'border-mint bg-mint-light/40' : 'border-line'} border-b-4 p-3 flex items-center gap-3">
-        <span class="w-12 h-12 rounded-xl grid place-items-center text-3xl shrink-0 ${kind === 'up' ? 'bg-sun-light' : 'bg-blu-light'}">${it.icon}</span>
-        <div class="flex-1 min-w-0">
-          <div class="font-display font-semibold text-[16px] leading-tight">${esc(it.name)}</div>
-          <div class="text-[12px] font-bold text-mute">${esc(it.desc)}${kind === 'con' ? ` · <b class="text-mint-dark">+${it.energy}⚡</b>` : ''}</div>
-        </div>
-        ${owned ? `<span class="tag bg-mint text-white">Đã sở hữu ✓</span>` : `
-        <button data-buy="${it.id}" data-kind="${kind}" class="btn3d shrink-0 rounded-2xl px-3 h-10 font-display font-bold text-[16px] border-b-4 active:border-b-0 active:translate-y-1 ${afford ? 'bg-mint border-mint-dark text-white' : 'bg-line border-[#CFCFCF] text-mute'}">$${it.price}</button>`}
+      <div class="shop-card ${owned ? 'owned' : ''}" style="--halo:${HALO[it.id] || '#A78BFA'}">
+        <span class="orb"><span>${it.icon}</span></span>
+        <div class="s-name">${esc(it.name)}</div>
+        <div class="s-desc">${esc(it.desc)}${kind === 'con' ? ` · <b class="text-mint-dark">+${it.energy}⚡</b>` : ''}</div>
+        ${owned ? `<span class="price-btn grid place-items-center" style="cursor:default">Đã sở hữu ✓</span>` :
+        `<button data-buy="${it.id}" data-kind="${kind}" class="price-btn ${afford ? '' : 'poor'}">$${it.price}</button>`}
       </div>`;
   };
   $('#sheet').innerHTML = sheetHeader('🛍️', 'Cửa hàng',
     `Số dư <b class="text-mint-dark">$${fmt(state.cash)}</b> · Năng lượng <b class="text-ink">${state.energy}/${state.maxEnergy}⚡</b>`) + `
     <div class="flex-1 scroll px-4 md:px-5 py-3 pb-5 flex flex-col gap-2.5">
       <div class="rounded-xl bg-blu-light text-[#0B6A99] px-3 py-2 text-[12px] font-bold">☕🛒 Mẹo: <b>Morning Coffee Run</b> và <b>Supermarket Run</b> miễn phí, hồi tới +26⚡ khi đạt 3⭐ — vừa luyện nói vừa nạp năng lượng!</div>
-      <div class="text-[11px] font-black text-mute uppercase tracking-wide mt-1">⚡ Hồi năng lượng</div>
-      ${SHOP.consumables.map(it => row(it, 'con')).join('')}
-      <div class="text-[11px] font-black text-mute uppercase tracking-wide mt-2">✨ Nâng cấp vĩnh viễn</div>
-      ${SHOP.upgrades.map(it => row(it, 'up')).join('')}
+      <div class="sect-title">⚡ Hồi năng lượng</div>
+      <div class="shop-grid">${SHOP.consumables.map(it => card(it, 'con')).join('')}</div>
+      <div class="sect-title">✨ Nâng cấp vĩnh viễn</div>
+      <div class="shop-grid">${SHOP.upgrades.map(it => card(it, 'up')).join('')}</div>
       <button id="btnReset" class="mt-4 self-center text-[12px] font-extrabold text-mute underline">🔄 Xoá dữ liệu & chơi lại từ đầu</button>
     </div>`;
   bindSheetClose();
@@ -3555,24 +3715,30 @@ function finishScene() {
   setTimeout(() => SFX.play(cash ? 'coin' : 'ting'), 150);
   confetti();
   const grade = avg >= 2.6 ? ['🌟', daily ? 'Một buổi sáng hoàn hảo!' : 'Khán giả đứng dậy vỗ tay!'] : avg >= 1.8 ? ['🎉', daily ? 'Nạp năng lượng xong!' : 'Show thành công!'] : avg > 0 ? ['👏', 'Ổn rồi, lần sau bùng nổ hơn!'] : ['😅', 'Lần sau thử nói nhiều hơn nhé!'];
-  const tile = (ico, val, lbl, cls) => `<div class="rounded-2xl border-2 border-line border-b-4 py-2.5"><div class="text-xl">${ico}</div><div class="font-display font-bold ${cls}">${val}</div><div class="text-[10px] font-black text-mute uppercase">${lbl}</div></div>`;
+  const stars = Math.round(avg);
   const perks = daily ? [] : SHOP.upgrades.filter(u => state.items[u.id]).map(u => `<span class="tag bg-sun-light text-[#A87A00]">${u.icon} ${esc(u.desc.split('·')[0].trim())}</span>`);
+  const big = daily ? { ico: '⚡', val: energy, pre: '+', lbl: 'Năng lượng hồi phục' } : { ico: '💰', val: cash, pre: '+$', lbl: 'Cát-xê show này' };
   const card = openModal(`
-    <div class="bg-white rounded-2xl border-2 border-line border-b-4 p-5 text-center">
-      <div class="text-6xl">${grade[0]}</div>
-      <div class="font-display font-bold text-[24px] mt-2 leading-tight">${grade[1]}</div>
-      <div class="text-[13px] font-extrabold text-mute mt-0.5">${esc(sc.icon + ' ' + sc.title)}</div>
-      <div class="text-3xl mt-3 tracking-widest">${'⭐'.repeat(Math.round(avg)) || '—'}</div>
-      <div class="grid grid-cols-3 gap-2 mt-4">
-        ${tile('🎙️', '+' + Stage.xpEarned, 'XP', 'text-blu-dark')}
-        ${tile('✨', '+' + cha, 'Charisma', 'text-sun-dark')}
-        ${daily ? tile('⚡', '+' + energy, 'Năng lượng', 'text-mint-dark') : tile('💰', '+$' + cash, 'Cát-xê', 'text-mint-dark')}
+    <div class="res-card rounded-2xl p-5 text-center">
+      <div class="res-rays"></div>
+      <div class="text-[12px] font-extrabold text-mute uppercase tracking-wider">${esc(sc.icon + ' ' + sc.title)}</div>
+      <div class="res-stars">${[0, 1, 2].map(i => STAR_SVG.replace('class="st-star"', `class="rs ${i < stars ? '' : 'dim'}"`)).join('')}</div>
+      <div class="res-title">${grade[1]}</div>
+      <div class="grid grid-cols-2 gap-2 mt-4">
+        <div class="res-tile big"><div class="text-2xl leading-none">${big.ico}</div><div class="rv" data-count="${big.val}" data-pre="${big.pre}">${big.pre}0</div><div class="rl">${big.lbl}</div></div>
+        <div class="res-tile"><div class="rv text-blu-dark" data-count="${Stage.xpEarned}" data-pre="+">+0</div><div class="rl">🎙️ Fluency XP</div></div>
+        <div class="res-tile"><div class="rv text-sun-dark" data-count="${cha}" data-pre="+">+0</div><div class="rl">✨ Charisma</div></div>
       </div>
       <div class="mt-3 text-[12px] font-extrabold text-blu-dark">🎧 Trong đó Listening XP: +${Stage.listenEarned}</div>
+      ${state.streak.count > 1 ? `<div class="mt-1 text-[12px] font-extrabold" style="color:#FFB65C">🔥 Chuỗi ${state.streak.count} ngày liên tiếp</div>` : ''}
       ${perks.length ? `<div class="flex flex-wrap justify-center gap-1.5 mt-3">${perks.join('')}</div>` : ''}
       ${state.weak.length ? `<div class="mt-2 text-[12px] font-extrabold text-[#A87A00]">🎯 ${state.weak.length} từ đang chờ luyện lại trong Sổ tay</div>` : ''}
       <button id="btnHome" class="btn3d mt-5 w-full bg-mint border-b-4 border-mint-dark active:border-b-0 active:translate-y-1 rounded-2xl py-3.5 font-display font-semibold text-[18px] text-white">🏠 Về phòng MC</button>
     </div>`);
+  // sao bật lần lượt + số đếm lên
+  $$('.rs', card).forEach((el, i) => setTimeout(() => { el.classList.add('pop'); if (i < stars) SFX.play('pop'); }, 350 + i * 280));
+  $$('[data-count]', card).forEach(el => setTimeout(() => tween(el, 0, +el.dataset.count, { dur: 1100, prefix: el.dataset.pre }), 900));
+  setTimeout(() => confetti(36), 1300);
   $('#btnHome', card).addEventListener('click', () => {
     SFX.play('tap'); closeModal(); NpcWave.stop();
     goTo('hub', { title: 'Đang về nhà…', tip: 'Cởi giày, treo đồ diễn, tắm nước ấm…' }).then(() => { renderGigs(); renderMood(); });
@@ -3784,13 +3950,43 @@ $('#btnStart').addEventListener('click', async () => {
   SFX.play('ting');
   state.day++; save();
   $('#dayLabel').textContent = `Ngày ${state.day} trong sự nghiệp MC`;
+  const streakUp = touchStreak(); renderStreak();
   $('#welcome').classList.add('hide');
   setTimeout(() => $('#welcome').remove(), 600);
   await wait(250);
   renderHUD();
   await wait(600);
   toast(`☀️ Ngày ${state.day} — Chào buổi sáng, ${PLAYER_NAME}!`, 'gold');
+  if (streakUp > 1) { await wait(2600); SFX.play('levelUp'); retrigger($('#streakPill'), 'bump'); toast(`🔥 Chuỗi ${streakUp} ngày liên tiếp! Giữ lửa nhé`, 'coral', 2800); }
 }, { once: true });
+
+/* =========================================================
+   14b. TỰ BÁO CÓ BẢN MỚI
+   ---------------------------------------------------------
+   Mỗi lần deploy chỉ cần tăng APP_VERSION. Game tải lại index.html (bỏ qua cache)
+   khi mở lại app / mỗi 5 phút; thấy version khác → hiện nút “Chạm để cập nhật”.
+   ========================================================= */
+const APP_VERSION = '2026.11.07-4';
+const Updater = {
+  newVer: null, busy: false,
+  async check() {
+    if (this.busy || this.newVer || !navigator.onLine || location.protocol === 'file:') return;
+    this.busy = true;
+    try {
+      const res = await fetch(location.pathname + '?vcheck=' + Date.now(), { cache: 'no-store' });
+      const m = res.ok && (await res.text()).match(/const APP_VERSION = '([^']+)'/);
+      if (m && m[1] !== APP_VERSION) { this.newVer = m[1]; $('#updateBar').classList.add('show'); SFX.play('ting'); }
+    } catch (e) {} finally { this.busy = false; }
+  },
+  apply() {
+    try { saveNow(); } catch (e) {}
+    location.replace(location.pathname + '?v=' + encodeURIComponent(this.newVer || Date.now()));
+  }
+};
+$('#btnUpdate').addEventListener('click', () => Updater.apply());
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') Updater.check(); });
+setInterval(() => Updater.check(), 5 * 60 * 1000);
+setTimeout(() => Updater.check(), 4000);
 
 /* =========================================================
    15. BOOT
@@ -3801,7 +3997,7 @@ $('#roomBg').innerHTML = SCENE_ART.room();
 renderAvatar();
 $('#btnMute').textContent = state.muted ? '🔕' : '🔔';
 $('#dayLabel').textContent = `Ngày ${state.day + 1} trong sự nghiệp MC`;
-renderGigs(); renderMood();
+renderGigs(); renderMood(); renderStreak();
 
 
 })();
