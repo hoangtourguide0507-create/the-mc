@@ -3966,7 +3966,7 @@ $('#btnStart').addEventListener('click', async () => {
    Mỗi lần deploy chỉ cần tăng APP_VERSION. Game tải lại index.html (bỏ qua cache)
    khi mở lại app / mỗi 5 phút; thấy version khác → hiện nút “Chạm để cập nhật”.
    ========================================================= */
-const APP_VERSION = '2026.11.07-4';
+const APP_VERSION = '2026.11.07-5';
 const Updater = {
   newVer: null, busy: false,
   async check() {
@@ -3975,7 +3975,16 @@ const Updater = {
     try {
       const res = await fetch(location.pathname + '?vcheck=' + Date.now(), { cache: 'no-store' });
       const m = res.ok && (await res.text()).match(/const APP_VERSION = '([^']+)'/);
-      if (m && m[1] !== APP_VERSION) { this.newVer = m[1]; $('#updateBar').classList.add('show'); SFX.play('ting'); }
+      if (m && m[1] !== APP_VERSION) {
+        this.newVer = m[1];
+        // Chưa vào game (còn màn chào) → tự tải bản mới luôn, không cần chạm
+        let tried = ''; try { tried = sessionStorage.getItem('mclife.autoUpd') || ''; } catch (e) {}
+        if (document.getElementById('welcome') && !Stage.sc && tried !== m[1]) {   // mỗi bản chỉ tự tải 1 lần → không bao giờ lặp
+          try { sessionStorage.setItem('mclife.autoUpd', m[1]); } catch (e) {}
+          return this.apply();
+        }
+        $('#updateBar').classList.add('show'); SFX.play('ting');
+      }
     } catch (e) {} finally { this.busy = false; }
   },
   apply() {
@@ -3986,7 +3995,9 @@ const Updater = {
 $('#btnUpdate').addEventListener('click', () => Updater.apply());
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') Updater.check(); });
 setInterval(() => Updater.check(), 5 * 60 * 1000);
-setTimeout(() => Updater.check(), 4000);
+Updater.check();                       // kiểm tra ngay khi mở app
+// Giữ link gọn: bỏ đuôi ?v=… (chỉ dùng để vượt cache) khỏi thanh địa chỉ
+if (/[?&](v|vcheck)=/.test(location.search)) { try { history.replaceState(null, '', location.pathname + location.hash); } catch (e) {} }
 
 /* =========================================================
    15. BOOT
