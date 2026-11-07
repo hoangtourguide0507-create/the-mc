@@ -1116,7 +1116,7 @@ const DEFAULT_STATE = {
   energy: 100, maxEnergy: 100,
   charisma: { lv: 1, pts: 0 },
   xp: 0, cash: 150,
-  day: 0, muted: false, voiceURI: null,
+  day: 0, dayDate: '', muted: false, voiceURI: null,   // dayDate: ngày thật đã mở “Ngày N” → thoát ra vào lại vẫn chơi tiếp ngày đó
   learned: [],                 // id cụm từ đã mở khoá trong Sổ tay
   weak: [],                    // [{ key, word, ctx, status, misses, scene, at }]
   items: {},                   // { goldmic:true, gown:true, inear:true }
@@ -3948,7 +3948,9 @@ $('#btnStart').addEventListener('click', async () => {
   Voice.init(); Voice.unlock();
   await p;
   SFX.play('ting');
-  state.day++; save();
+  const resume = state.day > 0 && state.dayDate === dayKey();   // hôm nay đã mở ngày rồi → chơi tiếp, không sang ngày mới
+  if (!resume) { state.day++; state.dayDate = dayKey(); }
+  save();
   $('#dayLabel').textContent = `Ngày ${state.day} trong sự nghiệp MC`;
   const streakUp = touchStreak(); renderStreak();
   $('#welcome').classList.add('hide');
@@ -3956,7 +3958,7 @@ $('#btnStart').addEventListener('click', async () => {
   await wait(250);
   renderHUD();
   await wait(600);
-  toast(`☀️ Ngày ${state.day} — Chào buổi sáng, ${PLAYER_NAME}!`, 'gold');
+  toast(resume ? `▶️ Chơi tiếp Ngày ${state.day} — chào mừng trở lại, ${PLAYER_NAME}!` : `☀️ Ngày ${state.day} — Chào buổi sáng, ${PLAYER_NAME}!`, 'gold');
   if (streakUp > 1) { await wait(2600); SFX.play('levelUp'); retrigger($('#streakPill'), 'bump'); toast(`🔥 Chuỗi ${streakUp} ngày liên tiếp! Giữ lửa nhé`, 'coral', 2800); }
 }, { once: true });
 
@@ -3966,7 +3968,7 @@ $('#btnStart').addEventListener('click', async () => {
    Mỗi lần deploy chỉ cần tăng APP_VERSION. Game tải lại index.html (bỏ qua cache)
    khi mở lại app / mỗi 5 phút; thấy version khác → hiện nút “Chạm để cập nhật”.
    ========================================================= */
-const APP_VERSION = '2026.11.07-5';
+const APP_VERSION = '2026.11.08-1';
 const Updater = {
   newVer: null, busy: false,
   async check() {
@@ -4007,7 +4009,11 @@ $$('.playerName').forEach(el => el.textContent = PLAYER_NAME);
 $('#roomBg').innerHTML = SCENE_ART.room();
 renderAvatar();
 $('#btnMute').textContent = state.muted ? '🔕' : '🔔';
-$('#dayLabel').textContent = `Ngày ${state.day + 1} trong sự nghiệp MC`;
+{ // Màn chào: hôm nay đã mở ngày → nút “Tiếp tục Ngày N”
+  const resume = state.day > 0 && state.dayDate === dayKey();
+  $('#dayLabel').textContent = `Ngày ${resume ? state.day : state.day + 1} trong sự nghiệp MC`;
+  if (resume) $('#btnStart').innerHTML = `▶️ Tiếp tục Ngày ${state.day}`;
+}
 renderGigs(); renderMood(); renderStreak();
 
 
