@@ -442,6 +442,202 @@
   .tag { display:inline-flex; align-items:center; gap:4px; font-size:10px; font-weight:900; letter-spacing:.06em;
          text-transform:uppercase; padding:3px 8px; border-radius:9999px; line-height:1.2; }
 
+  /* =====================================================================
+     THEME 2026 — "Neon Stage × Glass" (theo moodboard)
+     Studio xám mềm cho Hub · sân khấu tối đèn neon · panel kính mờ ·
+     nút bóng (glossy) · bong bóng sóng âm glassmorphism
+     ===================================================================== */
+  :root{
+    --neon-g1:#7CFF6B; --neon-g2:#19D27A; --neon-pink:#FF4FD8; --neon-cyan:#22D3EE; --neon-vio:#7C3AED;
+    --glass-dark: rgba(18,14,44,.72); --glass-line: rgba(255,255,255,.16);
+    --rainbow: linear-gradient(90deg,#FF4FD8 0%,#FF8A3D 22%,#FDE047 42%,#4ADE80 62%,#22D3EE 80%,#6366F1 100%);
+  }
+  html, body { background:#E9E9EE; }
+  #app { background: radial-gradient(120% 70% at 50% 0%, #FBFBFD 0%, #EEEEF2 55%, #DEDEE5 100%); }
+
+  /* Nút bóng: phủ lớp highlight lên mọi nút màu */
+  .btn3d.bg-mint, .btn3d.bg-blu, .btn3d.bg-sun, .btn3d.bg-coral { position:relative; isolation:isolate;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.55), 0 6px 18px -6px rgba(30,20,80,.35); }
+  .btn3d.bg-mint::after, .btn3d.bg-blu::after, .btn3d.bg-sun::after, .btn3d.bg-coral::after {
+    content:''; position:absolute; left:6%; right:6%; top:3px; height:42%; border-radius:999px; pointer-events:none; z-index:-1;
+    background: linear-gradient(180deg, rgba(255,255,255,.45), rgba(255,255,255,0)); }
+  .btn3d.bg-mint  { background-image: linear-gradient(180deg,#86E34F,#46B30C); }
+  .btn3d.bg-blu   { background-image: linear-gradient(180deg,#4CC6FF,#1593E0); }
+  .btn3d.bg-sun   { background-image: linear-gradient(180deg,#FFDA4D,#F5B400); }
+  .btn3d.bg-coral { background-image: linear-gradient(180deg,#FF7A7A,#F03A3A); }
+
+  /* Hub: thẻ trắng mềm như studio render */
+  #view-hub .bg-white.rounded-2xl { border-color: rgba(255,255,255,.95); border-bottom-color: #D9D9E2;
+    box-shadow: 0 10px 30px -14px rgba(40,30,90,.28); }
+  #view-hub .hub-room { background: rgba(255,255,255,.78); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+
+  /* ---------- HUD: thanh kính tối + viên thuốc bóng ---------- */
+  #hud { background: rgba(20,14,48,.88); -webkit-backdrop-filter: blur(16px) saturate(1.4); backdrop-filter: blur(16px) saturate(1.4);
+         box-shadow: 0 1px 0 rgba(255,255,255,.08) inset, 0 8px 24px -10px rgba(10,6,30,.6); }
+  .hud-chip { color:#fff; border:1px solid rgba(255,255,255,.35); border-bottom-width:1px; border-radius:999px; overflow:hidden; isolation:isolate;
+              box-shadow: inset 0 1px 0 rgba(255,255,255,.6), inset 0 -3px 6px rgba(0,0,0,.18), 0 6px 16px -6px var(--glow, rgba(0,0,0,.4)); }
+  .hud-chip::before { content:''; position:absolute; left:8%; right:8%; top:2px; height:46%; border-radius:999px; z-index:-1;
+                      background: linear-gradient(180deg, rgba(255,255,255,.5), rgba(255,255,255,0)); }
+  #chipEnergy { background: linear-gradient(180deg,#5BE584,#14A35A); --glow: rgba(25,210,122,.55); }
+  #chipCha    { background: linear-gradient(180deg,#C98BFF,#7C3AED); --glow: rgba(124,58,237,.55); }
+  #chipXp     { background: linear-gradient(180deg,#52D3FF,#2563EB); --glow: rgba(37,99,235,.55); }
+  #chipCash   { background: linear-gradient(180deg,#FFB65C,#F26B1D); --glow: rgba(242,107,29,.55); }
+  .hud-chip .hud-label, .hud-chip .hud-val small { color: rgba(255,255,255,.82) !important; }
+  .hud-chip .hud-val, #vCash { color:#fff !important; text-shadow: 0 1px 1px rgba(0,0,0,.25); }
+  .hud-bar { background: rgba(0,0,0,.22); }
+  #bCha, #bXp { background:#fff !important; }
+  #vShows { color: rgba(255,255,255,.8) !important; }
+
+  /* ---------- STAGE: phông tối đèn neon ---------- */
+  #view-stage { background:
+      radial-gradient(60% 45% at 15% 0%, rgba(255,79,216,.35), transparent 70%),
+      radial-gradient(55% 45% at 85% 5%, rgba(34,211,238,.30), transparent 70%),
+      radial-gradient(70% 50% at 50% 110%, rgba(124,58,237,.45), transparent 70%),
+      linear-gradient(180deg,#140C35 0%,#0E0A26 100%); }
+  .stage-scene { border:1px solid var(--glass-line) !important; border-radius:26px !important;
+                 box-shadow: 0 0 0 1px rgba(0,0,0,.25), 0 18px 50px -12px rgba(124,58,237,.55), 0 0 40px -10px rgba(255,79,216,.35); }
+  /* lớp đèn sân khấu phủ lên mọi bối cảnh */
+  .scene-fx { position:absolute; inset:0; z-index:1; pointer-events:none; mix-blend-mode:screen;
+    background:
+      conic-gradient(from 200deg at 18% -6%, transparent 0 8deg, rgba(255,79,216,.28) 14deg, transparent 22deg),
+      conic-gradient(from 150deg at 82% -6%, transparent 0 8deg, rgba(34,211,238,.26) 14deg, transparent 22deg),
+      radial-gradient(70% 40% at 50% 100%, rgba(124,58,237,.30), transparent 70%); animation: beams 7s ease-in-out infinite alternate; }
+  .scene-vig { position:absolute; inset:0; z-index:1; pointer-events:none; background: radial-gradient(120% 90% at 50% 40%, transparent 55%, rgba(8,4,24,.55) 100%); }
+  @keyframes beams { from{ opacity:.75; filter:hue-rotate(0deg); } to{ opacity:1; filter:hue-rotate(25deg); } }
+
+  /* Header "ACTIVITY" */
+  .glass-btn { background: rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.35); color:#fff;
+               -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: inset 0 1px 0 rgba(255,255,255,.4); }
+  .glass-btn:active { transform: scale(.94); }
+  .act-label { font-family:'Fredoka',sans-serif; font-weight:700; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:#fff;
+               text-shadow: 0 1px 6px rgba(0,0,0,.5); }
+  @media (min-width:768px){ .act-label { font-size:13px; } }
+  .rbw-track { height:12px; border-radius:999px; background: rgba(10,6,30,.45); border:1px solid rgba(255,255,255,.25); overflow:hidden;
+               box-shadow: inset 0 2px 4px rgba(0,0,0,.35); }
+  #stageProgress { background: var(--rainbow) !important; box-shadow: 0 0 12px rgba(255,255,255,.45); position:relative; }
+  #stageProgress::after { content:''; position:absolute; left:4px; right:4px; top:1px; height:40%; border-radius:999px; background: rgba(255,255,255,.55); }
+  .st-star { width:22px; height:22px; flex:none; filter: grayscale(1) brightness(.75) opacity(.55); transition: all .45s cubic-bezier(.2,1.8,.4,1); }
+  .st-star.on { filter: drop-shadow(0 0 6px rgba(255,200,0,.9)); transform: scale(1.12); }
+  @media (min-width:768px){ .st-star { width:28px; height:28px; } }
+  #stageStep { background: rgba(255,255,255,.16) !important; color:#fff !important; border:1px solid rgba(255,255,255,.3); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+
+  /* Bong bóng thoại cạnh NPC */
+  .say-bubble { position:absolute; z-index:6; left:4%; top:2%; max-width:46%; background:#fff; color:#1B1530; border-radius:18px;
+                padding:6px 12px; font-family:'Fredoka',sans-serif; font-weight:600; font-size:12px; line-height:1.25;
+                box-shadow: 0 10px 24px -8px rgba(10,6,30,.55); opacity:0; transform: translateY(6px) scale(.9); transform-origin: 85% 100%;
+                transition: opacity .25s, transform .35s cubic-bezier(.2,1.5,.4,1); pointer-events:none; }
+  .say-bubble::after { content:''; position:absolute; right:14px; bottom:-7px; width:14px; height:14px; background:#fff; transform: rotate(45deg); border-radius:3px; }
+  .say-bubble.show { opacity:1; transform:none; }
+  .say-bubble .dots i { display:inline-block; width:5px; height:5px; margin-left:3px; border-radius:50%; background:#7C3AED; animation: dotJump 1s ease-in-out infinite; }
+  .say-bubble .dots i:nth-child(2){ animation-delay:.15s; background:#FF4FD8; } .say-bubble .dots i:nth-child(3){ animation-delay:.3s; background:#22D3EE; }
+  @keyframes dotJump { 0%,100%{ transform:translateY(0); opacity:.5; } 40%{ transform:translateY(-4px); opacity:1; } }
+  @media (min-width:768px){ .say-bubble { font-size:14px; padding:8px 14px; left:6%; top:4%; } }
+
+  /* ---------- Interactive Listening card (kính tối) ---------- */
+  #dlgBox { background: var(--glass-dark) !important; border:1px solid rgba(255,255,255,.22) !important; border-radius:22px !important;
+            -webkit-backdrop-filter: blur(18px) saturate(1.3); backdrop-filter: blur(18px) saturate(1.3); color:#fff; overflow:visible;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 14px 36px -12px rgba(0,0,0,.6), 0 0 0 1px rgba(124,58,237,.25); }
+  #dlgBox.inear { background: linear-gradient(180deg, rgba(70,12,28,.78), rgba(30,8,24,.78)) !important; border-color: rgba(255,120,140,.45) !important; }
+  .il-chip { position:absolute; left:50%; top:0; transform:translate(-50%,-55%); white-space:nowrap; z-index:2;
+             font-family:'Fredoka',sans-serif; font-weight:600; font-size:11px; letter-spacing:.02em; color:#fff;
+             padding:3px 12px; border-radius:999px; background: rgba(40,30,80,.9); border:1px solid rgba(255,255,255,.3);
+             box-shadow: 0 4px 12px -4px rgba(0,0,0,.6); }
+  #dlgBox.inear .il-chip { background: rgba(120,20,40,.95); }
+  @media (min-width:768px){ .il-chip { font-size:13px; } }
+  #dlgBox .dlg-line { color:#fff !important; }
+  #npcVi { color: rgba(255,255,255,.7) !important; }
+  #npcRole { color: rgba(255,255,255,.6) !important; }
+  #npcName { background: linear-gradient(180deg,#A78BFA,#7C3AED) !important; box-shadow: inset 0 1px 0 rgba(255,255,255,.45); }
+  /* karaoke: từ đang đọc → chữ gradient vàng→xanh neon */
+  .w.hl { background:none !important; box-shadow:none !important;
+          background-image: linear-gradient(90deg,#FDE047,#7CFF6B) !important; -webkit-background-clip:text; background-clip:text; color:transparent;
+          filter: drop-shadow(0 0 6px rgba(124,255,107,.55)); }
+
+  /* Nút trong card */
+  .ctl { height:36px; border-radius:999px; padding:0 12px; display:inline-flex; align-items:center; gap:6px; flex:none;
+         font-family:'Fredoka',sans-serif; font-weight:600; font-size:13px; color:#fff; position:relative; isolation:isolate; overflow:hidden;
+         transition: transform .15s, filter .2s, opacity .2s; }
+  .ctl:active { transform: scale(.94); }
+  .ctl::after { content:''; position:absolute; left:8%; right:8%; top:2px; height:44%; border-radius:999px; z-index:-1;
+                background: linear-gradient(180deg, rgba(255,255,255,.5), rgba(255,255,255,0)); }
+  @media (min-width:768px){ .ctl { height:42px; padding:0 16px; font-size:15px; } }
+  .ctl-listen { background: linear-gradient(180deg,#9DFF6B,#19C46A); color:#06341A; border:1.5px solid rgba(190,255,170,.9);
+                box-shadow: 0 0 0 2px rgba(124,255,107,.25), 0 0 18px rgba(124,255,107,.55), inset 0 -3px 6px rgba(0,80,30,.25); }
+  .ctl-slow { background: linear-gradient(180deg,#B7F25A,#4CAF22); color:#173D00; border:1.5px solid rgba(220,255,170,.85);
+              box-shadow: 0 4px 12px -4px rgba(76,175,34,.7), inset 0 -3px 6px rgba(20,70,0,.25); letter-spacing:.04em; }
+  .ctl-glass { background: rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.3); }
+  .ctl-glass.on { background: rgba(124,58,237,.55); border-color: rgba(200,170,255,.8); }
+  .ctl.is-speaking { animation: ctlPulse .9s ease-in-out infinite; }
+  @keyframes ctlPulse { 0%,100%{ box-shadow: 0 0 0 2px rgba(124,255,107,.25), 0 0 14px rgba(124,255,107,.5); } 50%{ box-shadow: 0 0 0 6px rgba(124,255,107,.12), 0 0 28px rgba(124,255,107,.85); } }
+  .ctl .t-ico { width:20px; height:20px; flex:none; }
+  @media (max-width:480px){
+    .ctl { height:34px; padding:0 9px; font-size:12px; gap:4px; }
+    .ctl-slow .lbl { display:none; }
+    .blind-toggle { width:60px; height:34px; } .blind-toggle .knob { width:29px; height:29px; } .blind-toggle .slash { right:7px; width:17px; height:17px; }
+  }
+
+  /* Công tắc Blind Listening: núm mắt trắng + rãnh đỏ mắt gạch */
+  .blind-toggle { position:relative; flex:none; height:36px; width:72px; border-radius:999px; padding:0;
+                  background: linear-gradient(180deg,#FF6B7A,#E1263F); border:1.5px solid rgba(255,190,200,.8);
+                  box-shadow: inset 0 2px 5px rgba(120,0,20,.45), 0 4px 12px -4px rgba(225,38,63,.7); transition: background .3s; }
+  .blind-toggle .knob { position:absolute; left:2px; top:50%; transform:translateY(-50%); width:31px; height:31px; border-radius:50%;
+                        background: radial-gradient(circle at 35% 30%, #fff, #E8E8F0); box-shadow: 0 3px 6px rgba(0,0,0,.35);
+                        display:grid; place-items:center; transition: left .35s cubic-bezier(.2,1.4,.4,1); }
+  .blind-toggle .slash { position:absolute; right:9px; top:50%; transform:translateY(-50%); width:20px; height:20px; color:#fff; }
+  .blind-toggle:active .knob { transform: translateY(-50%) scale(.92); }
+  @media (min-width:768px){ .blind-toggle { height:42px; width:84px; } .blind-toggle .knob { width:37px; height:37px; } .blind-toggle .slash{ right:12px; width:22px; height:22px; } }
+
+  /* ---------- Bong bóng sóng âm glassmorphism ---------- */
+  .wave-bars { height:auto !important; gap:clamp(10px,4vw,26px) !important; padding:6px 0 2px; }
+  .wbub { position:relative; width:64px; height:64px; border-radius:50%; flex:none; display:flex; align-items:center; justify-content:center; gap:2px;
+          background:
+            radial-gradient(circle at 30% 24%, rgba(255,255,255,.85) 0, rgba(255,255,255,.18) 18%, transparent 34%),
+            radial-gradient(circle at 72% 82%, rgba(130,220,255,.40), transparent 55%),
+            radial-gradient(circle at 20% 80%, rgba(255,120,230,.30), transparent 55%),
+            rgba(255,255,255,.06);
+          box-shadow: inset 0 0 10px rgba(255,255,255,.45), inset -6px -8px 16px rgba(170,110,255,.40), inset 6px 6px 14px rgba(110,255,220,.25),
+                      0 10px 26px -8px rgba(140,90,255,.55);
+          -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); animation: bubFloat 4.2s ease-in-out infinite; }
+  .wbub:nth-child(2){ animation-delay:-1.4s; width:72px; height:72px; } .wbub:nth-child(3){ animation-delay:-2.8s; }
+  .wbub::before { content:''; position:absolute; inset:-1px; border-radius:50%; padding:1.5px; pointer-events:none;
+                  background: conic-gradient(from 0deg, #FF4FD8, #FDE047, #7CFF6B, #22D3EE, #A78BFA, #FF4FD8);
+                  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; opacity:.75; }
+  .wbub i { width:3px !important; border-radius:3px; background: var(--c) !important; box-shadow: 0 0 6px var(--c); }
+  @keyframes bubFloat { 0%,100%{ transform: translateY(0) } 50%{ transform: translateY(-5px) } }
+  @media (min-width:768px){ .wbub { width:84px; height:84px; gap:3px; } .wbub:nth-child(2){ width:94px; height:94px; } .wbub i { width:4px !important; } }
+  @media (max-width:480px){ .wbub { width:52px; height:52px; } .wbub:nth-child(2){ width:58px; height:58px; } .wbub i{ width:2.5px !important; } }
+  #dlgBox.inear .wbub { box-shadow: inset 0 0 10px rgba(255,255,255,.4), inset -6px -8px 16px rgba(255,90,110,.45), 0 10px 26px -8px rgba(255,60,90,.55); }
+  .wave-hint { color: rgba(255,255,255,.72) !important; }
+  .wave-hint b { color:#FDE047 !important; }
+
+  /* ---------- Cue card: kính trắng mờ ---------- */
+  .stage-cue { background: rgba(255,255,255,.9) !important; border:1px solid rgba(255,255,255,.7) !important; border-radius:26px !important;
+               -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
+               box-shadow: 0 20px 50px -16px rgba(10,4,40,.75), 0 0 0 1px rgba(124,58,237,.18); }
+  .mic { background: radial-gradient(circle at 35% 28%, #A6F57A, #3FB50E 60%, #2E8F06) !important; border-color:#2E8F06 !important;
+         box-shadow: inset 0 2px 0 rgba(255,255,255,.5), 0 10px 24px -6px rgba(63,181,14,.7); }
+  .mic[data-state="rec"] { background: radial-gradient(circle at 35% 28%, #FF9A9A, #F03A3A 60%, #C21F1F) !important; border-color:#C21F1F !important; }
+  .mic[data-state="analyzing"], .mic[data-state="arming"] { background: radial-gradient(circle at 35% 28%, #8FDFFF, #1593E0 60%, #0D6FB0) !important; border-color:#0D6FB0 !important; }
+  .mic[data-state="locked"] { background: #E5E5EC !important; border-color:#CFCFD8 !important; box-shadow:none; }
+
+  /* ---------- Welcome & màn chuyển cảnh: neon ---------- */
+  #welcome, #curtain { background:
+      radial-gradient(50% 40% at 15% 10%, rgba(255,79,216,.55), transparent 70%),
+      radial-gradient(45% 40% at 90% 20%, rgba(34,211,238,.45), transparent 70%),
+      radial-gradient(70% 50% at 50% 105%, rgba(124,58,237,.7), transparent 70%),
+      #120A30 !important; }
+  .bubble { background:
+      radial-gradient(circle at 30% 25%, rgba(255,255,255,.7), rgba(255,255,255,.08) 30%, transparent 45%),
+      radial-gradient(circle at 70% 80%, rgba(130,220,255,.35), transparent 60%), rgba(255,255,255,.05);
+    box-shadow: inset 0 0 8px rgba(255,255,255,.35), inset -4px -6px 12px rgba(170,110,255,.35); }
+  #welcome .logo-bounce, #curtain .c-orb { background: radial-gradient(circle at 35% 28%, #fff, #E9E4FF) !important;
+      box-shadow: 0 0 0 4px rgba(255,255,255,.15), 0 0 40px rgba(255,79,216,.55), 0 0 60px rgba(34,211,238,.35) !important; border:0 !important; }
+  #btnStart { background: linear-gradient(180deg,#9DFF6B,#19C46A) !important; color:#063A1C !important; border-color:#0E8F4A !important;
+              box-shadow: 0 0 0 3px rgba(124,255,107,.25), 0 0 30px rgba(124,255,107,.6); }
+  #curtain .c-bar i { background: var(--rainbow) !important; }
+
+  #sheet, #modalCard > div { border-radius:1.6rem; }
+
   @media (prefers-reduced-motion: reduce){
     *, *::before, *::after { animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
   }
@@ -586,33 +782,48 @@
         <!-- LEFT / TOP: Sân khấu -->
         <div class="stage-scene relative rounded-2xl overflow-hidden border-b-4 border-black/20 flex flex-col" id="stageScene">
           <div class="absolute inset-0" id="sceneBg"></div>
+          <div class="scene-fx"></div><div class="scene-vig"></div>
 
-          <div class="relative shrink-0 p-2.5 md:p-3 flex items-center gap-2 z-20">
-            <button id="btnLeave" class="btn3d bg-white border-2 border-line border-b-4 active:border-b-0 active:translate-y-1 rounded-2xl w-10 h-10 grid place-items-center font-black text-mute text-lg shrink-0" aria-label="Rời sân khấu">✕</button>
+          <div class="relative shrink-0 p-2.5 md:p-3 flex items-center gap-2 md:gap-3 z-20">
+            <button id="btnLeave" class="glass-btn rounded-full w-10 h-10 md:w-11 md:h-11 grid place-items-center shrink-0 transition-transform" aria-label="Rời sân khấu">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+            </button>
             <div class="flex-1 min-w-0">
-              <div class="h-3.5 rounded-full bg-black/20 overflow-hidden">
-                <i id="stageProgress" class="block h-full rounded-full bg-sun transition-all duration-700" style="width:0"></i>
+              <div id="sceneTitle" class="act-label truncate mb-1"></div>
+              <div class="flex items-center gap-1.5">
+                <div class="rbw-track flex-1 min-w-0">
+                  <i id="stageProgress" class="block h-full rounded-full transition-all duration-700" style="width:0"></i>
+                </div>
+                <span id="stageStars" class="flex items-center -space-x-0.5 shrink-0"></span>
               </div>
-              <div id="sceneTitle" class="mt-1 text-[12px] md:text-[13px] font-black text-white truncate" style="text-shadow:0 1px 2px rgba(0,0,0,.35)"></div>
             </div>
-            <span id="stageStep" class="font-display font-semibold text-[13px] bg-white/90 text-ink rounded-full px-2.5 py-1 shrink-0">1/4</span>
+            <span id="stageStep" class="font-display font-semibold text-[13px] rounded-full px-2.5 py-1 shrink-0">1/4</span>
           </div>
 
           <!-- Vùng NPC: tự co giãn theo khoảng trống còn lại, không bị hộp thoại che -->
           <div class="relative flex-1 min-h-[56px] z-[5]">
+            <div id="sayBubble" class="say-bubble"><span id="sayName">NPC</span><span class="dots"><i></i><i></i><i></i></span></div>
             <div id="npc" class="npc-box absolute left-1/2" style="aspect-ratio:160/222; transform:translateX(-50%);"></div>
           </div>
 
-          <div id="dlgBox" class="relative shrink-0 mx-2.5 mb-2.5 md:mx-3 md:mb-3 z-10 bg-white rounded-2xl border-2 border-line border-b-4 px-3 py-2.5 md:p-4 dlg-box scroll">
-            <div class="flex items-center gap-2 mb-1.5">
-              <span id="npcName" class="tag bg-blu text-white shrink-0">NPC</span>
+          <div id="dlgBox" class="relative shrink-0 mx-2.5 mb-2.5 mt-2 md:mx-3 md:mb-3 z-10 px-3 pt-3.5 pb-2.5 md:px-4 md:pt-5 md:pb-4 dlg-box scroll">
+            <span class="il-chip">🎧 Interactive Listening</span>
+            <div class="flex flex-wrap items-center gap-1.5 md:gap-2 gap-y-2 mb-1.5">
+              <span id="npcName" class="tag text-white shrink-0">NPC</span>
               <span id="npcChannel" class="hidden tag bg-coral text-white shrink-0">📻<span class="hidden sm:inline">In-ear</span></span>
-              <span id="npcRole" class="hidden md:block flex-1 min-w-0 text-[11px] font-extrabold text-mute truncate"></span>
+              <span id="npcRole" class="hidden md:block flex-1 min-w-0 text-[11px] font-extrabold truncate"></span>
               <span class="flex-1 md:hidden"></span>
-              <button id="btnListen" class="tts-btn btn3d shrink-0 bg-blu border-b-4 border-blu-dark active:border-b-0 active:translate-y-1 text-white rounded-2xl px-2.5 md:px-3 h-9 md:h-10 font-extrabold text-[13px] flex items-center gap-1" aria-label="Nghe tốc độ thường 1x">🔊 1x</button>
-              <button id="btnSlow" class="tts-btn btn3d shrink-0 bg-white border-2 border-line border-b-4 active:border-b-0 active:translate-y-1 rounded-2xl px-2.5 md:px-3 h-9 md:h-10 font-extrabold text-[13px] flex items-center gap-1">🐢 0.75x</button>
-              <button id="btnReveal" class="hidden btn3d shrink-0 bg-sun border-b-4 border-sun-dark active:border-b-0 active:translate-y-1 rounded-2xl px-2.5 md:px-3 h-9 md:h-10 font-extrabold text-[13px] text-[#5C4300] flex items-center gap-1" aria-label="Hiện chữ (Reveal Text)">👁️<span class="hidden sm:inline">Hiện chữ</span></button>
-              <button id="btnTrans" class="btn3d shrink-0 bg-white border-2 border-line border-b-4 active:border-b-0 active:translate-y-1 rounded-2xl px-2.5 md:px-3 h-9 md:h-10 font-extrabold text-[13px] flex items-center gap-1" aria-label="Dịch">🌐<span class="hidden sm:inline">Dịch</span></button>
+              <span class="ctl-group flex items-center gap-1.5 md:gap-2 ml-auto">
+              <button id="btnReveal" class="hidden blind-toggle" aria-label="Blind Listening đang bật — chạm để hiện chữ" title="Blind Listening · chạm để hiện chữ">
+                <span class="knob"><svg viewBox="0 0 24 24" width="22" height="22"><ellipse cx="12" cy="12" rx="10" ry="7" fill="#fff" stroke="#2A2340" stroke-width="1.6"/><circle cx="12" cy="12" r="4.6" fill="#5B3A1E"/><circle cx="12" cy="12" r="2.2" fill="#120d14"/><circle cx="13.6" cy="10.4" r="1.2" fill="#fff"/></svg></span>
+                <svg class="slash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z"/><circle cx="12" cy="12" r="2.6"/><path d="M4 4l16 16"/></svg>
+              </button>
+              <button id="btnTrans" class="ctl ctl-glass" aria-label="Dịch">🌐<span class="hidden sm:inline">Dịch</span></button>
+              <button id="btnSlow" class="tts-btn ctl ctl-slow" aria-label="Nghe chậm 0.75x">
+                <svg class="t-ico" viewBox="0 0 32 32"><ellipse cx="15" cy="17" rx="10" ry="7.5" fill="#2F7D12"/><path d="M7 17a8 7 0 0 1 16 0z" fill="#5FBF2A"/><path d="M11 12l2 4M15 10.5v5M19 12l-2 4" stroke="#2F7D12" stroke-width="1.4"/><circle cx="26.5" cy="16.5" r="3.6" fill="#8FDB55"/><circle cx="27.6" cy="15.6" r=".9" fill="#173D00"/><path d="M8 22.5l-1.5 3M21 22.5l1.5 3" stroke="#5FBF2A" stroke-width="2.6" stroke-linecap="round"/></svg><span class="lbl">SLOW</span></button>
+              <button id="btnListen" class="tts-btn ctl ctl-listen" aria-label="Tap & Listen — nghe tốc độ thường">
+                <svg class="t-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 9v6h4l5 4V5L8 9z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg><span class="hidden sm:inline">Tap &amp;</span> Listen</button>
+              </span>
             </div>
             <div id="waveBox" class="wave-box">
               <div id="waveBars" class="wave-bars"></div>
@@ -1651,7 +1862,12 @@ function shade(hex, amt) {
 let clayUid = 0;
 function clayDefs(p, L) {
   const grad = (id, c) => `<radialGradient id="${p}${id}" cx="34%" cy="26%" r="82%"><stop offset="0" stop-color="${shade(c, .38)}"/><stop offset=".55" stop-color="${c}"/><stop offset="1" stop-color="${shade(c, -.3)}"/></radialGradient>`;
-  return grad('sk', L.skin) + grad('hr', L.hair) + grad('cl', L.cloth) + grad('ac', L.accent || '#FFC800') + `
+  const dk = shade(L.cloth, -.42), lt = shade(L.cloth, .35);
+  const plaid = L.plaid ? `<pattern id="${p}pl" width="16" height="16" patternUnits="userSpaceOnUse"><rect width="16" height="16" fill="${L.cloth}"/>
+      <rect width="16" height="6" fill="${dk}" opacity=".55"/><rect width="6" height="16" fill="${dk}" opacity=".55"/>
+      <rect x="10" width="1.5" height="16" fill="${lt}" opacity=".7"/><rect y="10" width="16" height="1.5" fill="${lt}" opacity=".7"/></pattern>` : '';
+  return grad('sk', L.skin) + grad('hr', L.hair) + grad('cl', L.cloth) + grad('ac', L.accent || '#FFC800') + grad('ht', L.hat || '#8C7B63') +
+    grad('bd', L.beard || L.hair) + plaid + `
     <radialGradient id="${p}gl" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#fff" stop-opacity=".6"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
     <filter id="${p}sh" x="-25%" y="-20%" width="150%" height="150%"><feDropShadow dx="0" dy="5" stdDeviation="4" flood-color="#1b2440" flood-opacity=".22"/></filter>`;
 }
@@ -1663,17 +1879,26 @@ function clayFig(L, p, who) {
   const hairBack = {
     veil: `<path d="M40 50 Q80 16 120 50 L148 214 L12 214 Z" fill="#fff" opacity=".55"/><path d="M48 60 L30 214 M112 60 L130 214" stroke="#fff" stroke-width="2" opacity=".7"/><circle cx="80" cy="33" r="17" fill="${H}"/>`,
     updo: `<ellipse cx="80" cy="70" rx="58" ry="52" fill="${H}"/><circle cx="80" cy="25" r="20" fill="${H}"/><ellipse cx="74" cy="18" rx="7" ry="4" fill="#fff" opacity=".25"/>`,
-    long: `<path d="M30 84 Q26 30 80 28 Q134 30 130 84 L136 158 Q80 172 24 158 Z" fill="${H}"/>`
+    long: `<path d="M30 84 Q26 30 80 28 Q134 30 130 84 L136 158 Q80 172 24 158 Z" fill="${H}"/>`,
+    beanie: [[30, 70], [27, 86], [33, 101], [130, 70], [133, 86], [127, 101]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="11" fill="${H}"/>`).join('')
   }[L.hairStyle] || '';
   const hairFront = {
     swoop: `<path d="M34 80 Q28 36 76 30 Q124 26 128 72 Q118 54 98 50 Q108 38 88 36 Q72 44 62 52 Q44 58 34 80Z" fill="${H}"/>`,
     crew:  `<path d="M35 72 Q36 34 80 32 Q124 34 125 72 Q118 54 80 52 Q44 54 35 72Z" fill="${H}"/>`,
     side:  `<path d="M34 76 Q33 32 82 30 Q126 32 127 74 Q120 52 72 48 Q52 50 34 76Z" fill="${H}"/><path d="M70 34 Q66 42 63 50" stroke="${shade(L.hair, -.45)}" stroke-width="2" fill="none" opacity=".6"/>`,
     veil:  `<path d="M35 82 Q32 36 80 31 Q128 36 125 82 Q118 56 98 51 Q80 60 62 51 Q42 56 35 82Z" fill="${H}"/>` +
-           [56, 68, 80, 92, 104].map((x, i) => `<circle cx="${x}" cy="${36 - (i === 2 ? 4 : i % 2 ? 2 : 0)}" r="4.6" fill="${['#FFB5C9', '#fff', '#FFD1DC', '#fff', '#FFB5C9'][i]}"/>`).join(''),
+           `<path d="M56 40 L61 30 L67 37 L73 26 L80 18 L87 26 L93 37 L99 30 L104 40 Q80 33 56 40Z" fill="#F4F6FB" stroke="#B9C2D3" stroke-width="1.2" stroke-linejoin="round"/>` +
+           [[61, 31, 1.8], [73, 27, 2], [80, 20, 2.6], [87, 27, 2], [99, 31, 1.8]].map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="#fff" stroke="#9FB3D6" stroke-width=".6"/>`).join('') +
+           `<circle cx="80" cy="33" r="2.4" fill="${L.accent}"/>`,
     updo:  `<path d="M33 86 Q26 36 82 30 Q132 32 127 88 Q122 52 92 48 Q70 64 33 86Z" fill="${H}"/>`,
     long:  `<path d="M34 80 Q32 34 80 30 Q128 34 126 80 Q114 50 84 48 Q66 60 34 80Z" fill="${H}"/>`,
-    curly: [[44, 56], [55, 43], [69, 36], [85, 33], [100, 37], [113, 46], [123, 60], [37, 70]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="13" fill="${H}"/>`).join('')
+    curly: [[44, 56], [55, 43], [69, 36], [85, 33], [100, 37], [113, 46], [123, 60], [37, 70]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="13" fill="${H}"/>`).join(''),
+    beanie: [[42, 64], [54, 60], [106, 60], [118, 64]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="9" fill="${H}"/>`).join('') +
+      `<path d="M30 60 Q28 8 80 6 Q132 8 130 60 Z" fill="url(#${p}ht)" filter="${F}"/>` +
+      [44, 56, 68, 80, 92, 104, 116].map(x => `<path d="M${x} ${x === 80 ? 10 : 14} Q${x + 1} 34 ${x} 54" stroke="${shade(L.hat || '#8C7B63', -.22)}" stroke-width="2" fill="none" opacity=".55"/>`).join('') +
+      `<path d="M27 52 Q80 40 133 52 L134 66 Q80 54 26 66 Z" fill="${shade(L.hat || '#8C7B63', -.12)}"/>` +
+      Array.from({ length: 14 }, (_, i) => `<path d="M${31 + i * 7.5} ${51 - Math.sin(Math.PI * i / 13) * 7} v12" stroke="${shade(L.hat || '#8C7B63', -.32)}" stroke-width="1.6" opacity=".55"/>`).join('') +
+      `<ellipse cx="58" cy="24" rx="16" ry="8" fill="#fff" opacity=".22"/>`
   }[L.hairStyle] || '';
 
   const outfit = {
@@ -1684,6 +1909,16 @@ function clayFig(L, p, who) {
     gown:  `<path d="M26 214 Q30 172 44 166 Q80 182 116 166 Q130 172 134 214Z" fill="${C}" filter="${F}"/>` + [[48, 192], [70, 202], [96, 188], [114, 204], [60, 180], [104, 178]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.7" fill="${L.accent}" class="twinkle"/>`).join(''),
     hoodie:`<path d="M50 144 Q80 168 110 144 Q100 160 80 162 Q60 160 50 144Z" fill="${shade(L.cloth, -.22)}"/><path d="M72 162 L70 190 M88 162 L90 190" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>`,
     blouse:`<path d="M62 140 L80 158 L98 140 L92 138 L80 150 L68 138Z" fill="#fff"/>` + (L.pattern ? [[50, 180], [100, 192], [70, 202], [112, 168], [58, 160]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="5" fill="#fff" opacity=".35"/>`).join('') : ''),
+    jacket:`<path d="M66 140 Q80 152 94 140 L94 150 Q80 160 66 150Z" fill="#6B7280"/>` +
+           `<path d="M54 136 Q80 150 106 136 L110 146 Q80 162 50 146Z" fill="${shade(L.cloth, -.35)}"/>` +
+           `<path d="M80 156 L80 214" stroke="#A1A8B3" stroke-width="2.2"/><rect x="77.5" y="158" width="5" height="8" rx="1.5" fill="#C9CED6"/>` +
+           `<path d="M40 176 Q80 184 120 176 M36 196 Q80 206 124 196" stroke="${shade(L.cloth, .18)}" stroke-width="2" fill="none" opacity=".55"/>` +
+           `<rect x="98" y="190" width="14" height="20" rx="3" fill="#1A1C24"/><rect x="104" y="182" width="3" height="9" rx="1.5" fill="#1A1C24"/><circle cx="105" cy="196" r="2" fill="#58CC02" class="led"/>`,
+    velvet:`<path d="M66 140 L80 160 L94 140 Z" fill="#fff"/><path d="M71 140 L80 151 L89 140 Q80 145 71 140Z" fill="${shade(L.skin, -.12)}"/>` +
+           `<path d="M66 140 L80 160 L74 214 L40 214 Q44 156 66 140Z M94 140 L80 160 L86 214 L120 214 Q116 156 94 140Z" fill="${shade(L.cloth, -.35)}" opacity=".65"/>` +
+           `<path d="M44 160 Q52 150 62 148" stroke="#fff" stroke-width="5" opacity=".12" stroke-linecap="round"/>` +
+           `<path d="M100 170 L108 160 L112 164 L116 158 L118 172 Z" fill="${L.accent}"/><path d="M98 170 L120 170" stroke="${shade(L.cloth, -.5)}" stroke-width="2.5"/>` +
+           `<circle cx="84" cy="190" r="2.2" fill="${shade(L.cloth, -.55)}"/><circle cx="84" cy="202" r="2.2" fill="${shade(L.cloth, -.55)}"/>`,
     suit:  `<path d="M66 140 L80 172 L94 140 Z" fill="#fff"/><path d="M77 146 L83 146 L84 176 L80 182 L76 176Z" fill="${L.accent}"/><path d="M66 140 L80 172 L70 214 L40 214 Q44 156 66 140Z M94 140 L80 172 L90 214 L120 214 Q116 156 94 140Z" fill="${shade(L.cloth, -.32)}" opacity=".6"/>`
   }[L.outfit] || '';
 
@@ -1695,7 +1930,7 @@ function clayFig(L, p, who) {
     (acc.has('intercom') ? `<path d="M33 76 Q34 23 80 23 Q126 23 127 76" stroke="#23252E" stroke-width="7" fill="none" stroke-linecap="round"/><rect x="117" y="70" width="19" height="27" rx="8" fill="#2D2F3A"/><rect x="120" y="73" width="6" height="9" rx="3" fill="#fff" opacity=".25"/><circle cx="131" cy="77" r="2.3" fill="#FF4B4B" class="led"/><path d="M127 95 Q124 114 99 112" stroke="#23252E" stroke-width="3.6" fill="none" stroke-linecap="round"/><rect x="88" y="108" width="12" height="7.5" rx="3.6" fill="#1E1E24"/>` : '') +
     (acc.has('headset') ? `<path d="M34 76 Q35 24 80 24 Q125 24 126 76" stroke="#3A3A48" stroke-width="4" fill="none"/><circle cx="127" cy="86" r="7" fill="#3A3A48"/><path d="M127 92 Q122 112 100 111" stroke="#3A3A48" stroke-width="2.4" fill="none"/><circle cx="99" cy="111" r="3" fill="#3A3A48"/>` : '') +
     (acc.has('earrings') ? [34, 126].map(x => `<circle cx="${x}" cy="97" r="2.6" fill="${L.accent}"/><ellipse cx="${x}" cy="105" rx="3.4" ry="4.6" fill="#FFF8E7" stroke="#E8D9B5" stroke-width=".6"/>`).join('') : '') +
-    (acc.has('glasses') ? `<g stroke="#2D2D3A" stroke-width="2.6" fill="rgba(255,255,255,.16)"><circle cx="62" cy="85" r="12.5"/><circle cx="98" cy="85" r="12.5"/><path d="M74.5 84 Q80 80 85.5 84" fill="none"/></g>` : '') +
+    (acc.has('glasses') ? `<g stroke="#2A1E18" stroke-width="3.4" fill="rgba(255,255,255,.14)"><rect x="48" y="73" width="27" height="22" rx="8"/><rect x="85" y="73" width="27" height="22" rx="8"/><path d="M75 82 Q80 78 85 82" fill="none"/><path d="M48 80 L36 78 M112 80 L124 78" fill="none"/></g><path d="M52 77 l6 -1" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".7"/><path d="M89 77 l6 -1" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".7"/>` : '') +
     (acc.has('flower') ? `<g transform="translate(40 50)">${[0, 72, 144, 216, 288].map(r => `<ellipse cx="0" cy="-7" rx="5" ry="7.5" fill="${L.accent}" transform="rotate(${r})"/>`).join('')}<circle r="3.5" fill="#FFC800"/></g>` : '');
 
   const lashes = L.lashes ? `<path d="M53 80 L48 77 M54 77 L51 73 M107 80 L112 77 M106 77 L109 73" stroke="${dark}" stroke-width="2" stroke-linecap="round"/>` : '';
@@ -1704,7 +1939,8 @@ function clayFig(L, p, who) {
   <g class="fig" data-who="${who}" data-vis="rest">
     <ellipse cx="80" cy="215" rx="58" ry="6" fill="rgba(20,30,60,.12)"/>
     <g class="torso">
-      <path d="M22 214 Q24 148 80 138 Q136 148 138 214Z" fill="${bareShoulders ? S : C}" filter="${F}"/>
+      <path d="M22 214 Q24 148 80 138 Q136 148 138 214Z" fill="${bareShoulders ? S : L.plaid ? `url(#${p}pl)` : C}" filter="${F}"/>
+      ${L.plaid ? `<path d="M22 214 Q24 148 80 138 Q136 148 138 214Z" fill="url(#${p}gl)" opacity=".25"/><path d="M62 140 L72 156 L80 146 L88 156 L98 140 Q80 148 62 140Z" fill="${shade(L.cloth, -.2)}"/>` : ''}
       <path d="M68 116 L68 142 Q80 150 92 142 L92 116Z" fill="${skinD}"/>
       ${outfit}${torsoAcc}
       <ellipse cx="52" cy="166" rx="16" ry="7" fill="url(#${p}gl)" opacity=".6"/>
@@ -1720,6 +1956,8 @@ function clayFig(L, p, who) {
       <g class="eyes-happy" stroke="${dark}" stroke-width="3.4" stroke-linecap="round" fill="none"><path d="M54 87 Q62 78 70 87"/><path d="M90 87 Q98 78 106 87"/></g>
       <ellipse cx="51" cy="99" rx="7.5" ry="4.5" fill="#FF8FA3" opacity=".45"/><ellipse cx="109" cy="99" rx="7.5" ry="4.5" fill="#FF8FA3" opacity=".45"/>
       <ellipse cx="80" cy="95" rx="3.4" ry="2.6" fill="${skinD}" opacity=".7"/>
+      ${acc.has('beard') ? `<path d="M37 88 Q38 124 62 128 Q80 133 98 128 Q122 124 123 88 Q118 104 106 110 Q96 114 92 110 Q80 104 68 110 Q64 114 54 110 Q42 104 37 88Z" fill="url(#${p}bd)"/>
+        <path d="M66 103 Q72 97 80 99 Q88 97 94 103 Q88 104 80 102.5 Q72 104 66 103Z" fill="url(#${p}bd)"/>` : ''}
       <g class="mouth">
         <path class="m m-rest" d="M71 104 Q80 111 89 104" stroke="${lip}" stroke-width="3.2" stroke-linecap="round" fill="none"/>
         <g class="m m-a"><path d="M70 102 Q80 100 90 102 Q89 117 80 118 Q71 117 70 102Z" fill="#6B2433"/><ellipse cx="80" cy="113.5" rx="5" ry="2.6" fill="#FF7A8A"/></g>
@@ -1736,8 +1974,43 @@ function clayFig(L, p, who) {
     <g class="fx fx-sweat"><path d="M130 50 Q138 62 130 68 Q122 62 130 50Z" fill="#7FD4FF"/><ellipse cx="128" cy="62" rx="1.6" ry="2.6" fill="#fff" opacity=".85"/></g>
     <text class="fx fx-q" x="136" y="40" font-family="Fredoka, sans-serif" font-weight="700" font-size="28" fill="#FF4B4B">?</text>
     <g class="fx fx-listen" stroke="#1CB0F6" stroke-width="3" fill="none" stroke-linecap="round"><path d="M141 76 Q147 86 141 96"/><path d="M149 70 Q158 86 149 102"/></g>
-    ${L.prop ? `<g class="prop"><circle cx="136" cy="180" r="17" fill="#fff" filter="${F}"/><text x="136" y="187" text-anchor="middle" font-size="19">${L.prop}</text></g>` : ''}
+    ${L.propArt ? propArt(L.propArt, p, L) : L.prop ? `<g class="prop"><circle cx="136" cy="180" r="17" fill="#fff" filter="${F}"/><text x="136" y="187" text-anchor="middle" font-size="19">${L.prop}</text></g>` : ''}
   </g>`;
+}
+/** Đạo cụ vẽ tay (thay emoji) — cốc latte, máy tính bảng, bìa kẹp hồ sơ, bó hoa cưới */
+function propArt(kind, p, L) {
+  const F = `url(#${p}sh)`, S = `url(#${p}sk)`;
+  const hand = (x, y) => `<ellipse cx="${x}" cy="${y}" rx="9" ry="8" fill="${S}"/>`;
+  switch (kind) {
+    case 'cup': return `<g class="prop" filter="${F}">
+        <g class="steam" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round" opacity=".8"><path d="M128 150 q-5 -7 0 -14 q5 -7 0 -14"><animate attributeName="opacity" values=".2;.9;.2" dur="2.4s" repeatCount="indefinite"/></path><path d="M140 152 q-5 -7 0 -14 q5 -7 0 -14"><animate attributeName="opacity" values=".9;.2;.9" dur="2.4s" repeatCount="indefinite"/></path></g>
+        <path d="M118 160 L150 160 L146 190 Q134 196 122 190 Z" fill="#F5EFE6"/><path d="M150 166 q11 1 9 11 q-2 8 -12 7" stroke="#F5EFE6" stroke-width="4.5" fill="none"/>
+        <ellipse cx="134" cy="160" rx="16" ry="5" fill="#C58B5A"/><path d="M134 163 q-5 -5 -1 -7 q2 -1 1 1 q-1 -2 1 -1 q4 2 -1 7z" fill="#FFF3E2"/>
+        <path d="M121 172 L147 172" stroke="#E0D3C2" stroke-width="2"/>${hand(124, 184)}</g>`;
+    case 'tablet': return `<g class="prop" filter="${F}" transform="rotate(-8 134 178)">
+        <rect x="112" y="150" width="44" height="58" rx="7" fill="#9AA1AD"/><rect x="115.5" y="153.5" width="37" height="51" rx="4.5" fill="#1C2233"/>
+        <rect x="119" y="158" width="30" height="5" rx="2" fill="#22D3EE" opacity=".8"/><rect x="119" y="167" width="22" height="3.5" rx="1.7" fill="#fff" opacity=".55"/>
+        <rect x="119" y="174" width="26" height="3.5" rx="1.7" fill="#fff" opacity=".4"/><rect x="119" y="184" width="30" height="14" rx="3" fill="#7C3AED" opacity=".7"/>
+        <path d="M116 155 L132 155 L118 175 Z" fill="#fff" opacity=".12"/>${hand(116, 196)}</g>`;
+    case 'clipboard': return `<g class="prop" filter="${F}" transform="rotate(10 134 180)">
+        <rect x="112" y="146" width="42" height="58" rx="5" fill="#B07A45"/><rect x="117" y="153" width="32" height="46" rx="2" fill="#FBFAF6"/>
+        ${[161, 168, 175, 182, 189].map((y, i) => `<path d="M121 ${y} h${i % 2 ? 18 : 24}" stroke="#9AA3B2" stroke-width="2" stroke-linecap="round"/>`).join('')}
+        <rect x="124" y="142" width="18" height="9" rx="3" fill="#C9CED6"/><rect x="128" y="139" width="10" height="5" rx="2" fill="#A1A8B3"/>${hand(150, 186)}</g>`;
+    case 'mic': case 'goldmic': {
+      const g = kind === 'goldmic', body = g ? '#E0A800' : '#3A3A48', head = g ? '#FFD84D' : '#B9C1CC';
+      return `<g class="prop" filter="${F}" transform="rotate(-16 136 176)">
+        <rect x="131" y="166" width="10" height="40" rx="5" fill="${body}"/><rect x="129.5" y="164" width="13" height="7" rx="3" fill="${g ? '#C98F00' : '#23252E'}"/>
+        <circle cx="136" cy="154" r="12" fill="${head}"/><path d="M125 151h22M126 156h20M128 146h16M128 161h16" stroke="${g ? '#B07D00' : '#8D96A1'}" stroke-width="1.2"/>
+        <circle cx="131" cy="149" r="3.2" fill="#fff" opacity=".7"/>${hand(136, 190)}</g>`;
+    }
+    case 'bouquet': return `<g class="prop" filter="${F}">
+        <path d="M120 186 L134 214 M128 186 L134 214 M140 186 L134 214" stroke="#3E8E41" stroke-width="3" stroke-linecap="round"/>
+        <path d="M128 200 q6 6 12 0 l-2 10 h-8z" fill="#FFF8EC"/>
+        ${[[112, 176, '#5DAA4A', 7], [154, 176, '#5DAA4A', 7]].map(([x, y, c, r]) => `<ellipse cx="${x}" cy="${y}" rx="${r}" ry="4" fill="${c}" transform="rotate(${x < 130 ? -30 : 30} ${x} ${y})"/>`).join('')}
+        ${[[120, 170, '#FF7FA5'], [134, 165, '#FFD1DC'], [148, 170, '#FF9E7A'], [126, 181, '#FFF4E0'], [142, 181, '#FF7FA5'], [134, 176, '#F7B2C4']].map(([x, y, c]) =>
+          `<circle cx="${x}" cy="${y}" r="8" fill="${c}"/><circle cx="${x - 1.5}" cy="${y - 1.5}" r="3.2" fill="${shade(c, -.18)}" opacity=".7"/><circle cx="${x - 3}" cy="${y - 3.5}" r="1.6" fill="#fff" opacity=".6"/>`).join('')}</g>`;
+  }
+  return '';
 }
 /** SVG hoàn chỉnh cho 1 NPC (hoặc cặp đôi duo) */
 function npcSVG(n) {
@@ -1814,13 +2087,17 @@ const NpcWave = {
   raf: 0, bars: [], level: 0, target: 0, speaking: false,
   build() {
     const box = $('#waveBars'); if (!box || box.children.length) return;
-    box.innerHTML = Array.from({ length: 38 }, () => '<i></i>').join('');
+    // 3 bong bóng kính, mỗi bóng 11 vạch sóng màu cầu vồng
+    const hues = [[320, 45], [40, 140], [180, 280]];
+    box.innerHTML = hues.map(([h0, h1]) => `<span class="wbub">${Array.from({ length: 11 }, (_, i) =>
+      `<i style="--c:hsl(${Math.round(h0 + (h1 - h0) * i / 10)} 95% 64%)"></i>`).join('')}</span>`).join('');
   },
   kick(v) { this.target = Math.min(1, this.target + v); },
   start() {
     this.build(); this.bars = $$('#waveBars i');
     cancelAnimationFrame(this.raf);
     const n = this.bars.length, mid = (n - 1) / 2;
+    const bub = $('#waveBars .wbub'); const maxH = Math.max(18, (bub ? bub.clientHeight : 64) * .52);
     const loop = t => {
       if (this.speaking) this.target = Math.max(this.target, .45 + .25 * Math.sin(t / 110) + .15 * Math.random());
       this.target *= .9;
@@ -1829,7 +2106,8 @@ const NpcWave = {
         const w = 1 - Math.abs(i - mid) / mid * .55;
         const noise = .5 + .5 * Math.sin(t / 85 + i * 1.3) * Math.cos(t / 160 + i * .7);
         const idle = .07 + .04 * Math.sin(t / 420 + i * .5);
-        this.bars[i].style.height = (4 + 40 * Math.min(1, Math.max(idle, this.level * w * (.35 + .65 * noise)))) + 'px';
+        const inB = 1 - Math.abs((i % 11) - 5) / 5 * .6;          // giữa mỗi bong bóng cao hơn
+        this.bars[i].style.height = (3 + maxH * inB * Math.min(1, Math.max(idle * 1.6, this.level * w * (.35 + .65 * noise)))) + 'px';
       }
       this.raf = requestAnimationFrame(loop);
     };
@@ -1855,15 +2133,15 @@ const NpcWave = {
 const NPCS = {
   leo: { name: 'Leo', role: 'Barista · Nhân viên pha chế',
     voice: { lang: 'en-AU', gender: 'm', pitch: 1.05, rate: 1.0 },
-    look: { skin: '#E8B48A', hair: '#4A2C1A', hairStyle: 'swoop', eye: '#5B3A1E', outfit: 'apron', cloth: '#3E7C59', accent: '#8B5A3C', prop: '☕' } },
+    look: { skin: '#E8B48A', hair: '#5A3420', hairStyle: 'beanie', hat: '#9C8A6E', eye: '#5B3A1E', outfit: 'apron', plaid: true, cloth: '#9A4A2A', accent: '#45597A', propArt: 'cup' } },
   alex: { name: 'Alex', role: 'Stage Director · Đạo diễn sân khấu',
     voice: { lang: 'en-US', gender: 'm', pitch: 0.9, rate: 1.06 },
-    look: { skin: '#C68642', hair: '#1E1E24', hairStyle: 'crew', eye: '#2D1B10', outfit: 'crew', cloth: '#2D2F3A', accent: '#FF4B4B', acc: ['intercom'], prop: '📋' } },
+    look: { skin: '#EFC39C', hair: '#6B4226', hairStyle: 'swoop', eye: '#4E3420', outfit: 'jacket', cloth: '#26282F', accent: '#FF4B4B', acc: ['headset'], propArt: 'tablet' } },
   couple: { name: 'Emma & Liam', role: 'Wedding Couple · Cô dâu & Chú rể', duo: [
     { who: 'emma', name: 'Emma', role: 'Bride · Cô dâu', voice: { lang: 'en-GB', gender: 'f', pitch: 1.15, rate: 0.98 },
-      look: { skin: '#FFE0CC', hair: '#C68B59', hairStyle: 'veil', eye: '#3E7CB1', outfit: 'bride', cloth: '#FFFFFF', accent: '#F7A8C0', lip: '#D45D79', lashes: true } },
+      look: { skin: '#B57A55', hair: '#2E1C14', hairStyle: 'veil', eye: '#4A2E1C', outfit: 'bride', cloth: '#FFFFFF', accent: '#F7A8C0', lip: '#C2506E', lashes: true, acc: ['earrings'], propArt: 'bouquet' } },
     { who: 'liam', name: 'Liam', role: 'Groom · Chú rể', voice: { lang: 'en-GB', gender: 'm', pitch: 0.95, rate: 1.0 },
-      look: { skin: '#F1C9A5', hair: '#2B1B12', hairStyle: 'side', eye: '#3FA34D', outfit: 'tux', cloth: '#1F2A44', accent: '#FF8FB1' } } ] },
+      look: { skin: '#8E5B3E', hair: '#17110E', hairStyle: 'side', eye: '#3B2416', outfit: 'tux', cloth: '#1A1B22', accent: '#FF7FA5', acc: ['beard'] } } ] },
   victoria: { name: 'Victoria', role: 'Gala VIP · Khách mời danh dự',
     voice: { lang: 'en-GB', gender: 'f', pitch: 1.0, rate: 0.92 },
     look: { skin: '#A8693F', hair: '#1B1212', hairStyle: 'updo', eye: '#4E3B1F', outfit: 'gown', cloth: '#6A1B4D', accent: '#FFD700', lip: '#9E2A4F', lashes: true, acc: ['earrings', 'pearls'], prop: '🥂' } },
@@ -1879,7 +2157,7 @@ const NPCS = {
     look: { skin: '#E0AC69', hair: '#3B2219', hairStyle: 'long', eye: '#4E3B1F', outfit: 'blouse', cloth: '#2EC4B6', accent: '#FF6F91', lip: '#C8556E', lashes: true, pattern: true, acc: ['flower', 'headset'], prop: '🌺' } },
   david: { name: 'Mr. Tran', role: 'CEO · Khách mời phỏng vấn',
     voice: { lang: 'en-US', gender: 'm', pitch: 0.88, rate: 0.96 },
-    look: { skin: '#E8B98F', hair: '#2B2B2B', hairStyle: 'side', eye: '#2D1B10', outfit: 'suit', cloth: '#1F2A44', accent: '#1CB0F6', acc: ['glasses'], prop: '🏅' } }
+    look: { skin: '#C99474', hair: '#8E8A86', beard: '#6F6A66', hairStyle: 'swoop', eye: '#3B2416', outfit: 'velvet', cloth: '#232A6B', accent: '#E8453C', acc: ['glasses', 'beard'], propArt: 'clipboard' } }
 };
 Object.entries(NPCS).forEach(([k, n]) => { n.key = k; });
 
@@ -2318,11 +2596,11 @@ function renderMood() {
 }
 function renderAvatar() {
   const it = state.items;
-  $('#avatar').innerHTML = personSVG({
-    skin: '#FFD7B5', hair: '#2A1C14', hairStyle: 'quiff', bow: true, mic: true,
-    top: it.gown ? '#8E1B4A' : '#2B3A67', accent: it.gown ? '#FFC800' : '#FF4B4B',
-    gown: !!it.gown, goldMic: !!it.goldmic, inear: !!it.inear
-  });
+  // MC của người chơi — cùng phong cách clay 3D với NPC
+  $('#avatar').innerHTML = npcSVG({ key: 'player', look: {
+    skin: '#F1C9A5', hair: '#2A1C14', hairStyle: 'swoop', eye: '#3B2416',
+    outfit: it.gown ? 'velvet' : 'tux', cloth: it.gown ? '#8E1B4A' : '#232A6B', accent: it.gown ? '#FFC800' : '#FF4B4B',
+    acc: it.inear ? ['headset'] : [], propArt: it.goldmic ? 'goldmic' : 'mic' } });
   $('#roomItems').innerHTML = SHOP.upgrades.filter(u => it[u.id])
     .map(u => `<span class="bg-white/90 rounded-xl border-b-4 border-black/10 px-2 py-1 text-[13px] font-extrabold" title="${esc(u.name)}">${u.icon}</span>`).join('');
 }
@@ -2625,10 +2903,11 @@ function startScene(id, srcEl) {
 
 function setupStage(sc) {
   $('#sceneBg').innerHTML = SCENE_ART[sc.art]();
-  $('#sceneTitle').textContent = `${sc.icon} ${sc.title} · ${sc.level}`;
+  $('#sceneTitle').textContent = `Activity: ${sc.title}`;
+  $('#sceneTitle').title = `${sc.title} · ${sc.level}`;
   $('#npcLine').innerHTML = '';
   $('#npcViBox').classList.remove('open');
-  $('#btnTrans').classList.remove('bg-blu-light', 'border-blu');
+  $('#btnTrans').classList.remove('on');
 }
 
 /** Thông tin người đang nói (hỗ trợ NPC đôi Emma & Liam) */
@@ -2679,6 +2958,16 @@ function cueWordsHTML(text, key) {
   }).join('');
 }
 
+/** 3 ngôi sao trên header = trung bình sao các lượt đã chơi */
+const STAR_SVG = `<svg class="st-star" viewBox="0 0 24 24"><defs><linearGradient id="stg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFE873"/><stop offset="1" stop-color="#F5A300"/></linearGradient></defs><path d="M12 2.6l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17l-5.7 3.1 1.2-6.4-4.7-4.4 6.4-.8z" fill="url(#stg)" stroke="#C77800" stroke-width="1" stroke-linejoin="round"/><path d="M9 8.6l1.6-3.2" stroke="#fff" stroke-width="1.4" stroke-linecap="round" opacity=".8"/></svg>`;
+function renderStageStars() {
+  const box = $('#stageStars'); if (!box || !Stage.sc) return;
+  if (!box.children.length) box.innerHTML = STAR_SVG.repeat(3);
+  const played = Stage.stars.filter(v => v != null), avg = played.length ? played.reduce((a, b) => a + (b || 0), 0) / played.length : 0;
+  const on = Math.round(avg);
+  $$('.st-star', box).forEach((el, i) => el.classList.toggle('on', i < on));
+}
+
 /* ---------- ① Blind Listening ---------- */
 function setBlind(on) {
   Stage.blind = on;
@@ -2697,16 +2986,17 @@ function revealNpcText(byUser) {
 
 function renderTurn() {
   const sc = Stage.sc, t = curTurn();
-  Stage.attempt++; SpeechEngine.abort(); Visualizer.stop(); Voice.stop(); LipSync.stop();
+  Stage.attempt++; SpeechEngine.abort(); Visualizer.stop(); Voice.stop(); LipSync.stop(); $('#sayBubble').classList.remove('show');
   clearTimeout(Stage.radioT); clearTimeout(Stage.reflexT);
   Object.assign(Stage, { quizWrong: 0, revealed: false, catchDone: !isCatch(t), catchMiss: 0, reflexOn: false, reflexMissed: false, onSpeechEnd: null });
   $('#stageProgress').style.width = (Stage.turn / sc.turns.length * 100) + '%';
   $('#stageStep').textContent = `${Stage.turn + 1}/${sc.turns.length}`;
+  renderStageStars();
   showNpc(t);
   $('#npcLine').innerHTML = wordSpans(t.npc);
   $('#npcVi').textContent = t.npcVi;
   $('#npcViBox').classList.remove('open');
-  $('#btnTrans').classList.remove('bg-blu-light', 'border-blu');
+  $('#btnTrans').classList.remove('on');
   $('#waveHint').innerHTML = t.channel === 'inear'
     ? '📻 Chỉ thị qua tai nghe · nghe ý chính · <b>×2 XP</b> nếu không mở chữ'
     : '🎧 Chữ đang ẩn · nghe hiểu để nhận <b>×2 Listening XP</b>';
@@ -2905,9 +3195,10 @@ function speakNpc(rate) {
     if (curTurn() !== t || AudioBus.isMicBusy()) return;
     Voice.speak(t.npc, {
       rate: (vc.rate || 1) * rate, pitch: vc.pitch || 1, voice: Voice.forNpc(sp.who, vc),
-      onstart: () => { npc.classList.add('speaking'); LipSync.start(fig); NpcWave.speaking = true; btn.classList.add('is-speaking'); },
+      onstart: () => { npc.classList.add('speaking'); LipSync.start(fig); NpcWave.speaking = true; btn.classList.add('is-speaking');
+        $('#sayName').textContent = sp.name; $('#sayBubble').classList.add('show'); },
       onend: () => {
-        npc.classList.remove('speaking'); LipSync.stop(); NpcWave.speaking = false;
+        npc.classList.remove('speaking'); LipSync.stop(); NpcWave.speaking = false; $('#sayBubble').classList.remove('show');
         $$('#btnListen, #btnSlow').forEach(b => b.classList.remove('is-speaking'));
         words.forEach(w => w.classList.remove('hl'));
         if (inear) SFX.play('radioOut');
@@ -3166,6 +3457,7 @@ async function awardTurn(r, source, turnIdx = Stage.turn) {
     gain({ xp });
   }
   Stage.stars[turnIdx] = Math.max(prev, r.stars);
+  renderStageStars();
   // Listening XP (1 lần mỗi lượt)
   if (!Stage.listened[turnIdx]) {
     Stage.listened[turnIdx] = true;
@@ -3398,8 +3690,7 @@ $('#btnSlow').addEventListener('click', () => { SFX.play('tap'); speakNpc(0.75);
 $('#btnTrans').addEventListener('click', e => {
   SFX.play('page');
   const open = $('#npcViBox').classList.toggle('open');
-  e.currentTarget.classList.toggle('bg-blu-light', open);
-  e.currentTarget.classList.toggle('border-blu', open);
+  e.currentTarget.classList.toggle('on', open);
 });
 $('#btnReveal').addEventListener('click', () => {
   SFX.play('page'); revealNpcText(true);
@@ -3420,7 +3711,7 @@ $('#btnLeave').addEventListener('click', async () => {
   SFX.play('tap');
   const ok = await confirmDialog('Rời sân khấu?', 'Năng lượng đã dùng sẽ không được hoàn lại.', 'Rời đi', 'Ở lại');
   if (!ok) return;
-  Stage.attempt++; SpeechEngine.abort(); Visualizer.stop(); Voice.stop(); LipSync.stop(); NpcWave.stop();
+  Stage.attempt++; SpeechEngine.abort(); Visualizer.stop(); Voice.stop(); LipSync.stop(); NpcWave.stop(); $('#sayBubble').classList.remove('show');
   clearTimeout(Stage.radioT); clearTimeout(Stage.reflexT); setMic('idle');
   goTo('hub', { title: 'Đang về nhà…' }).then(() => { renderGigs(); renderMood(); });
 });
