@@ -1,5 +1,5 @@
-import React, { useRef } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
+import React, { useEffect, useRef } from 'react';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { ContactShadows, Float, Html, OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
 import { getPlayerLook } from '../data/content';
@@ -94,7 +94,7 @@ const StudioRoomScene: React.FC = () => {
           <boxGeometry args={[1.65, 1.45, 0.04]} />
           <meshStandardMaterial color="#312E81" roughness={0.4} />
         </mesh>
-        <Html position={[0, -0.52, 0.06]} center distanceFactor={7}>
+        <Html position={[0, -0.52, 0.06]} center zIndexRange={[20, 0]}>
           <div className="pointer-events-none whitespace-nowrap rounded-full bg-black/60 px-2.5 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm">
             {periodMeta.icon} {periodMeta.label}
           </div>
@@ -112,7 +112,7 @@ const StudioRoomScene: React.FC = () => {
               emissiveIntensity={0.45}
             />
           </mesh>
-          <Html position={[0, 0, 0.06]} center distanceFactor={6.5}>
+          <Html position={[0, 0, 0.06]} center zIndexRange={[20, 0]}>
             <div className="pointer-events-none select-none whitespace-nowrap rounded-lg border border-pink-400/60 bg-[#120A30]/90 px-3 py-1 font-display text-xs font-extrabold tracking-wider text-pink-300 shadow-[0_0_15px_#FF4FD8]">
               🎙️ MC THIÊN ÂN STUDIO
             </div>
@@ -137,7 +137,7 @@ const StudioRoomScene: React.FC = () => {
           <boxGeometry args={[0.46, 0.08, 0.34]} />
           <meshStandardMaterial color="#22D3EE" emissive="#22D3EE" emissiveIntensity={0.35} />
         </mesh>
-        <Html position={[0, 0.75, 0]} center distanceFactor={7}>
+        <Html position={[0, 0.75, 0]} center zIndexRange={[20, 0]}>
           <button
             onClick={() => setBookOpen(true)}
             className=" whitespace-nowrap rounded-full border border-cyan-400/50 bg-[#120A30]/85 px-2.5 py-0.5 text-[10px] font-bold text-cyan-200 shadow-lg transition hover:scale-105"
@@ -170,7 +170,7 @@ const StudioRoomScene: React.FC = () => {
             roughness={0.2}
           />
         </mesh>
-        <Html position={[0, 0.98, 0]} center distanceFactor={7}>
+        <Html position={[0, 0.98, 0]} center zIndexRange={[20, 0]}>
           <button
             onClick={() => setShopOpen(true)}
             className="whitespace-nowrap rounded-full border border-amber-400/50 bg-[#120A30]/85 px-2.5 py-0.5 text-[10px] font-bold text-amber-200 shadow-lg transition hover:scale-105"
@@ -191,7 +191,7 @@ const StudioRoomScene: React.FC = () => {
       />
 
       {/* Mood Speech Bubble above MC */}
-      <Html position={[0, 2.18, 0.25]} center distanceFactor={7}>
+      <Html position={[0, 2.18, 0.25]} center zIndexRange={[20, 0]}>
         <div className="pointer-events-none whitespace-nowrap rounded-2xl border border-white/20 bg-white/10 px-3 py-1 text-xs font-bold text-white shadow-xl backdrop-blur-md">
           {moodText}
         </div>
@@ -208,6 +208,21 @@ const StudioRoomScene: React.FC = () => {
   );
 };
 
+/** Lùi camera khi khung hẹp (iPhone dọc) để thấy đủ cả phòng, không cắt nhãn */
+const FitRoomCamera: React.FC = () => {
+  const { camera, size, controls } = useThree();
+  useEffect(() => {
+    const aspect = size.width / Math.max(1, size.height);
+    const need = 4.6 / (2 * Math.tan(THREE.MathUtils.degToRad(19)) * Math.min(aspect, 1.5));
+    const z = Math.max(3.85, need);
+    camera.position.set(0, 1.35 * (z / 3.85), z);
+    camera.lookAt(0, 0, 0);
+    (controls as any)?.target?.set(0, 0, 0);
+    (controls as any)?.update?.();
+  }, [camera, size.width, size.height, controls]);
+  return null;
+};
+
 export const HubRoom3D: React.FC = () => {
   return (
     <div className="relative h-full w-full overflow-hidden rounded-3xl border border-white/15 bg-gradient-to-b from-[#1D1147] to-[#0E0725] shadow-2xl">
@@ -217,7 +232,9 @@ export const HubRoom3D: React.FC = () => {
         camera={{ position: [0, 1.35, 3.85], fov: 38 }}
       >
         <StudioRoomScene />
+        <FitRoomCamera />
         <OrbitControls
+          makeDefault
           enablePan={false}
           enableZoom={false}
           minPolarAngle={Math.PI / 2.6}

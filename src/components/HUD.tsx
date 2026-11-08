@@ -1,5 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { chaNeed, useGameStore } from '../core/store';
+import { fmtRep, levelTitle, MAX_LV } from '../core/career';
+
+/** Khoảng đệm phía trên cho nội dung nằm dưới HUD (tính cả tai thỏ iPhone) */
+export const HUD_PAD = 'calc(max(0.5rem, env(safe-area-inset-top)) + 76px)';
 
 function useAnimatedNumber(target: number, duration = 800): number {
   const [display, setDisplay] = useState(target);
@@ -51,8 +55,9 @@ export const HUD: React.FC = () => {
       ? 'from-amber-400 to-yellow-500'
       : 'from-emerald-400 to-lime-400';
 
+  const isMax = state.charisma.lv >= MAX_LV;
   const needCha = chaNeed(state.charisma.lv);
-  const chaPct = Math.min(100, Math.round((state.charisma.pts / needCha) * 100));
+  const chaPct = isMax ? 100 : Math.min(100, Math.round((state.charisma.pts / needCha) * 100));
   const xpModPct = state.xp % 100;
 
   const renderFloats = (stat: 'energy' | 'charisma' | 'xp' | 'cash') =>
@@ -72,7 +77,10 @@ export const HUD: React.FC = () => {
       ));
 
   return (
-    <header className="pointer-events-none fixed inset-x-0 top-0 z-40 px-2.5 pt-2 sm:px-6">
+    <header
+      className="pointer-events-none fixed inset-x-0 top-0 z-40 px-2.5 sm:px-6"
+      style={{ paddingTop: 'max(0.5rem, env(safe-area-inset-top))' }}
+    >
       <div className="mx-auto grid max-w-6xl grid-cols-4 gap-2 sm:gap-3">
         {/* 1. ENERGY PILL */}
         <div className="pointer-events-auto relative overflow-visible rounded-2xl border border-white/15 bg-[#120A30]/85 px-2.5 py-1.5 shadow-lg backdrop-blur-xl">
@@ -102,8 +110,8 @@ export const HUD: React.FC = () => {
               <span>✨</span>
               <span>Lv.{state.charisma.lv}</span>
             </span>
-            <span className="font-display text-[11px] text-slate-200">
-              {animChaPts}/{needCha}
+            <span className="hidden font-display text-[11px] text-slate-200 sm:inline">
+              {isMax ? 'MAX' : `${animChaPts}/${needCha}`}
             </span>
           </div>
           <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
@@ -111,6 +119,10 @@ export const HUD: React.FC = () => {
               className="h-full rounded-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-300"
               style={{ width: `${chaPct}%` }}
             />
+          </div>
+          <div className="mt-0.5 flex items-center justify-between gap-1 text-[10px] font-bold text-purple-200/80">
+            <span className="truncate">{levelTitle(state.charisma.lv)}</span>
+            <span className="shrink-0 text-slate-300 sm:hidden">{isMax ? 'MAX' : `${animChaPts}/${needCha}`}</span>
           </div>
           {renderFloats('charisma')}
         </div>
@@ -143,7 +155,10 @@ export const HUD: React.FC = () => {
             <span className="font-display text-amber-300">${animCash}</span>
           </div>
           <div className="mt-1 flex items-center justify-between text-[10px] font-bold text-slate-400">
-            <span>🎤 {state.stats.shows} show</span>
+            <span title="Danh tiếng: trung bình sao các show gần đây">
+              ⭐ <span className="text-amber-200">{fmtRep(state.rep)}</span>
+            </span>
+            <span className="hidden sm:inline">🎤 {state.stats.shows} show</span>
             <span className="hidden md:inline">🔥 {state.streak.count}d</span>
           </div>
           {renderFloats('cash')}

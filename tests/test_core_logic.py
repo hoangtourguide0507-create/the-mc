@@ -4,6 +4,7 @@ Unit test suite verifying the core game formulas and TypeScript module integrity
 for MC Life · English Stage 3D (mc-life-3d/).
 """
 
+import math
 import os
 import re
 import unittest
@@ -15,8 +16,28 @@ def clamp(val, low, high):
     return max(low, min(high, val))
 
 
-def cha_need(lv: int) -> int:
-    return 40 + 50 * (lv - 1)
+CHA_TABLE = [60, 90, 200, 260, 380, 460, 600, 700, 900]
+MAX_LV = 10
+REP_WEIGHT = 0.25
+
+
+def cha_need(lv: int) -> float:
+    """Charisma cần để lên cấp kế tiếp (thang nghề 10 cấp)."""
+    if lv >= MAX_LV:
+        return float("inf")
+    return CHA_TABLE[max(1, lv) - 1]
+
+
+def next_rep(avg: float, n: int, show_avg: float):
+    """Danh tiếng: show đầu đặt thẳng, các show sau trung bình trượt 25%."""
+    new = show_avg if n <= 0 else avg * (1 - REP_WEIGHT) + show_avg * REP_WEIGHT
+    return math.floor(new * 100 + 0.5) / 100, n + 1  # giống Math.round của JS
+
+
+def travel_minutes(tiles: int) -> int:
+    if tiles <= 0:
+        return 0
+    return max(2, round(tiles * 2.5))
 
 
 def late_penalty(late: int) -> float:
@@ -52,9 +73,49 @@ def finish_scene_rewards(
 
 class TestGameFormulas(unittest.TestCase):
     def test_charisma_level_thresholds(self):
-        self.assertEqual(cha_need(1), 40)
+        self.assertEqual(cha_need(1), 60)
         self.assertEqual(cha_need(2), 90)
-        self.assertEqual(cha_need(3), 140)
+        self.assertEqual(cha_need(9), 900)
+        self.assertEqual(cha_need(10), float("inf"))
+        # Tổng Charisma để đạt Ngôi sao MC (Lv.10)
+        self.assertEqual(sum(CHA_TABLE), 3650)
+
+    def test_career_table_matches_source(self):
+        with open(os.path.join(ROOT, "src/core/career.ts"), "r", encoding="utf-8") as f:
+            src = f.read()
+        m = re.search(r"CHA_TABLE = \[([^\]]+)\]", src)
+        self.assertIsNotNone(m)
+        self.assertEqual([int(x) for x in m.group(1).split(",")], CHA_TABLE)
+        self.assertIn("MAX_LV = 10", src)
+        self.assertIn("REP_WEIGHT = 0.25", src)
+
+    def test_reputation(self):
+        self.assertEqual(next_rep(0, 0, 2.5), (2.5, 1))
+        self.assertEqual(next_rep(2.5, 1, 1.0), (2.13, 2))
+        avg, n = 0.0, 0
+        for _ in range(12):
+            avg, n = next_rep(avg, n, 3.0)
+        self.assertEqual(avg, 3.0)
+
+    def test_show_unlocks(self):
+        with open(os.path.join(ROOT, "src/data/content.ts"), "r", encoding="utf-8") as f:
+            content_ts = f.read()
+        expected = {"backstage": (1, None), "wedding": (3, None), "beach": (5, "1.6"), "gala": (7, "2.0"), "interview": (9, "2.4")}
+        start = content_ts.index("const rawScenes")
+        for sid, (lv, rep) in expected.items():
+            i = content_ts.index(f"id: '{sid}'", start)
+            j = content_ts.index("turns:", i)
+            block = content_ts[i:j]
+            self.assertIn(f"reqLv: {lv},", block, sid)
+            if rep:
+                self.assertIn(f"minRep: {rep},", block, sid)
+            else:
+                self.assertNotIn("minRep", block, sid)
+
+    def test_travel_minutes(self):
+        self.assertEqual(travel_minutes(0), 0)
+        self.assertEqual(travel_minutes(1), 2)
+        self.assertEqual(travel_minutes(24), 60)
 
     def test_late_penalty(self):
         self.assertEqual(late_penalty(0), 0.0)
@@ -101,6 +162,12 @@ class TestGameFormulas(unittest.TestCase):
             "src/three/ClayCharacter3D.tsx",
             "src/three/HubRoom3D.tsx",
             "src/three/CityWorld3D.tsx",
+            "src/three/city/cityMap.ts",
+            "src/three/city/Buildings.tsx",
+            "src/three/city/Ground.tsx",
+            "src/three/city/Props.tsx",
+            "src/three/city/Agents.tsx",
+            "src/core/career.ts",
             "src/three/Stage3D.tsx",
             "src/components/HUD.tsx",
             "src/components/HubView.tsx",

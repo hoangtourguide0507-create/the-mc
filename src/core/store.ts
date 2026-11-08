@@ -24,6 +24,7 @@ import {
   yesterdayKey,
 } from './clock';
 import { FUNCTION_WORDS } from './evaluator';
+import { chaNeed, levelTitle, MAX_LV, nextRep } from './career';
 import { Ambience, AudioBus, SFX, Voice } from '../audio/audioSystem';
 
 export const STORAGE_KEY_V2 = 'mclife.v2';
@@ -34,6 +35,7 @@ export const DEFAULT_STATE: GameState = {
   energy: 100,
   maxEnergy: 100,
   charisma: { lv: 1, pts: 0 },
+  rep: { avg: 0, n: 0 },
   xp: 0,
   cash: 150,
   day: 0,
@@ -57,9 +59,7 @@ export const DEFAULT_STATE: GameState = {
   voiceURI: null,
 };
 
-export function chaNeed(lv: number): number {
-  return 40 + 50 * (lv - 1);
-}
+export { chaNeed } from './career';
 
 export function deepClone<T>(obj: T): T {
   return JSON.parse(JSON.stringify(obj));
@@ -340,11 +340,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (charisma !== 0) {
       const deltaCha = Math.round(charisma);
       st.charisma.pts = Math.max(0, st.charisma.pts + deltaCha);
-      while (st.charisma.pts >= chaNeed(st.charisma.lv)) {
+      while (st.charisma.lv < MAX_LV && st.charisma.pts >= chaNeed(st.charisma.lv)) {
         st.charisma.pts -= chaNeed(st.charisma.lv);
         st.charisma.lv += 1;
         leveledUpTo = st.charisma.lv;
       }
+      if (st.charisma.lv >= MAX_LV) st.charisma.pts = 0;
       if (deltaCha !== 0) {
         newFloats.push({ id: floatSeq++, stat: 'charisma', delta: deltaCha });
       }
@@ -369,10 +370,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (leveledUpTo !== null && typeof window !== 'undefined') {
       window.setTimeout(() => {
         SFX.play('levelUp');
+        const lv = leveledUpTo as number;
+        const unlocked = Object.values(SCENES)
+          .filter((sc) => sc.reqLv === lv)
+          .map((sc) => sc.title);
         get().toast(
-          `✨ Charisma lên Lv.${leveledUpTo}! Có show mới trong lịch!`,
+          `✨ Lên Lv.${lv} · ${levelTitle(lv)}!` +
+            (unlocked.length ? ` Mở khoá: ${unlocked.join(', ')}` : ''),
           'pink',
-          3400
+          4200
         );
       }, 650);
     }
@@ -640,6 +646,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return false;
     }
 
+    if (scene.minRep && (!st.rep || st.rep.n <= 0 || st.rep.avg < scene.minRep)) {
+      SFX.play('error');
+      get().toast(`Cần Danh tiếng ⭐ ${scene.minRep.toFixed(1)} để nhận show này!`, 'warn');
+      return false;
+    }
+
     if (scene.type === 'show' && st.energy < scene.energy) {
       SFX.play('error');
       get().toast(`Không đủ Năng lượng (Cần ${scene.energy} ⚡)!`, 'error');
@@ -719,6 +731,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     nextState.doneToday[activeSceneId] = true;
     if (scene.type === 'show') {
       nextState.stats.shows += 1;
+      nextState.rep = nextRep(nextState.rep || { avg: 0, n: 0 }, avg);
     } else {
       nextState.stats.daily += 1;
     }

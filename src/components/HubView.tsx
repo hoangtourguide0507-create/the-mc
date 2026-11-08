@@ -2,6 +2,8 @@ import React from 'react';
 import { GIG_ORDER, SCENES, SHOP, WORLD_LOCS } from '../data/content';
 import { dayKey, fmtTime, getPeriodMeta, sceneStatus, yesterdayKey } from '../core/clock';
 import { chaNeed, useGameStore } from '../core/store';
+import { fmtRep, levelTitle, MAX_LV } from '../core/career';
+import { HUD_PAD } from './HUD';
 import { HubRoom3D } from '../three/HubRoom3D';
 
 export const HubView: React.FC = () => {
@@ -47,7 +49,10 @@ export const HubView: React.FC = () => {
   };
 
   return (
-    <div className="mx-auto flex h-full max-w-6xl flex-col gap-4 overflow-y-auto px-3 pb-8 pt-16 sm:px-6 md:grid md:grid-cols-12 md:overflow-hidden">
+    <div
+      className="mx-auto flex h-full max-w-6xl flex-col gap-4 overflow-y-auto px-3 pb-8 sm:px-6 md:grid md:grid-cols-12 md:overflow-hidden"
+      style={{ paddingTop: HUD_PAD }}
+    >
       {/* LEFT COLUMN (iPad: 5 cols): 3D Studio Room + Career Profile */}
       <div className="flex flex-col gap-3 md:col-span-5 md:h-full">
         {/* Room Header */}
@@ -100,7 +105,7 @@ export const HubView: React.FC = () => {
           <HubRoom3D />
 
           {/* Clock Strip & Sleep Button Overlay inside 3D Room Frame */}
-          <div className="pointer-events-none absolute inset-x-3 top-3 flex items-center justify-between">
+          <div className="pointer-events-none absolute inset-x-3 bottom-3 z-30 flex items-center justify-between">
             <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-white/20 bg-[#120A30]/85 px-3 py-1 text-xs font-extrabold text-white shadow-lg backdrop-blur-md">
               <span>{periodMeta.icon}</span>
               <span>{fmtTime(state.clock)}</span>
@@ -127,7 +132,7 @@ export const HubView: React.FC = () => {
 
           {/* Owned Upgrades Badges */}
           {ownedUpgrades.length > 0 && (
-            <div className="pointer-events-none absolute bottom-3 left-3 flex flex-wrap gap-1.5">
+            <div className="pointer-events-none absolute left-3 top-3 z-30 flex flex-wrap gap-1.5">
               {ownedUpgrades.map((up) => (
                 <span
                   key={up.id}
@@ -156,10 +161,14 @@ export const HubView: React.FC = () => {
           </div>
           <div>
             <div className="font-display text-base font-black text-purple-300">
-              {Math.max(0, chaNeed(state.charisma.lv) - state.charisma.pts)} điểm
+              {state.charisma.lv >= MAX_LV
+                ? '⭐ ' + fmtRep(state.rep)
+                : `${Math.max(0, chaNeed(state.charisma.lv) - state.charisma.pts)} điểm`}
             </div>
             <div className="text-[11px] font-semibold text-slate-300">
-              Tới Lv.{state.charisma.lv + 1}
+              {state.charisma.lv >= MAX_LV
+                ? 'Ngôi sao MC · Danh tiếng'
+                : `Tới Lv.${state.charisma.lv + 1} · ${levelTitle(state.charisma.lv + 1)}`}
             </div>
           </div>
         </div>
@@ -298,6 +307,10 @@ export const HubView: React.FC = () => {
               const sc = SCENES[sceneId];
               const st = sceneStatus(sceneId, state.clock, state.doneToday);
               const lockedLv = state.charisma.lv < sc.reqLv;
+              const lockedRep =
+                !lockedLv &&
+                Boolean(sc.minRep) &&
+                (state.rep.n <= 0 || state.rep.avg < (sc.minRep || 0));
               const isDoneOrMissed = st.state === 'done' || st.state === 'missed';
               const bestStars = state.stats.bestStars[sceneId] || 0;
 
@@ -308,7 +321,7 @@ export const HubView: React.FC = () => {
                   className={`group relative flex w-64 flex-shrink-0 cursor-pointer flex-col justify-between overflow-hidden rounded-3xl border p-4 transition hover:-translate-y-0.5 ${
                     isDoneOrMissed
                       ? 'border-white/10 bg-white/5 opacity-60'
-                      : lockedLv
+                      : lockedLv || lockedRep
                       ? 'border-white/15 bg-white/5 opacity-75'
                       : 'border-white/20 bg-gradient-to-b from-white/10 to-white/5 hover:border-pink-400/60'
                   }`}
@@ -344,6 +357,7 @@ export const HubView: React.FC = () => {
                         </h3>
                         <span className="text-[11px] font-bold text-slate-300">
                           {sc.level} · Cần Lv.{sc.reqLv}
+                          {sc.minRep ? ` · ⭐${sc.minRep.toFixed(1)}` : ''}
                         </span>
                       </div>
                     </div>
@@ -378,13 +392,20 @@ export const HubView: React.FC = () => {
                   </div>
 
                   {/* Lock or Done Stamp Overlay */}
-                  {lockedLv && (
-                    <div className=" -inset-0 absolute inset-0 flex items-center justify-center bg-[#120A30]/75 backdrop-blur-[2px]">
+                  {(lockedLv || lockedRep) && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-[#120A30]/75 backdrop-blur-[2px]">
                       <div className="rounded-2xl border border-purple-400/50 bg-[#120A30]/95 px-3.5 py-2 text-center shadow-xl">
                         <div className="text-lg">🔒</div>
                         <div className="text-xs font-black text-purple-200">
-                          Cần Charisma Lv.{sc.reqLv}
+                          {lockedLv
+                            ? `Cần Lv.${sc.reqLv} · ${levelTitle(sc.reqLv)}`
+                            : `Cần Danh tiếng ⭐ ${(sc.minRep || 0).toFixed(1)}`}
                         </div>
+                        {lockedRep && (
+                          <div className="mt-0.5 text-[10px] font-bold text-slate-400">
+                            Hiện tại: ⭐ {fmtRep(state.rep)}
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}

@@ -27,5 +27,7 @@ Sau đó mở trình duyệt tại `http://localhost:5173` (hoặc địa chỉ 
   - `SpeechEngine`: Nhận dạng giọng nói `webkitSpeechRecognition` kèm `mergeChunks` chống lặp từ trên iOS.
 - [`src/three/ClayCharacter3D.tsx`](src/three/ClayCharacter3D.tsx): Nhân vật 3D Stylized Clay với trang phục/đạo cụ gắn rời (`goldmic`, `gown`, `inear`), 5 khẩu hình `Viseme` nội suy mượt, chớp mắt tự nhiên (`Blink`) và 4 biểu cảm (`idle`, `listening`, `happy`, `confused`).
 - [`src/three/HubRoom3D.tsx`](src/three/HubRoom3D.tsx): Phòng Studio 3D của MC Thiên Ân với cửa sổ đổi màu bầu trời theo giờ và kệ trưng bày nâng cấp 3D.
-- [`src/three/CityWorld3D.tsx`](src/three/CityWorld3D.tsx): Sa bàn thành phố Isometric 3D 14×14 ô với 8 toà nhà (cửa sổ `.win` và biển hiệu `.sign` phát sáng ban đêm), tìm đường BFS 4 hướng, 6 người đi đường AI và 4 làn xe 3D.
+- [`src/three/CityWorld3D.tsx`](src/three/CityWorld3D.tsx) + [`src/three/city/`](src/three/city/): Sa bàn thành phố 3D 28×28 ô, 3 khu phố (Trung tâm · Phố đêm · Ven biển), 8 toà nhà địa điểm kiến trúc riêng + 20 nhà phụ, công viên đài phun nước, bãi biển, cầu cảng, hải đăng; 10 người đi đường, 12 xe; bản đồ nhỏ; ánh sáng theo buổi.
+- [`src/core/career.ts`](src/core/career.ts): Thang nghề 10 cấp + Danh tiếng (sao trung bình) để mở khoá show lớn.
+- QA: `npm run build && npx vite preview --port 4173 &` rồi `python3 tools/qa_shot.py world hub stage` (ảnh iPhone 390×844 + iPad 1180×820).
 - [`src/three/Stage3D.tsx`](src/three/Stage3D.tsx): 8 bối cảnh sân khấu 3D với đèn Spotlight động, sóng âm 3D Hologram cầu vồng và Camera tự động lia theo người nói.

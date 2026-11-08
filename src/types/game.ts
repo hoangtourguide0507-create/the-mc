@@ -110,6 +110,8 @@ export interface SceneData {
   tint: string;
   level: string;
   reqLv: number;
+  /** Danh tiếng tối thiểu (0–3 sao) để nhận show */
+  minRep?: number;
   icon: string;
   title: string;
   sub: string;
@@ -154,6 +156,11 @@ export interface GameState {
   charisma: {
     lv: number;
     pts: number;
+  };
+  /** Danh tiếng: trung bình trượt số sao các show (0–3), n = số show đã tính */
+  rep: {
+    avg: number;
+    n: number;
   };
   xp: number;
   cash: number;
@@ -202,7 +209,9 @@ export interface WorldLocation {
   id: string;
   name: string;
   icon: string;
-  at: [number, number]; // Top corner of 2x2 building
+  at: [number, number]; // Top corner of the building footprint
+  size?: number; // Footprint (tiles per side), default 3
+  district: 'center' | 'night' | 'coast';
   doorFace: 'front-left' | 'front-right';
   doorTile: [number, number]; // Absolute walkable door tile
   scenes: string[];
@@ -211,14 +220,28 @@ export interface WorldLocation {
   roofColor: string;
 }
 
-export type TileKind = 'grass' | 'road-x' | 'road-y' | 'cross' | 'sand' | 'plaza' | 'water';
+export type TileKind = 'grass' | 'road-x' | 'road-y' | 'cross' | 'walk' | 'park' | 'sand' | 'plaza' | 'water';
 
 export interface WorldProp {
-  kind: 'tree' | 'palm' | 'lamp' | 'bench' | 'bush' | 'hydrant' | 'fountain';
+  kind:
+    | 'tree'
+    | 'palm'
+    | 'lamp'
+    | 'bench'
+    | 'bush'
+    | 'flower'
+    | 'hydrant'
+    | 'fountain'
+    | 'umbrella'
+    | 'kiosk'
+    | 'lighthouse'
+    | 'boat';
   c: number;
   r: number;
   color?: string;
   dir?: 'u' | 'v';
+  /** Chặn ô (không đi qua được) */
+  blocks?: boolean;
 }
 
 export interface StreetTalkOption {

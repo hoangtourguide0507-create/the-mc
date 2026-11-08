@@ -40,7 +40,12 @@ mc-life-3d/
     ├── three/
     │   ├── ClayCharacter3D.tsx  # Model nhân vật 3D Claymorphism + 5 Viseme miệng + Chớp mắt + 4 Mood + Trang phục/Đạo cụ
     │   ├── HubRoom3D.tsx        # Phòng Studio 3D của MC Thiên Ân (cửa sổ theo buổi, bàn Sổ tay, kệ Nâng cấp)
-    │   ├── CityWorld3D.tsx      # Bản đồ Isometric 3D 14×14 ô, 8 toà nhà sáng đèn đêm, BFS, 6 người đi đường, 4 xe hơi
+    │   ├── CityWorld3D.tsx      # Điều phối bản đồ: camera bám MC, ánh sáng theo buổi, nhãn địa điểm, bản đồ nhỏ, thẻ cửa
+    │   ├── city/cityMap.ts      # Lưới 28×28 ô, 3 khu (Trung tâm / Phố đêm / Ven biển), nhà phụ, đạo cụ, BFS, làn xe
+    │   ├── city/Buildings.tsx   # 8 toà nhà địa điểm kiến trúc riêng + 5 kiểu nhà phụ; mặt tiền cửa sổ vẽ bằng canvas
+    │   ├── city/Ground.tsx      # Mặt đất instanced (đường, vỉa hè, cỏ, cát), vạch kẻ đường, biển, bệ sa bàn
+    │   ├── city/Props.tsx       # Cây, cọ, đèn đường (+ vũng sáng đêm), đài phun nước, dù biển, hải đăng, thuyền
+    │   ├── city/Agents.tsx      # MC / 10 người đi đường / 12 xe — vị trí đọc từ ref mỗi frame (không re-render)
     │   └── Stage3D.tsx          # 8 bối cảnh sân khấu 3D, đèn Spotlight, sóng âm 3D Hologram, Camera động theo người nói
     └── components/
         ├── HUD.tsx              # Thanh 4 viên chỉ số (Energy, Charisma, XP, Cash) đếm số mượt 800ms + số bay (+N/-N)
@@ -66,11 +71,13 @@ Khi chỉnh sửa hoặc mở rộng dự án, **AI KHÔNG ĐƯỢC LÀM SAI L�
 ### 2.2. Kinh tế & Công thức Thưởng (`src/core/store.ts` & `src/core/clock.ts`)
 1. **Hàm thay đổi chỉ số duy nhất**: Mọi biến động của `energy`, `xp`, `cash`, `charisma` phải đi qua `gain({ energy, xp, cash, charisma })`.
    - `energy` kẹp trong `[0, maxEnergy]`.
-   - `charisma.pts` cộng điểm và lặp `while (pts >= chaNeed(lv))` với:
-     $$\text{chaNeed}(\text{lv}) = 40 + 50 \times (\text{lv} - 1)$$
-     (Lv1→2: 40, Lv2→3: 90, Lv3→4: 140). Có thể lên nhiều cấp một lần.
+   - `charisma.pts` cộng điểm và lặp `while (lv < 10 && pts >= chaNeed(lv))` — **thang nghề 10 cấp** (`src/core/career.ts`):
+     `CHA_TABLE = [60, 90, 200, 260, 380, 460, 600, 700, 900]` (Lv1→2 … Lv9→10, tổng 3.650). Lv.10 “Ngôi sao MC” là tối đa.
+     Danh hiệu: Tân binh, MC tập sự, MC sự kiện, MC tiệc cưới, MC chuyên nghiệp, MC sân khấu lớn, MC Gala, MC truyền hình, MC hạng A, Ngôi sao MC.
+   - **Danh tiếng** `state.rep = { avg, n }`: sau mỗi *show* (không tính daily) `avg = n==0 ? showAvg : avg·0.75 + showAvg·0.25`, làm tròn 2 chữ số.
+   - **Mở khoá show**: backstage Lv1 · wedding Lv3 · beach Lv5 + ⭐1.6 · gala Lv7 + ⭐2.0 · interview Lv9 + ⭐2.4.
 2. **Chi phí vào Show (`startScene`)**:
-   - Thứ tự kiểm tra bắt buộc: **Giờ giấc (`blockReason`) → Cấp Charisma (`reqLv`) → Đủ Energy (`20 ⚡`)**.
+   - Thứ tự kiểm tra bắt buộc: **Giờ giấc (`blockReason`) → Cấp Charisma (`reqLv`) → Danh tiếng (`minRep`) → Đủ Energy (`20 ⚡`)**.
    - Trừ `20 Energy` ngay lúc vào show (không hoàn lại nếu rời sân khấu giữa chừng). Hoạt động `daily` (`coffee`, `market`) miễn phí Energy.
 3. **Phạt đi trễ (`latePenalty`)**:
    - Số phút trễ được chụp **lúc vào cửa** (`stageEntry = { at: now, late }`), không phải lúc kết thúc show.
@@ -97,10 +104,15 @@ Khi chỉnh sửa hoặc mở rộng dự án, **AI KHÔNG ĐƯỢC LÀM SAI L�
 
 ### 2.3. Hệ thống Thời gian & Lịch trình (`src/core/clock.ts`)
 - **Đồng hồ không chạy theo thời gian thực (No Realtime Tick)**: Tuyệt đối không cộng phút trong `useFrame` hay `setInterval`. Đồng hồ chỉ tiến khi:
-  1. Đi bộ trên bản đồ: $\max(2, \text{round}(\text{số ô} \times 3.5))$ phút.
+  1. Đi bộ trên bản đồ: $\max(2, \text{round}(\text{số ô} \times 2.5))$ phút (bản đồ 28×28, xa nhất ≈ 24 ô ≈ 60 phút).
   2. Hoàn thành hoạt động: $\text{beginAt} = \max(\text{entry.at}, \text{start})$ với show (đến sớm phải chờ tới giờ diễn), $\text{endAt} = \min(1440, \text{beginAt} + \text{duration})$.
   3. Bấm nút `"⏩ Chờ đến HH:MM"` (`waitUntilMinute`).
 - **Ngất xỉu lúc 24:00 (`1440`)**: Khi `clock >= 1440`, nếu đang ở `stage` hoặc đang hiện `ResultModal` thì bật cờ `faintPending = true` và đợi người chơi đóng bảng kết quả mới gọi `sleepDay({ forced: true })` (hồi `60%` Energy, về thẳng `hub`).
+
+### 2.3b. Quy tắc hoạt cảnh 3D
+- Mọi làm mượt dùng $a \mathrel{+}= (b-a)\,(1-e^{-k\,dt})$, **không** dùng `lerp(a, b, dt*k)` (khi khung hình giật `dt*k > 2` sẽ phóng đại tới vô cực → nhân vật biến mất).
+- Vị trí nhân vật/xe trên bản đồ đọc từ ref trong `useFrame`; không `setState` mỗi frame.
+- Nhãn `<Html>` trong cảnh: không dùng `distanceFactor` (nhãn phình to trên khung nhỏ), luôn đặt `zIndexRange` thấp để không đè HUD.
 
 ### 2.4. AudioBus Bán Song Công & Chấm Phát Âm (`src/audio/audioSystem.ts` & `src/core/evaluator.ts`)
 - **Half-Duplex bắt buộc**:

@@ -1,7 +1,8 @@
 import React, { useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { ContactShadows, Float, Html } from '@react-three/drei';
-import { Bloom, EffectComposer } from '@react-three/postprocessing';
+import { Bloom, EffectComposer, ToneMapping } from '@react-three/postprocessing';
+import { ToneMappingMode } from 'postprocessing';
 import * as THREE from 'three';
 import { getPlayerLook, NPCS } from '../data/content';
 import { NpcMood, SceneData, StageMicPhase, VisemeType } from '../types/game';
@@ -42,22 +43,29 @@ const StageSceneContent: React.FC<Stage3DProps> = ({
     const t = state.clock.elapsedTime;
     const cam = state.camera;
 
+    // Lùi camera theo tỉ lệ khung: khung hẹp (điện thoại dọc) cần đứng xa hơn để thấy đủ 2 nhân vật
+    const aspect = state.size.width / Math.max(1, state.size.height);
+    const fit = 3.9 / (2 * Math.tan(THREE.MathUtils.degToRad(18)) * Math.min(aspect, 1.6));
+    const baseZ = Math.max(4.15, fit);
+    const focusZ = baseZ * 0.86;
+
     let targetX = 0;
-    let targetY = 1.45;
-    let targetZ = 4.15;
+    const targetY = 1.35 + (baseZ - 4.15) * 0.12;
+    let targetZ = baseZ;
 
     if (npcSpeaking) {
-      targetX = npc.isCouple ? (speaker === 'liam' ? -0.35 : -0.95) : -0.55;
-      targetZ = 3.65;
+      targetX = (npc.isCouple ? (speaker === 'liam' ? -0.35 : -0.95) : -0.55) * Math.min(1, aspect);
+      targetZ = focusZ;
     } else if (micPhase === 'rec' || micPhase === 'arming') {
-      targetX = 0.65;
-      targetZ = 3.65;
+      targetX = 0.65 * Math.min(1, aspect);
+      targetZ = focusZ;
     }
 
-    cam.position.x = THREE.MathUtils.lerp(cam.position.x, targetX, dt * 3.5);
-    cam.position.y = THREE.MathUtils.lerp(cam.position.y, targetY, dt * 3.5);
-    cam.position.z = THREE.MathUtils.lerp(cam.position.z, targetZ, dt * 3.5);
-    cam.lookAt(targetX * 0.4, 1.05, 0);
+    const k = 1 - Math.exp(-3.5 * Math.min(dt, 0.1));
+    cam.position.x += (targetX - cam.position.x) * k;
+    cam.position.y += (targetY - cam.position.y) * k;
+    cam.position.z += (targetZ - cam.position.z) * k;
+    cam.lookAt(targetX * 0.4, 0.95, 0);
 
     // Animate 11 rainbow hologram bars
     if (waveGroupRef.current) {
@@ -66,7 +74,7 @@ const StageSceneContent: React.FC<Stage3DProps> = ({
         const base = npcSpeaking
           ? 0.35 + Math.abs(Math.sin(t * 12 + idx * 0.7)) * 0.85
           : 0.12 + Math.abs(Math.sin(t * 3 + idx * 0.5)) * 0.12;
-        mesh.scale.y = THREE.MathUtils.lerp(mesh.scale.y, base, dt * 15);
+        mesh.scale.y += (base - mesh.scale.y) * (1 - Math.exp(-15 * Math.min(dt, 0.1)));
       });
     }
   });
@@ -164,7 +172,7 @@ const StageSceneContent: React.FC<Stage3DProps> = ({
           </mesh>
         )}
         {scene.art === 'talkshow' && (
-          <Html position={[0, 1.05, 0.18]} center distanceFactor={7}>
+          <Html position={[0, 1.05, 0.18]} center zIndexRange={[20, 0]}>
             <div className="rounded-lg border border-red-400 bg-red-950/90 px-3 py-0.5 text-xs font-black tracking-widest text-red-200 shadow-[0_0_16px_#EF4444]">
               🔴 ON AIR · LIVE TV
             </div>
@@ -262,19 +270,21 @@ export const Stage3D: React.FC<Stage3DProps> = (props) => {
   return (
     <div className="relative h-full w-full overflow-hidden rounded-3xl border border-white/15 bg-[#0D0620] shadow-2xl">
       <Canvas
-        shadows
+        shadows="soft"
         dpr={[1, 2]}
+        gl={{ antialias: false, stencil: false }}
         camera={{ position: [0, 1.45, 4.15], fov: 36 }}
       >
         <StageSceneContent {...props} />
         {/* Neon arch, rainbow hologram bars and the spotlight cones glow; matte clay stays unaffected */}
-        <EffectComposer multisampling={0}>
+        <EffectComposer multisampling={4}>
           <Bloom
             luminanceThreshold={0.85}
             luminanceSmoothing={0.2}
             intensity={props.npcSpeaking ? 0.9 : 0.6}
             mipmapBlur
           />
+          <ToneMapping mode={ToneMappingMode.NEUTRAL} />
         </EffectComposer>
       </Canvas>
     </div>

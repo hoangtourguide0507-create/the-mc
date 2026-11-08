@@ -10,7 +10,7 @@ export const LATE_CASH_PER_MIN = 0.012; // 1.2% per min after grace
 export const LATE_CASH_MAX = 0.5; // max 50% penalty
 export const DAILY_REPEAT_CHA = 0.5;
 export const DURATION_DEFAULT = { daily: 30, show: 90 };
-export const TRAVEL_MIN_PER_TILE = 3.5;
+export const TRAVEL_MIN_PER_TILE = 2.5;
 export const TRAVEL_MIN = 2;
 export const SLEEP_ENERGY_PCT = 1.0;
 export const FAINT_ENERGY_PCT = 0.6;
@@ -225,6 +225,13 @@ export function blockReason(
 
   if (state.charisma.lv < scene.reqLv) {
     return `Cần đạt Charisma Lv.${scene.reqLv} để nhận dẫn show này!`;
+  }
+
+  if (scene.minRep) {
+    const rep = state.rep;
+    if (!rep || rep.n <= 0 || rep.avg < scene.minRep) {
+      return `Cần Danh tiếng ⭐ ${scene.minRep.toFixed(1)} (hiện ${rep && rep.n > 0 ? rep.avg.toFixed(1) : '—'}) — dẫn các show nhỏ thật tốt để lên danh tiếng!`;
+    }
   }
 
   if (scene.type === 'show' && state.energy < scene.energy) {

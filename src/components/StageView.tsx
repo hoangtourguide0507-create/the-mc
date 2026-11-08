@@ -3,6 +3,7 @@ import { NPCS, SCENES } from '../data/content';
 import { clamp } from '../core/clock';
 import { evaluateTurnCandidates } from '../core/evaluator';
 import { useGameStore } from '../core/store';
+import { HUD_PAD } from './HUD';
 import {
   EvalResult,
   NpcMood,
@@ -461,7 +462,7 @@ export const StageView: React.FC = () => {
   const progressPct = Math.round(((turnIdx + 1) / scene.turns.length) * 100);
 
   return (
-    <div className="mx-auto flex h-full max-w-6xl flex-col gap-3 overflow-y-auto px-3 pb-6 pt-16 sm:px-6">
+    <div className="mx-auto flex h-full max-w-6xl flex-col gap-3 overflow-y-auto px-3 pb-6 sm:px-6" style={{ paddingTop: HUD_PAD }}>
       {/* Top Stage Header Bar */}
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-white/15 bg-[#120A30]/90 px-3.5 py-2 shadow-lg backdrop-blur-xl">
         <div className="flex items-center gap-2.5">
