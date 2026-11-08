@@ -1124,7 +1124,12 @@ const DEFAULT_STATE = {
   items: {},                   // { goldmic:true, gown:true, inear:true }
   gigsDone: {},                // { sceneId: số lần hoàn thành }
   stats: { shows: 0, daily: 0, mastered: 0, bestStars: {} },
-  streak: { count: 0, best: 0, last: '' }   // chuỗi ngày mở app luyện tập liên tiếp (theo lịch thật)
+  streak: { count: 0, best: 0, last: '' },  // chuỗi ngày mở app luyện tập liên tiếp (theo lịch thật)
+  // Giờ trong ngày (10c. CLOCK) — người chơi cũ chưa có 3 field này → deepMerge tự điền mặc định
+  clock: 420,                  // phút từ 00:00 của ngày trong game (420 = 07:00)
+  loc: 'home',                 // locId đang đứng trên bản đồ thành phố
+  doneToday: {},               // { sceneId: true } đã dẫn/làm trong ngày game này — reset khi sang ngày
+  dayFresh: false              // true = vừa ngủ dậy, chưa tiêu phút nào → sang ngày thật mới thì dùng luôn ngày này
 };
 const chaNeed = lv => 40 + (lv - 1) * 50;     // Lv2: 40 · Lv3: 90 · Lv4: 140…
 
@@ -2967,20 +2972,138 @@ async function practiceWeak(key, row, simulated) {
 }
 
 /* =========================================================
-   10c. CLOCK — giờ trong ngày · [STUB · owner: game-systems]
+   10c. CLOCK — giờ trong ngày · owner: game-systems
+   ---------------------------------------------------------
+   Một ngày game: 07:00 → 24:00 (phút tính từ 00:00). Thời gian chỉ trôi khi
+   đi bộ trên bản đồ (travelMinutes) và khi dẫn xong hoạt động (duration).
+   LUẬT:  • Show (type ≠ 'daily') nhận 1 lần/ngày (state.doneToday).
+          • Daily lặp được, nhưng chỉ hồi ⚡ ở lần đầu trong ngày.
+          • Show: chưa tới (start − SHOW_DOOR_OPEN) → 'early' (chưa vào được);
+            mở cửa → 'open'; quá start → 'late' (trừ cát-xê theo phút);
+            quá start + SHOW_LATE_MAX → 'missed'.
+          • Chạm 24:00 → ngất xỉu, tự về nhà ngủ (chỉ hồi FAINT_ENERGY_PCT ⚡).
+          • Ngày gắn ngày thật: mở lại cùng ngày thật → chơi tiếp đúng giờ cũ;
+            sang ngày thật mới mà chưa ngủ → tự sang ngày mới lúc 07:00.
    ========================================================= */
-const SCHEDULE = {                     // phút tính từ 00:00
-  coffee: { open: 420, close: 660 }, market: { open: 480, close: 1260 },
-  backstage: { start: 900 }, beach: { start: 1050 }, wedding: { start: 1110 }, gala: { start: 1140 }, interview: { start: 1200 }
+const DAY_START = 420;                 // 07:00 — giờ thức dậy mỗi ngày
+const DAY_END = 1440;                  // 24:00 — chạm mốc này là ngất xỉu, tự về nhà ngủ
+const SHOW_DOOR_OPEN = 60;             // show mở cửa đón MC trước giờ bắt đầu bao nhiêu phút
+const SHOW_LATE_MAX = 45;              // trễ quá bấy nhiêu phút → lỡ show
+const LATE_GRACE_MIN = 5;              // 5 phút đầu trễ: ân hạn, chưa trừ cát-xê
+const LATE_CASH_PER_MIN = 0.012;       // mỗi phút trễ (sau ân hạn) trừ 1.2% cát-xê
+const LATE_CASH_MAX = 0.5;             // trừ tối đa 50% cát-xê
+const DAILY_REPEAT_CHA = 0.5;          // daily lặp lại trong ngày: không hồi ⚡, Charisma chỉ còn 50% (chống cày)
+const DURATION_DEFAULT = { daily: 30, show: 90 };   // phút tiêu tốn khi xong hoạt động (nếu SCENES chưa có `duration`)
+const TRAVEL_MIN_PER_TILE = 3.5;       // phút đi bộ cho mỗi ô đường
+const TRAVEL_MIN = 2;                  // đi bộ ngắn nhất cũng tốn chừng này phút
+const SLEEP_ENERGY_PCT = 1;            // tự đi ngủ → hồi đầy năng lượng
+const FAINT_ENERGY_PCT = 0.6;          // ngất xỉu lúc 24:00 → chỉ hồi tới 60%
+const NEW_DAY_ENERGY_PCT = 1;          // sang ngày thật mới (đã ngủ ngoài đời) → hồi đầy
+const PERIOD_BOUNDS = { morning: 660, afternoon: 1020, evening: 1260 };   // < 11:00 sáng · < 17:00 chiều · < 21:00 tối · còn lại đêm
+
+const SCHEDULE = {                     // phút tính từ 00:00 · daily: open/close · show: start
+  coffee: { open: 420, close: 660 },   // ☕ 07:00–11:00
+  market: { open: 480, close: 1260 },  // 🛒 08:00–21:00
+  backstage: { start: 900 },           // 15:00
+  beach: { start: 1050 },              // 17:30
+  wedding: { start: 1110 },            // 18:30
+  gala: { start: 1140 },               // 19:00
+  interview: { start: 1200 }           // 20:00
 };
+const isDailyScene = id => (SCENES[id] ? SCENES[id].type === 'daily' : SCHEDULE[id] && SCHEDULE[id].open != null);
+/** Độ dài "1g20" / "2g" / "45 phút" */
+const fmtSpan = m => { m = Math.max(0, Math.round(m)); const h = Math.floor(m / 60), r = m % 60; return h ? `${h}g${r ? String(r).padStart(2, '0') : ''}` : `${r} phút`; };
+
 const Clock = {
-  now() { return state.clock ?? 420; },
+  _faintPending: false,
+  now() { const c = Number(state.clock); return Number.isFinite(c) ? c : DAY_START; },
   label(m = this.now()) { m = Math.max(0, Math.min(1439, Math.round(m))); return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`; },
-  period(m = this.now()) { return m < 660 ? 'morning' : m < 1020 ? 'afternoon' : m < 1260 ? 'evening' : 'night'; },
-  advance(min) { state.clock = Math.min(1440, this.now() + min); save(); document.dispatchEvent(new CustomEvent('clock', { detail: { now: state.clock } })); },
-  travelMinutes(tiles) { return Math.max(5, Math.round(tiles * 4)); },
-  sceneStatus(id) { return { state: 'open', minutesLate: 0, label: '' }; },
-  sleep() {}
+  period(m = this.now()) { return m < PERIOD_BOUNDS.morning ? 'morning' : m < PERIOD_BOUNDS.afternoon ? 'afternoon' : m < PERIOD_BOUNDS.evening ? 'evening' : 'night'; },
+  _emit() { document.dispatchEvent(new CustomEvent('clock', { detail: { now: this.now() } })); },
+  /** Cộng giờ, lưu, phát sự kiện 'clock'. Chạm 24:00 → ngất xỉu (hoãn tới khi rời sân khấu nếu đang diễn). */
+  advance(min) {
+    min = Math.max(0, Math.round(Number(min) || 0));
+    state.clock = Math.min(DAY_END, this.now() + min);
+    if (min > 0) state.dayFresh = false;
+    save(); this._emit();
+    if (state.clock >= DAY_END) {
+      if (currentView === 'stage' || routing) this._faintPending = true;
+      else this.sleep({ forced: true });
+    }
+    return state.clock;
+  },
+  /** Đợi tới mốc giờ m (vd chờ show mở cửa) — không lùi giờ */
+  waitUntil(m) { return this.advance(Math.max(0, m - this.now())); },
+  /** Gọi sau khi rời sân khấu: nếu lúc diễn đã chạm 24:00 thì giờ mới ngất */
+  flushPending() { if (this._faintPending) { this._faintPending = false; this.sleep({ forced: true }); return true; } return false; },
+  travelMinutes(tiles) { return Math.max(TRAVEL_MIN, Math.round((Number(tiles) || 0) * TRAVEL_MIN_PER_TILE)); },
+  /** Thời lượng một hoạt động (phút) */
+  duration(id) { const sc = SCENES[id]; return (sc && sc.duration) ?? (isDailyScene(id) ? DURATION_DEFAULT.daily : DURATION_DEFAULT.show); },
+  /** { state: 'closed'|'early'|'open'|'late'|'missed'|'done', minutesLate, label } */
+  sceneStatus(id, m = this.now()) {
+    const s = SCHEDULE[id], done = !!(state.doneToday || {})[id];
+    const r = (st, label, minutesLate = 0) => ({ state: st, minutesLate, label });
+    if (isDailyScene(id)) {
+      const tail = done ? ' · đã hồi ⚡ hôm nay' : '';
+      if (!s) return r('open', tail.slice(3));
+      if (m < s.open) return r('closed', `Mở cửa lúc ${this.label(s.open)}`);
+      if (m >= s.close) return r('closed', `Đã đóng cửa (${this.label(s.open)}–${this.label(s.close)})`);
+      return r('open', `Mở cửa đến ${this.label(s.close)}${tail}`);
+    }
+    if (done) return r('done', 'Đã dẫn hôm nay');
+    if (!s || s.start == null) return r('open', '');
+    if (m < s.start - SHOW_DOOR_OPEN) return r('early', `Bắt đầu ${this.label(s.start)} · còn ${fmtSpan(s.start - m)}`);
+    if (m <= s.start) return r('open', m === s.start ? `Bắt đầu ngay ${this.label(s.start)}` : `Bắt đầu ${this.label(s.start)} · còn ${fmtSpan(s.start - m)}`);
+    const late = m - s.start;
+    if (late > SHOW_LATE_MAX) return r('missed', 'Đã lỡ show');
+    return r('late', `Trễ ${late} phút`, late);
+  },
+  /** Tỉ lệ cát-xê bị trừ khi trễ (0 → LATE_CASH_MAX) */
+  latePenalty(minutesLate) { return clamp((minutesLate - LATE_GRACE_MIN) * LATE_CASH_PER_MIN, 0, LATE_CASH_MAX); },
+  /** Lý do không vào được (null = vào được) — dùng cho toast ở startScene */
+  blockReason(id) {
+    const st = this.sceneStatus(id), s = SCHEDULE[id] || {};
+    if (st.state === 'closed') return this.now() < (s.open ?? 0) ? `🔒 Chưa mở cửa — mở lúc ${this.label(s.open)}` : `🌙 Đã đóng cửa lúc ${this.label(s.close)} — mai quay lại nhé`;
+    if (st.state === 'early') return `⏳ Chưa tới giờ — show bắt đầu ${this.label(s.start)}, mở cửa đón MC từ ${this.label(s.start - SHOW_DOOR_OPEN)}`;
+    if (st.state === 'missed') return `💔 Đã lỡ show lúc ${this.label(s.start)} (trễ quá ${SHOW_LATE_MAX} phút) — mai nhận lại nhé`;
+    if (st.state === 'done') return '✅ Hôm nay đã dẫn show này rồi — mai quay lại nhé';
+    return null;
+  },
+  /** Sang ngày game mới lúc 07:00 (dùng chung cho đi ngủ & sang ngày thật mới) */
+  _newDay(energyPct, { bump = true } = {}) {
+    if (bump) state.day++;
+    state.dayDate = dayKey();
+    state.clock = DAY_START; state.doneToday = {}; state.loc = 'home';
+    state.energy = Math.max(state.energy, Math.round(state.maxEnergy * energyPct));
+    this._faintPending = false;
+  },
+  /** Đi ngủ → ngày mới 07:00, hồi năng lượng (ngất xỉu: chỉ 60%), về nhà */
+  sleep({ forced = false } = {}) {
+    this._newDay(forced ? FAINT_ENERGY_PCT : SLEEP_ENERGY_PCT);
+    state.dayFresh = true;
+    saveNow(); renderHUD(); renderMood(); renderGigs();
+    const lbl = document.getElementById('dayLabel'); if (lbl) lbl.textContent = `Ngày ${state.day} trong sự nghiệp MC`;
+    this._emit();
+    if (forced) {
+      if (currentView !== 'hub' && currentView !== 'stage') goTo('hub', { title: '😵 Ngất xỉu… về nhà ngủ', tip: 'Quá nửa đêm rồi! Lần sau nhớ về nhà ngủ trước 24:00 nhé.' });
+      toast(`😵 Quá 24:00 — ngất xỉu! Ngày ${state.day}: chỉ hồi ${Math.round(FAINT_ENERGY_PCT * 100)}% ⚡`, 'coral', 3600);
+    } else toast(`☀️ Ngày ${state.day} — 07:00, năng lượng đầy!`, 'gold');
+    return state.day;
+  },
+  /** Mở app: 'resume' (cùng ngày thật) · 'fresh' (ngày mới vừa ngủ dậy, chưa chơi) · 'new' (sang ngày mới) */
+  dayPlan() {
+    if (state.day > 0 && state.dayDate === dayKey()) return { mode: 'resume', day: state.day };
+    if (state.day > 0 && state.dayFresh) return { mode: 'fresh', day: state.day };
+    return { mode: 'new', day: state.day + 1 };
+  },
+  /** Áp dụng dayPlan() — gọi khi bấm Bắt đầu / quay lại app sau nửa đêm */
+  startDay() {
+    const p = this.dayPlan();
+    if (p.mode !== 'resume') { this._newDay(NEW_DAY_ENERGY_PCT, { bump: p.mode === 'new' }); state.dayFresh = true; }
+    saveNow();
+    if (p.mode !== 'resume') this._emit();
+    return p;
+  }
 };
 
 /* =========================================================
@@ -3144,7 +3267,7 @@ $('#sheetRoot').addEventListener('click', e => { if (e.target.id === 'sheetRoot'
    ========================================================= */
 const Stage = { sc: null, turn: 0, phase: 'idle', stars: [], xpEarned: 0, listenEarned: 0, listened: {}, done: false, attempt: 0,
   npcKey: null, quizWrong: 0, revealed: false, blind: true, catchDone: true, catchMiss: 0,
-  reflexOn: false, reflexMissed: false, reflexT: null, radioT: null, onSpeechEnd: null };
+  reflexOn: false, reflexMissed: false, reflexT: null, radioT: null, onSpeechEnd: null, entry: null };
 const curTurn = () => Stage.sc.turns[Stage.turn];
 const isFree = t => t && t.mode === 'free';
 const isSemi = t => t && t.mode === 'semi';
@@ -3153,6 +3276,8 @@ const isCatch = t => t && !!t.catchAnswers;
 
 function startScene(id, srcEl, { returnTo = 'hub' } = {}) {
   const sc = SCENES[id];
+  const block = Clock.blockReason(id);        // giờ giấc: closed / early / missed / done → không vào
+  if (block) { SFX.play('error'); shake(srcEl); toast(block, 'coral', 3400); return; }
   if (state.charisma.lv < sc.reqLv) {
     SFX.play('error'); shake(srcEl); toast(`🔒 Cần Charisma Lv.${sc.reqLv} để nhận show này`, 'coral'); return;
   }
@@ -3162,7 +3287,9 @@ function startScene(id, srcEl, { returnTo = 'hub' } = {}) {
   }
   SFX.play('tap');
   if (sc.energy) gain({ energy: -sc.energy });
-  Object.assign(Stage, { sc, turn: 0, stars: [], xpEarned: 0, listenEarned: 0, listened: {}, phase: 'idle', npcKey: null, returnTo });
+  // Chụp lại giờ vào cửa → finishScene tính trễ & giờ kết thúc
+  const entry = { at: Clock.now(), late: Clock.sceneStatus(id).minutesLate };
+  Object.assign(Stage, { sc, turn: 0, stars: [], xpEarned: 0, listenEarned: 0, listened: {}, phase: 'idle', npcKey: null, returnTo, entry });
   setupStage(sc);
   goTo('stage', { title: sc.icon + ' ' + sc.title, tip: sc.curtain }).then(() => { renderTurn(); NpcWave.start(); Blink.start(); });
 }
@@ -3766,20 +3893,37 @@ function finishScene() {
   $('#stageProgress').style.width = '100%';
   const avg = Stage.stars.reduce((a, b) => a + (b || 0), 0) / sc.turns.length;
   const mult = 0.6 + avg * 0.15;
-  const cash = sc.reward.cash ? Math.round(sc.reward.cash * (0.8 + avg * 0.1) * (1 + bonusOf('cash'))) : 0;
-  const cha = Math.round(sc.reward.charisma * mult * (daily ? 1 : 1 + bonusOf('charisma')));
-  const energy = daily ? Math.round((sc.reward.energy || 0) * mult) : 0;
+  // Giờ giấc: trễ bao nhiêu phút lúc vào cửa (Stage.entry do startScene ghi; thiếu thì tính theo giờ hiện tại)
+  const entry = Stage.entry || { at: Clock.now(), late: Clock.sceneStatus(sc.id).minutesLate };
+  const firstToday = !state.doneToday[sc.id];           // daily: chỉ hồi ⚡ lần đầu trong ngày
+  const fullCash = sc.reward.cash ? Math.round(sc.reward.cash * (0.8 + avg * 0.1) * (1 + bonusOf('cash'))) : 0;
+  const latePct = daily ? 0 : Clock.latePenalty(entry.late || 0);
+  const cash = Math.round(fullCash * (1 - latePct)), lateLoss = fullCash - cash;
+  const cha = Math.round(sc.reward.charisma * mult * (daily ? (firstToday ? 1 : DAILY_REPEAT_CHA) : 1 + bonusOf('charisma')));
+  const energy = daily && firstToday ? Math.round((sc.reward.energy || 0) * mult) : 0;
   state.gigsDone[sc.id] = (state.gigsDone[sc.id] || 0) + 1;
+  state.doneToday[sc.id] = true;
   state.stats[daily ? 'daily' : 'shows']++;
   state.stats.bestStars[sc.id] = Math.max(state.stats.bestStars[sc.id] || 0, Math.round(avg));
   gain({ cash, charisma: cha, energy });
+  // Dẫn xong tốn thời gian: đến sớm thì chờ tới giờ bắt đầu, rồi cộng thời lượng hoạt động
+  const sched = SCHEDULE[sc.id] || {};
+  const beginAt = Math.max(entry.at, daily ? entry.at : (sched.start ?? entry.at));
+  const endAt = Math.min(DAY_END, beginAt + Clock.duration(sc.id));
+  Clock.advance(endAt - Clock.now());
+  Stage.entry = null;
+  const timeLine = `🕒 ${Clock.label(beginAt)} → ${endAt >= DAY_END ? '24:00' : Clock.label(endAt)}`;
+  const lateLine = entry.late > 0 && !daily
+    ? (latePct > 0 ? `⏰ Trễ ${entry.late} phút → cát-xê −${Math.round(latePct * 100)}% (−$${fmt(lateLoss)})` : `⏰ Trễ ${entry.late} phút — còn trong ${LATE_GRACE_MIN} phút ân hạn, chưa bị trừ cát-xê`)
+    : '';
   setNpcMood('happy');
   setTimeout(() => SFX.play(cash ? 'coin' : 'ting'), 150);
   confetti();
   const grade = avg >= 2.6 ? ['🌟', daily ? 'Một buổi sáng hoàn hảo!' : 'Khán giả đứng dậy vỗ tay!'] : avg >= 1.8 ? ['🎉', daily ? 'Nạp năng lượng xong!' : 'Show thành công!'] : avg > 0 ? ['👏', 'Ổn rồi, lần sau bùng nổ hơn!'] : ['😅', 'Lần sau thử nói nhiều hơn nhé!'];
   const stars = Math.round(avg);
   const perks = daily ? [] : SHOP.upgrades.filter(u => state.items[u.id]).map(u => `<span class="tag bg-sun-light text-[#A87A00]">${u.icon} ${esc(u.desc.split('·')[0].trim())}</span>`);
-  const big = daily ? { ico: '⚡', val: energy, pre: '+', lbl: 'Năng lượng hồi phục' } : { ico: '💰', val: cash, pre: '+$', lbl: 'Cát-xê show này' };
+  const big = daily ? { ico: '⚡', val: energy, pre: '+', lbl: firstToday ? 'Năng lượng hồi phục' : 'Hôm nay đã hồi ⚡ rồi — mai quay lại' }
+                    : { ico: '💰', val: cash, pre: '+$', lbl: latePct > 0 ? 'Cát-xê (đã trừ vì đến trễ)' : 'Cát-xê show này' };
   const card = openModal(`
     <div class="res-card rounded-2xl p-5 text-center">
       <div class="res-rays"></div>
@@ -3792,6 +3936,8 @@ function finishScene() {
         <div class="res-tile"><div class="rv text-sun-dark" data-count="${cha}" data-pre="+">+0</div><div class="rl">✨ Charisma</div></div>
       </div>
       <div class="mt-3 text-[12px] font-extrabold text-blu-dark">🎧 Trong đó Listening XP: +${Stage.listenEarned}</div>
+      <div class="mt-1 text-[12px] font-extrabold" style="color:#B9B0E8">${timeLine}</div>
+      ${lateLine ? `<div class="res-late mt-1 text-[12px] font-extrabold" style="color:#FF7A7A">${lateLine}</div>` : ''}
       ${state.streak.count > 1 ? `<div class="mt-1 text-[12px] font-extrabold" style="color:#FFB65C">🔥 Chuỗi ${state.streak.count} ngày liên tiếp</div>` : ''}
       ${perks.length ? `<div class="flex flex-wrap justify-center gap-1.5 mt-3">${perks.join('')}</div>` : ''}
       ${state.weak.length ? `<div class="mt-2 text-[12px] font-extrabold text-[#A87A00]">🎯 ${state.weak.length} từ đang chờ luyện lại trong Sổ tay</div>` : ''}
@@ -3803,7 +3949,10 @@ function finishScene() {
   setTimeout(() => confetti(36), 1300);
   $('#btnHome', card).addEventListener('click', () => {
     SFX.play('tap'); closeModal(); NpcWave.stop();
-    goTo(Stage.returnTo || 'hub', { title: Stage.returnTo === 'world' ? '🗺️ Ra phố…' : 'Đang về nhà…', tip: 'Cởi giày, treo đồ diễn, tắm nước ấm…' }).then(() => { renderGigs(); renderMood(); });
+    const faint = Clock._faintPending;                  // diễn xong chạm 24:00 → về thẳng nhà rồi ngất
+    const to = faint ? 'hub' : (Stage.returnTo || 'hub');
+    goTo(to, { title: faint ? '😵 Quá nửa đêm…' : to === 'world' ? '🗺️ Ra phố…' : 'Đang về nhà…', tip: 'Cởi giày, treo đồ diễn, tắm nước ấm…' })
+      .then(() => { Clock.flushPending(); renderGigs(); renderMood(); });
   }, { once: true });
 }
 
@@ -4010,9 +4159,9 @@ $('#btnStart').addEventListener('click', async () => {
   Voice.init(); Voice.unlock();
   await p;
   SFX.play('ting');
-  const resume = state.day > 0 && state.dayDate === dayKey();   // hôm nay đã mở ngày rồi → chơi tiếp, không sang ngày mới
-  if (!resume) { state.day++; state.dayDate = dayKey(); }
-  save();
+  // Cùng ngày thật → chơi tiếp đúng giờ cũ; sang ngày thật mới → ngày mới 07:00 (xem Clock.startDay)
+  const resume = Clock.startDay().mode === 'resume';
+  gameStarted = true;
   $('#dayLabel').textContent = `Ngày ${state.day} trong sự nghiệp MC`;
   const streakUp = touchStreak(); renderStreak();
   $('#welcome').classList.add('hide');
@@ -4020,9 +4169,22 @@ $('#btnStart').addEventListener('click', async () => {
   await wait(250);
   renderHUD();
   await wait(600);
-  toast(resume ? `▶️ Chơi tiếp Ngày ${state.day} — chào mừng trở lại, ${PLAYER_NAME}!` : `☀️ Ngày ${state.day} — Chào buổi sáng, ${PLAYER_NAME}!`, 'gold');
+  toast(resume ? `▶️ Chơi tiếp Ngày ${state.day} lúc ${Clock.label()} — chào mừng trở lại, ${PLAYER_NAME}!` : `☀️ Ngày ${state.day} — 07:00, chào buổi sáng ${PLAYER_NAME}!`, 'gold');
   if (streakUp > 1) { await wait(2600); SFX.play('levelUp'); retrigger($('#streakPill'), 'bump'); toast(`🔥 Chuỗi ${streakUp} ngày liên tiếp! Giữ lửa nhé`, 'coral', 2800); }
 }, { once: true });
+
+// Để app mở qua đêm rồi quay lại (sau nửa đêm thật) → tự sang ngày mới, trừ khi đang trên sân khấu
+let gameStarted = false;
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible' || !gameStarted || currentView === 'stage' || routing) return;
+  if (state.dayDate === dayKey()) return;
+  const p = Clock.startDay();
+  const streakUp = touchStreak(); renderStreak();
+  renderHUD(); renderMood(); renderGigs();
+  $('#dayLabel').textContent = `Ngày ${state.day} trong sự nghiệp MC`;
+  if (currentView !== 'hub') goTo('hub', { title: '☀️ Ngày mới…' });
+  toast(`☀️ Ngày ${p.day} — 07:00, chào buổi sáng ${PLAYER_NAME}!${streakUp > 1 ? ` 🔥 ${streakUp} ngày liên tiếp` : ''}`, 'gold', 3200);
+});
 
 /* =========================================================
    14b. TỰ BÁO CÓ BẢN MỚI
@@ -4072,9 +4234,9 @@ $('#roomBg').innerHTML = SCENE_ART.room();
 renderAvatar();
 $('#btnMute').textContent = state.muted ? '🔕' : '🔔';
 { // Màn chào: hôm nay đã mở ngày → nút “Tiếp tục Ngày N”
-  const resume = state.day > 0 && state.dayDate === dayKey();
-  $('#dayLabel').textContent = `Ngày ${resume ? state.day : state.day + 1} trong sự nghiệp MC`;
-  if (resume) $('#btnStart').innerHTML = `▶️ Tiếp tục Ngày ${state.day}`;
+  const plan = Clock.dayPlan();          // resume: cùng ngày thật · fresh: vừa ngủ dậy chưa chơi · new: sang ngày mới
+  $('#dayLabel').textContent = `Ngày ${plan.day} trong sự nghiệp MC`;
+  if (plan.mode === 'resume') $('#btnStart').innerHTML = `▶️ Tiếp tục Ngày ${state.day} · ${Clock.label()}`;
 }
 renderGigs(); renderMood(); renderStreak();
 
