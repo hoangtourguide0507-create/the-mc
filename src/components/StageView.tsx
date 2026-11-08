@@ -508,7 +508,7 @@ export const StageView: React.FC = () => {
       {/* Main Content Split: 3D Stage Viewport (Left on iPad) + Interactive Listening & Cue Cards (Right on iPad) */}
       <div className="grid flex-1 grid-cols-1 gap-3.5 md:grid-cols-12 md:overflow-hidden">
         {/* 3D STAGE VIEWPORT */}
-        <div className="relative h-64 w-full sm:h-72 md:col-span-5 md:h-full">
+        <div className="relative h-36 w-full sm:h-72 md:col-span-5 md:h-full">
           <Stage3D
             scene={scene}
             npcId={currentNpcId}

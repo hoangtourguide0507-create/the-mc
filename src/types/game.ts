@@ -217,6 +217,8 @@ export interface GameState {
   learned: string[];
   weak: WeakWord[];
   quests: QuestState;
+  /** Hướng dẫn chỉ điểm ngày đầu: bước đã xác nhận và cờ đã tắt hướng dẫn. */
+  tour: { acked: Record<string, boolean>; skipped: boolean };
   muted: boolean;
   voiceURI: string | null;
 }
