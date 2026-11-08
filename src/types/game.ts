@@ -150,6 +150,36 @@ export interface WeakWord {
   at: number;
 }
 
+/** Mục tiêu của một nhiệm vụ (quest). */
+export type QuestObjective =
+  | { kind: 'phrase'; phraseId: string; minStars: number }
+  | { kind: 'show'; sceneId: string; minStars: number }
+  | { kind: 'street'; count: number };
+
+export interface QuestDef {
+  id: string;
+  chapter: string;
+  title: string;
+  objectives: QuestObjective[];
+  reward: { xp: number; charisma: number };
+}
+
+export interface ChapterDef {
+  id: string;
+  title: string;
+  reward: { xp: number };
+}
+
+/** Tiến độ quest, lưu trong GameState.quests. */
+export interface QuestState {
+  /** phraseId -> số sao tốt nhất của lượt đó */
+  phraseStars: Record<string, number>;
+  /** itemId của STREET_TALK đã trả lời */
+  streetDone: Record<string, boolean>;
+  done: Record<string, boolean>;
+  chapterDone: Record<string, boolean>;
+}
+
 export interface GameState {
   v: number;
   energy: number;
@@ -186,6 +216,7 @@ export interface GameState {
   };
   learned: string[];
   weak: WeakWord[];
+  quests: QuestState;
   muted: boolean;
   voiceURI: string | null;
 }

@@ -14,6 +14,7 @@ import { StageView } from './components/StageView';
 import { dayKey } from './core/clock';
 import { useGameStore } from './core/store';
 import { CityWorld3D } from './three/CityWorld3D';
+import { QuestSheet } from './components/QuestSheet';
 
 export const App: React.FC = () => {
   const view = useGameStore((s) => s.view);
@@ -71,6 +72,7 @@ export const App: React.FC = () => {
       <ShopSheet />
       <ResultModal />
       <StreetTalkModal />
+      <QuestSheet />
       <GlobalOverlays />
     </div>
   );

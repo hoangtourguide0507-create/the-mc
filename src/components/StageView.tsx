@@ -24,6 +24,7 @@ export const StageView: React.FC = () => {
   const finishScene = useGameStore((s) => s.finishScene);
   const addWeakWordsFromTokens = useGameStore((s) => s.addWeakWordsFromTokens);
   const unlockPhrase = useGameStore((s) => s.unlockPhrase);
+  const recordPhraseStars = useGameStore((s) => s.recordPhraseStars);
 
   const scene = SCENES[activeSceneId || 'coffee'] || SCENES.coffee;
 
@@ -209,6 +210,8 @@ export const StageView: React.FC = () => {
       toast('Chưa nghe rõ hoặc chưa khớp mẫu câu — hãy thử lại nhé!', 'warn');
       return;
     }
+
+    recordPhraseStars(`${scene.id}-${turnIdx}`, res.stars);
 
     // Play sequential stars sound
     for (let i = 0; i < res.stars; i++) {
