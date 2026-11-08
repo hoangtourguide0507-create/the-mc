@@ -79,6 +79,30 @@
       "brief": "Người qua đường hay hỏi chuyện. Thân thiện, tò mò, hơi lém lỉnh.",
       "voiceName": "Will",
       "voiceId": "bIHbv24MWmeRgasZH58o"
+    },
+    "grandpa": {
+      "accent": "en-US",
+      "brief": "Ông nội cô dâu, ~75 tuổi. Trầm, ấm, hay kể chuyện xưa.",
+      "voiceName": "",
+      "voiceId": ""
+    },
+    "grandma": {
+      "accent": "en-US",
+      "brief": "Bà nội cô dâu, ~72 tuổi. Nhẹ nhàng, lễ phép, hay hỏi han.",
+      "voiceName": "",
+      "voiceId": ""
+    },
+    "boy": {
+      "accent": "en-US",
+      "brief": "Bé trai ~7 tuổi cầm nhẫn. Hồn nhiên, nói nhanh, hay hào hứng.",
+      "voiceName": "",
+      "voiceId": ""
+    },
+    "girl": {
+      "accent": "en-US",
+      "brief": "Bé gái ~5 tuổi rải hoa. Ngọt ngào, rụt rè rồi vui vẻ.",
+      "voiceName": "",
+      "voiceId": ""
     }
   }
 }
