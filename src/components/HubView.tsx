@@ -6,6 +6,7 @@ import { fmtRep, levelTitle, MAX_LV } from '../core/career';
 import { HUD_PAD } from './HUD';
 import { HubRoom3D } from '../three/HubRoom3D';
 import { currentQuest, questProgress } from '../core/quests';
+import { nextHint } from '../core/onboarding';
 
 export const HubView: React.FC = () => {
   const state = useGameStore((s) => s.state);
@@ -17,6 +18,8 @@ export const HubView: React.FC = () => {
   const sleepDay = useGameStore((s) => s.sleepDay);
   const toast = useGameStore((s) => s.toast);
   const setQuestOpen = useGameStore((s) => s.setQuestOpen);
+  const setHelpOpen = useGameStore((s) => s.setHelpOpen);
+  const hint = nextHint(state);
   const quest = currentQuest(state);
   const questProg = quest ? questProgress(quest, state) : null;
 
@@ -70,6 +73,15 @@ export const HubView: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-1.5">
+            {/* Help */}
+            <button
+              onClick={() => setHelpOpen(true)}
+              title="Hướng dẫn chơi"
+              className="rounded-full border border-white/15 bg-white/10 px-2.5 py-1 text-xs font-black text-white transition hover:bg-white/20"
+            >
+              ❓
+            </button>
+
             {/* Streak Pill */}
             <div
               title={`Kỷ lục: ${state.streak.best} ngày`}
@@ -192,6 +204,13 @@ export const HubView: React.FC = () => {
             Khám phá ➔
           </span>
         </button>
+
+        {/* Gợi ý bước tiếp theo cho người mới */}
+        {hint && (
+          <div className="rounded-2xl border border-amber-400/40 bg-amber-500/10 p-3.5 text-xs font-semibold leading-relaxed text-amber-100">
+            💡 {hint}
+          </div>
+        )}
 
         {/* Quest hiện tại: mở bảng nhiệm vụ đầy đủ */}
         <button

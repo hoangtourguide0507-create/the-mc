@@ -262,6 +262,8 @@ interface GameStore {
   evaluateQuests: () => void;
   questOpen: boolean;
   setQuestOpen: (open: boolean) => void;
+  helpOpen: boolean;
+  setHelpOpen: (open: boolean) => void;
 }
 
 let toastSeq = 1;
@@ -288,6 +290,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   streetTalkDoneIds: {},
   worldTarget: null,
   questOpen: false,
+  helpOpen: false,
 
   bonusOf: (key) => {
     const items = get().state.items;
@@ -1012,6 +1015,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (res.xp > 0 || res.charisma > 0) {
       get().gain({ xp: res.xp, charisma: res.charisma });
     }
+  },
+
+  setHelpOpen: (open) => {
+    SFX.play('page');
+    set({ helpOpen: open });
   },
 
   setQuestOpen: (open) => {

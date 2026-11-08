@@ -105,3 +105,20 @@ const fresh = () => ({
 }
 
 console.log(`quests: ${Q.QUESTS.length} nhiệm vụ, ${Q.CHAPTERS.length} chương — tất cả kiểm thử đều pass`);
+
+// Gợi ý người mới: suy ra từ trạng thái, không đổi state.
+{
+  const build2 = await import('esbuild');
+  const outOnb = path.join(dir, 'onboarding.mjs');
+  await build2.build({
+    entryPoints: [path.join(root, 'src/core/onboarding.ts')],
+    bundle: true, format: 'esm', platform: 'node', outfile: outOnb, logLevel: 'silent',
+  });
+  const { nextHint } = await import(pathToFileURL(outOnb).href);
+  const base = () => ({ stats: { daily: 0, shows: 0 }, rep: { n: 0 } });
+  assert.match(nextHint(base()), /Bước 1/);
+  assert.match(nextHint({ ...base(), stats: { daily: 1, shows: 0 } }), /Bước 2/);
+  assert.match(nextHint({ ...base(), stats: { daily: 1, shows: 1 } }), /Bước 3/);
+  assert.equal(nextHint({ ...base(), stats: { daily: 1, shows: 2 }, rep: { n: 2 } }), null);
+  console.log('onboarding: gợi ý người mới pass');
+}
