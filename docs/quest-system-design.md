@@ -1,6 +1,6 @@
 # Thiết kế C: Hệ thống nhiệm vụ (Quest) gắn với học tiếng Anh
 
-Trạng thái: **bản thiết kế, chờ duyệt**. Chưa có code.
+Trạng thái: **bản thiết kế đã chốt các quyết định ở mục 9, chưa có code.**
 
 ## 1. Mục tiêu
 
@@ -80,9 +80,15 @@ Chương 2 (hậu trường) sẽ dựa vào `backstage` và các mục `phrase`
 3. **Nội dung**: viết quest Chương 1 và 2 (tiếng Anh + tiếng Việt), thêm `key` và voice cho mẫu câu mới.
 4. **Cân bằng**: chỉnh số thưởng sau khi thử.
 
-## 9. Câu hỏi cần bạn quyết
+## 9. Quyết định đã chốt
 
-1. **Khối lượng nội dung.** Mục tiêu của bạn là 4–5 giờ chơi mỗi ngày. Hiện có 7 hoạt động (2 hằng ngày, 5 show), mỗi hoạt động 4 lượt, cùng nhiều file `STREET_TALK` bổ sung. Bạn muốn Chương 1–2 (khoảng 10 quest) trước, hay cả game ngay?
-2. **Giọng đọc cho câu mới.** Mỗi câu mới cần render giọng qua `voices.yml`, dùng ElevenLabs. Bạn đã ghi là chỉ dùng gói miễn phí. Cần kiểm tra hạn mức trước khi viết nhiều câu, vì nếu hết hạn mức thì câu mới sẽ rơi về giọng trình duyệt.
-3. **Thưởng quest có làm lệch kinh tế không.** Mình đề xuất thưởng nhỏ (XP và Cha), không cộng tiền lớn, để không phá cân bằng show.
-4. **Quest có bắt buộc không.** Mình đề xuất không bắt buộc: người chơi vẫn dẫn show bình thường, quest chỉ là định hướng.
+1. **Phạm vi nội dung: làm cả game ngay.** Quest phủ toàn bộ 7 hoạt động và toàn bộ `STREET_TALK`, không làm từng chương. Vì vậy các giai đoạn ở mục 8 được làm theo lô: dữ liệu và store trước, rồi nội dung cho toàn bộ quest, rồi mới đến giao diện đầy đủ.
+2. **Giọng đọc: dùng các giọng đã có, không cần giọng mới.** `tools/voices.config.json` đã gán sẵn giọng ElevenLabs cho từng vai (leo, ivy, victoria, couple:emma, couple:liam, alex, sam, tom…). Câu mới chỉ cần đúng vai là được render. Ràng buộc thực tế:
+   - Việc render chạy trong GitHub Actions (`voices.yml`) và cần secret `ELEVENLABS_API_KEY`. Mình không có khóa này, nên không tự render được. Bạn cần chạy workflow sau khi merge, hoặc đưa khóa để mình chạy `--dry-run` trước.
+   - Mỗi lần chạy có giới hạn `maxCharsPerRun: 5200` ký tự. Với toàn bộ game, việc render sẽ cần nhiều lần chạy. Hãy kiểm tra hạn mức gói miễn phí trước khi render lô lớn.
+   - Vai không có `voiceId` sẽ dùng giọng trình duyệt, nên không bị lỗi nhưng kém tự nhiên.
+3. **Mức thưởng (quyết định của mình):**
+   - Mỗi quest: +10 XP và +5 Charisma. Không cộng tiền.
+   - Mỗi chương xong: +25 XP.
+   - Không thưởng Energy, vì Energy là tài nguyên giới hạn của show. Mức này nhỏ hơn một lượt show đạt 3★, nên không làm lệch kinh tế hiện có.
+4. **Quest là tùy chọn.** Người chơi vẫn dẫn show bình thường. Quest chỉ định hướng và thưởng thêm.
