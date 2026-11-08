@@ -1,8 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Environment, Html, Lightformer, MapControls, PerformanceMonitor } from '@react-three/drei';
-import { Bloom, EffectComposer, ToneMapping, Vignette } from '@react-three/postprocessing';
-import { ToneMappingMode } from 'postprocessing';
+import { Bloom, BrightnessContrast, EffectComposer, HueSaturation, Noise, ToneMapping, Vignette } from '@react-three/postprocessing';
+import { BlendFunction, ToneMappingMode } from 'postprocessing';
+import { GHIBLI, isGhibli } from './artStyle';
+import { GhibliClouds, GrassTufts } from './city/GhibliDecor';
 import * as THREE from 'three';
 import { getPlayerLook, GIG_ORDER, PASSER_LOOKS, SCHEDULE, SCENES, STREET_TALK, WM_NAMES, WORLD_LOCS } from '../data/content';
 import {
@@ -113,6 +115,11 @@ export const CityWorld3D: React.FC = () => {
   const periodMeta = getPeriodMeta(state.clock);
   const night = periodMeta.isNight;
   const playerLook = useMemo(() => getPlayerLook(state.items), [state.items]);
+  // Bầu trời: Ghibli ban ngày xanh trong + chân trời kem; chiều tối/đêm giữ màu theo buổi
+  const sky =
+    isGhibli && (periodMeta.id === 'morning' || periodMeta.id === 'afternoon')
+      ? { top: GHIBLI.skyTop, bottom: GHIBLI.skyBottom }
+      : { top: periodMeta.skyTop, bottom: periodMeta.skyBottom };
   const initialDoor = WORLD_LOCS[state.loc]?.doorTile || WORLD_LOCS.home.doorTile;
 
   const mcRef = useRef<McState>({
@@ -369,10 +376,11 @@ export const CityWorld3D: React.FC = () => {
           onIncline={() => setDpr((d) => Math.min(2, d + 0.2))}
           onFallback={() => setDpr(1)}
         />
-        <SkyDome top={periodMeta.skyTop} bottom={periodMeta.skyBottom} />
-        <fog attach="fog" args={[periodMeta.skyBottom, 38, 95]} />
+        <SkyDome top={sky.top} bottom={sky.bottom} />
+        <fog attach="fog" args={[sky.bottom, isGhibli ? 30 : 38, isGhibli ? 85 : 95]} />
+        {isGhibli && <GhibliClouds night={night} />}
         <SceneLights meta={periodMeta} controlsRef={controlsRef} />
-        <Environment resolution={64} frames={1} environmentIntensity={night ? 0.3 : 0.6}>
+        <Environment resolution={64} frames={1} environmentIntensity={isGhibli ? (night ? 0.15 : 0.3) : night ? 0.3 : 0.6}>
           <Lightformer form="rect" intensity={2} position={[0, 10, 0]} rotation-x={Math.PI / 2} scale={[20, 20, 1]} color="#FFFFFF" />
           <Lightformer form="rect" intensity={1.4} position={[-10, 3, 0]} rotation-y={Math.PI / 2} scale={[10, 4, 1]} color="#FF4FD8" />
           <Lightformer form="rect" intensity={1.4} position={[10, 3, 0]} rotation-y={-Math.PI / 2} scale={[10, 4, 1]} color="#22D3EE" />
@@ -380,6 +388,7 @@ export const CityWorld3D: React.FC = () => {
         </Environment>
 
         <CityGround grid={grid} night={night} onTile={handleSelectTile} />
+        {isGhibli && <GrassTufts grid={grid} />}
         {Object.values(WORLD_LOCS).map((loc) => (
           <Landmark key={loc.id} loc={loc} night={night} onSelect={handleSelectBuilding} />
         ))}
@@ -451,11 +460,23 @@ export const CityWorld3D: React.FC = () => {
           screenSpacePanning={false}
         />
 
-        <EffectComposer multisampling={dpr >= 1.6 ? 4 : 2}>
-          <Bloom luminanceThreshold={1} luminanceSmoothing={0.2} intensity={night ? 1.0 : 0.4} mipmapBlur radius={0.7} />
-          <ToneMapping mode={ToneMappingMode.NEUTRAL} />
-          <Vignette eskil={false} offset={0.25} darkness={night ? 0.55 : 0.35} />
-        </EffectComposer>
+        {isGhibli ? (
+          <EffectComposer multisampling={dpr >= 1.6 ? 4 : 2}>
+            <Bloom luminanceThreshold={0.95} luminanceSmoothing={0.3} intensity={night ? 0.8 : 0.22} mipmapBlur radius={0.85} />
+            <ToneMapping mode={ToneMappingMode.NEUTRAL} />
+            <HueSaturation saturation={0.14} hue={0} />
+            <BrightnessContrast brightness={0.01} contrast={0.02} />
+            {/* Hạt giấy vẽ rất nhẹ */}
+            <Noise premultiply blendFunction={BlendFunction.SOFT_LIGHT} opacity={0.06} />
+            <Vignette eskil={false} offset={0.35} darkness={night ? 0.45 : 0.18} />
+          </EffectComposer>
+        ) : (
+          <EffectComposer multisampling={dpr >= 1.6 ? 4 : 2}>
+            <Bloom luminanceThreshold={1} luminanceSmoothing={0.2} intensity={night ? 1.0 : 0.4} mipmapBlur radius={0.7} />
+            <ToneMapping mode={ToneMappingMode.NEUTRAL} />
+            <Vignette eskil={false} offset={0.25} darkness={night ? 0.55 : 0.35} />
+          </EffectComposer>
+        )}
       </Canvas>
 
       {/* Thanh trên: đồng hồ, khu phố, nút nhanh */}
@@ -713,7 +734,7 @@ const SkyDome: React.FC<{ top: string; bottom: string }> = ({ top, bottom }) => 
         uniforms: { top: { value: new THREE.Color(top) }, bottom: { value: new THREE.Color(bottom) } },
         vertexShader: 'varying vec3 vP; void main(){ vP = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
         fragmentShader:
-          'uniform vec3 top; uniform vec3 bottom; varying vec3 vP; void main(){ float t = smoothstep(-0.15, 0.6, vP.y); gl_FragColor = vec4(mix(bottom, top, t), 1.0); }',
+          'uniform vec3 top; uniform vec3 bottom; varying vec3 vP; void main(){ float t = smoothstep(-0.04, 0.42, vP.y); gl_FragColor = vec4(mix(bottom, top, t), 1.0); }',
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
@@ -754,12 +775,17 @@ const SceneLights: React.FC<{ meta: ReturnType<typeof getPeriodMeta>; controlsRe
   const night = meta.isNight;
   return (
     <>
-      <hemisphereLight args={[night ? '#3B3F8F' : meta.skyTop, night ? '#120A30' : '#6B5040', night ? 0.38 : 0.55]} />
-      <ambientLight intensity={meta.ambientIntensity * (night ? 0.2 : 0.35)} />
+      {isGhibli && !night ? (
+        // Ghibli: nắng ấm vàng kem, vùng bóng nhận ánh trời xanh dịu (bóng mát tông lạnh)
+        <hemisphereLight args={[GHIBLI.hemiSky, GHIBLI.hemiGround, 0.95]} />
+      ) : (
+        <hemisphereLight args={[night ? '#3B3F8F' : meta.skyTop, night ? '#120A30' : '#6B5040', night ? 0.38 : 0.55]} />
+      )}
+      <ambientLight intensity={meta.ambientIntensity * (night ? 0.2 : isGhibli ? 0.25 : 0.35)} />
       <directionalLight
         ref={sun}
-        intensity={meta.sunIntensity * (night ? 0.9 : 1.45)}
-        color={meta.sunColor}
+        intensity={meta.sunIntensity * (night ? 0.9 : isGhibli ? 1.6 : 1.45)}
+        color={isGhibli && !night && meta.id !== 'evening' ? GHIBLI.sun : meta.sunColor}
         castShadow
         shadow-mapSize={[2048, 2048]}
         shadow-bias={-0.0004}

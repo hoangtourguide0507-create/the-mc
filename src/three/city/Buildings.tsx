@@ -4,6 +4,7 @@ import { RoundedBox } from '@react-three/drei';
 import * as THREE from 'three';
 import { WorldLocation } from '../../types/game';
 import { facadeTextures, FacadeKind, gableGeometry, glowMat, mat, repeatTex } from './assets';
+import { GHIBLI, isGhibli, softTint } from '../artStyle';
 import { Filler, gridToWorld } from './cityMap';
 
 /* ------------------------------------------------------------------ */
@@ -29,7 +30,7 @@ export const Volume: React.FC<{
     const floors = Math.max(1, Math.round(h / floorH));
     const mk = (bays: number) =>
       new THREE.MeshStandardMaterial({
-        color,
+        color: softTint(color, 0.32),
         map: repeatTex(map, bays, floors),
         emissiveMap: repeatTex(emissive, bays, floors),
         emissive: new THREE.Color('#FFFFFF'),
@@ -42,7 +43,7 @@ export const Volume: React.FC<{
     const bz = Math.max(1, Math.round(w / bayW));
     const sideX = mk(bx);
     const sideZ = mk(bz);
-    const top = mat(roof || shade(color, -0.25), { rough: 0.85 });
+    const top = mat(isGhibli ? GHIBLI.roofs[Math.abs(Math.round(w * 7 + h * 13)) % GHIBLI.roofs.length] : roof || shade(color, -0.25), { rough: 0.85 });
     const bottom = mat('#1F2937');
     return [sideX, sideX, top, bottom, sideZ, sideZ] as THREE.Material[];
   }, [w, d, h, color, kind, variant, roof, floorH, bayW]);
@@ -106,7 +107,8 @@ const Glow: React.FC<{
 }> = ({ args, pos, color, night, day = 0.5, nightI = 2.2, rot, shape = 'box' }) => {
   const m = useMemo(() => glowMat(color, color), [color]);
   useEffect(() => {
-    m.emissiveIntensity = night ? nightI : day;
+    // Ghibli: ban ngày gần như tắt ánh neon, ban đêm đèn lồng ấm dịu hơn
+    m.emissiveIntensity = isGhibli ? (night ? nightI * 0.75 : day * 0.25) : night ? nightI : day;
   }, [night, m, day, nightI]);
   return (
     <mesh position={pos} rotation={rot} material={m}>
@@ -659,7 +661,7 @@ export const FillerBuilding: React.FC<{ f: Filler; night: boolean; idx: number }
       <group position={[wx, 0, wz]}>
         {base}
         <Volume w={W - 0.2} d={D - 0.3} h={H} pos={[0, 0.08, -0.05]} color={f.color} kind="house" variant={v} night={night} />
-        <mesh position={[0, 0.08 + H, -0.05]} geometry={gableGeometry(W - 0.05, 0.55, D - 0.1)} material={mat(f.accent, { rough: 0.7 })} castShadow />
+        <mesh position={[0, 0.08 + H, -0.05]} geometry={gableGeometry(W - 0.05, 0.55, D - 0.1)} material={mat(isGhibli ? GHIBLI.roofs[idx % GHIBLI.roofs.length] : f.accent, { rough: 0.7 })} castShadow />
         <RB args={[0.16, 0.4, 0.16]} pos={[W * 0.25, 0.08 + H + 0.35, -0.25]} color="#78716C" r={0.02} />
         <Door pos={[0, 0.08, (D - 0.3) / 2 - 0.05 + 0.01]} w={0.3} h={0.42} color={f.accent} night={night} />
         <Planter pos={[-0.45, 0.08, D / 2 - 0.05]} color="#4ADE80" />

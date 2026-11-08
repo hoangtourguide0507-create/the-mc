@@ -1,6 +1,7 @@
 import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Html, RoundedBox } from '@react-three/drei';
+import { Html, Outlines, RoundedBox } from '@react-three/drei';
+import { isGhibli } from './artStyle';
 import * as THREE from 'three';
 import { LookConfig, NpcMood, VisemeType } from '../types/game';
 import { GlbCharacter3D } from './GlbCharacter3D';
@@ -24,6 +25,9 @@ export interface ClayCharacter3DProps {
  * (Bản cũ dùng lerp(a, b, dt*k): khi khung hình giật làm dt*k > 2 thì giá trị
  *  dao động phóng đại tới vô cực → mắt/miệng bị kéo dài vô hạn, thân nhân vật biến mất.)
  */
+/** Viền nâu mảnh kiểu tranh anime (chỉ khi bật phong cách Ghibli) */
+const Ol: React.FC<{ t?: number }> = ({ t = 0.011 }) => (isGhibli ? <Outlines thickness={t} color="#4A3326" /> : null);
+
 const damp = (a: number, b: number, k: number, dt: number) => a + (b - a) * (1 - Math.exp(-k * dt));
 
 function shade(hex: string, amt: number) {
@@ -60,7 +64,10 @@ const GEO = {
   bow: new THREE.ConeGeometry(0.045, 0.07, 4),
   tie: new THREE.ConeGeometry(0.035, 0.2, 4),
   button: new THREE.SphereGeometry(0.014, 8, 6),
-  hairCap: new THREE.SphereGeometry(0.385, 36, 24, 0, Math.PI * 2, 0, Math.PI * 0.56),
+  // Tóc: vỏ sau + hai bên (hở mặt) và chỏm đỉnh đầu nằm trên mắt — không còn che mắt như mũ bảo hiểm
+  hairCap: new THREE.SphereGeometry(0.385, 36, 24, Math.PI / 2 + 0.95, Math.PI * 2 - 1.9, 0, Math.PI * 0.6),
+  hairCrown: new THREE.SphereGeometry(0.39, 36, 16, 0, Math.PI * 2, 0, Math.PI * 0.3),
+  fringe: new THREE.CapsuleGeometry(0.06, 0.12, 6, 12),
   hairBlob: new THREE.SphereGeometry(0.16, 20, 14),
   curl: new THREE.SphereGeometry(0.085, 14, 10),
   bun: new THREE.SphereGeometry(0.15, 22, 16),
@@ -70,6 +77,7 @@ const GEO = {
   beanieRim: new THREE.TorusGeometry(0.37, 0.05, 10, 32),
   pompom: new THREE.SphereGeometry(0.07, 12, 10),
   lash: new THREE.TorusGeometry(0.06, 0.009, 6, 14, Math.PI * 0.7),
+  lid: new THREE.TorusGeometry(0.074, 0.017, 8, 20, Math.PI * 0.86),
   earring: new THREE.SphereGeometry(0.022, 10, 8),
   ring: new THREE.RingGeometry(0.42, 0.54, 40),
   shadow: new THREE.CircleGeometry(0.4, 28),
@@ -136,9 +144,12 @@ export const ClayCharacter3D: React.FC<ClayCharacter3DProps> = ({
     const cloth = look.cloth || '#1E2952';
     const glossy = look.outfit === 'velvet' || look.outfit === 'gown' || look.outfit === 'bride';
     const clay = (color: string, rough = 0.62, extra: Partial<THREE.MeshPhysicalMaterialParameters> = {}) =>
-      new THREE.MeshPhysicalMaterial({ color, roughness: rough, clearcoat: 0.18, clearcoatRoughness: 0.55, ...extra });
+      isGhibli
+        ? // Ghibli: vật liệu lì, tô màu mảng (không clearcoat / sheen)
+          new THREE.MeshStandardMaterial({ color, roughness: 0.9 })
+        : new THREE.MeshPhysicalMaterial({ color, roughness: rough, clearcoat: 0.18, clearcoatRoughness: 0.55, ...extra });
     return {
-      skin: clay(skin, 0.55, { sheen: 0.6, sheenColor: new THREE.Color('#FFB4A2'), sheenRoughness: 0.6 }),
+      skin: clay(isGhibli ? shade(skin, 0.03) : skin, 0.55, isGhibli ? { clearcoat: 0 } : { sheen: 0.6, sheenColor: new THREE.Color('#FFB4A2'), sheenRoughness: 0.6 }),
       hair: clay(look.hair || '#231829', 0.5, { clearcoat: 0.45, clearcoatRoughness: 0.35 }),
       cloth: clay(cloth, glossy ? 0.38 : 0.7, glossy ? { sheen: 1, sheenColor: new THREE.Color(shade(cloth, 0.25)), sheenRoughness: 0.35 } : {}),
       pants: clay(look.outfit === 'tux' || look.outfit === 'suit' ? shade(cloth, -0.08) : shade(cloth, -0.22), 0.7),
@@ -150,11 +161,11 @@ export const ClayCharacter3D: React.FC<ClayCharacter3DProps> = ({
       iris: new THREE.MeshStandardMaterial({ color: look.eye || '#3B2A4F', roughness: 0.15 }),
       pupil: new THREE.MeshBasicMaterial({ color: '#0B0614' }),
       glint: new THREE.MeshBasicMaterial({ color: '#FFFFFF' }),
-      lip: clay(look.lip || '#C2416B', 0.4),
+      lip: clay(isGhibli ? '#9C4A42' : look.lip || '#C2416B', 0.4),
       mouth: new THREE.MeshStandardMaterial({ color: '#5A1830', roughness: 0.5 }),
       gold: new THREE.MeshStandardMaterial({ color: '#FBBF24', roughness: 0.18, metalness: 0.9, emissive: '#78350F', emissiveIntensity: 0.2 }),
       silver: new THREE.MeshStandardMaterial({ color: '#E2E8F0', roughness: 0.22, metalness: 0.85 }),
-      blush: new THREE.MeshBasicMaterial({ color: '#FB7185', transparent: true, opacity: 0.32, depthWrite: false }),
+      blush: new THREE.MeshBasicMaterial({ color: isGhibli ? '#F7A1A8' : '#FB7185', transparent: true, opacity: isGhibli ? 0.55 : 0.32, depthWrite: false }),
       ring: new THREE.MeshBasicMaterial({ color: '#22D3EE', transparent: true, opacity: 0.85, side: THREE.DoubleSide, depthWrite: false }),
       shadow: new THREE.MeshBasicMaterial({ color: '#090518', transparent: true, opacity: 0.35, depthWrite: false }),
       hat: clay(look.hat || '#7C3AED', 0.85),
@@ -319,7 +330,9 @@ export const ClayCharacter3D: React.FC<ClayCharacter3DProps> = ({
         {/* CHÂN + GIÀY */}
         {[-1, 1].map((s) => (
           <group key={s} ref={s < 0 ? leftLegRef : rightLegRef} position={[s * 0.115, 0.3, 0]}>
-            <mesh geometry={GEO.leg} material={isLongDress ? M.skin : M.pants} position={[0, -0.13, 0]} />
+            <mesh geometry={GEO.leg} material={isLongDress ? M.skin : M.pants} position={[0, -0.13, 0]}>
+              <Ol />
+            </mesh>
             <RoundedBox args={[0.15, 0.08, 0.23]} radius={0.035} smoothness={3} position={[0, -0.255, 0.035]} material={M.shoe} />
           </group>
         ))}
@@ -328,7 +341,9 @@ export const ClayCharacter3D: React.FC<ClayCharacter3DProps> = ({
         <group position={[0, 0.63, 0]}>
           {isLongDress ? (
             <>
-              <mesh geometry={GEO.dress} material={M.cloth} position={[0, -0.16, 0]} castShadow />
+              <mesh geometry={GEO.dress} material={M.cloth} position={[0, -0.16, 0]} castShadow>
+                <Ol />
+              </mesh>
               <mesh geometry={GEO.dressTop} material={M.cloth} position={[0, 0.2, 0]} scale={[1, 0.9, 0.85]} />
               <mesh geometry={GEO.torso} material={M.cloth} position={[0, 0.08, 0]} scale={[0.82, 0.7, 0.72]} />
               {look.outfit === 'bride' && (
@@ -338,7 +353,9 @@ export const ClayCharacter3D: React.FC<ClayCharacter3DProps> = ({
               )}
             </>
           ) : (
-            <mesh geometry={GEO.torso} material={M.cloth} scale={[1, 1, 0.84]} castShadow />
+            <mesh geometry={GEO.torso} material={M.cloth} scale={[1, 1, 0.84]} castShadow>
+              <Ol t={0.013} />
+            </mesh>
           )}
 
           {/* Áo vest / tux: sơ mi chữ V, ve áo, nơ hoặc cà vạt, cúc */}
@@ -400,20 +417,26 @@ export const ClayCharacter3D: React.FC<ClayCharacter3DProps> = ({
         {/* TAY + ĐẠO CỤ */}
         {[-1, 1].map((s) => (
           <group key={s} ref={s < 0 ? leftArmRef : rightArmRef} position={[s * 0.29, 0.8, 0]}>
-            <mesh geometry={GEO.arm} material={M.cloth} position={[s * 0.035, -0.15, 0]} />
+            <mesh geometry={GEO.arm} material={M.cloth} position={[s * 0.035, -0.15, 0]}>
+              <Ol />
+            </mesh>
             {formal && (
               <mesh position={[s * 0.045, -0.27, 0]} material={M.white}>
                 <cylinderGeometry args={[0.064, 0.064, 0.03, 14]} />
               </mesh>
             )}
-            <mesh geometry={GEO.hand} material={M.skin} position={[s * 0.045, -0.32, 0]} />
+            <mesh geometry={GEO.hand} material={M.skin} position={[s * 0.045, -0.32, 0]}>
+              <Ol t={0.008} />
+            </mesh>
             {s > 0 && look.propArt && <HandProp kind={look.propArt} M={M} />}
           </group>
         ))}
 
         {/* ĐẦU */}
         <group ref={headRef} position={[0, 1.27, 0]}>
-          <mesh geometry={GEO.head} material={M.skin} scale={[1, 0.95, 0.94]} castShadow />
+          <mesh geometry={GEO.head} material={M.skin} scale={[1, 0.95, 0.94]} castShadow>
+            <Ol t={0.012} />
+          </mesh>
           {[-1, 1].map((s) => (
             <mesh key={s} geometry={GEO.ear} material={M.skin} position={[s * 0.345, -0.03, -0.01]} scale={[0.7, 1, 1]} />
           ))}
@@ -430,27 +453,38 @@ export const ClayCharacter3D: React.FC<ClayCharacter3DProps> = ({
             <mesh key={`b${s}`} geometry={GEO.blush} material={M.blush} position={[s * 0.2, -0.075, 0.3]} rotation={[0, s * 0.42, 0]} />
           ))}
 
-          {/* MẮT: lòng trắng + tròng + con ngươi + ánh sáng */}
-          {[-1, 1].map((s) => (
-            <group key={`e${s}`} ref={s < 0 ? leftEyeRef : rightEyeRef} position={[s * 0.125, 0.02, 0.29]}>
-              <mesh geometry={GEO.sclera} material={M.sclera} scale={[1, 1.12, 0.6]} />
-              <mesh geometry={GEO.iris} material={M.iris} position={[0, -0.004, 0.028]} scale={[1, 1.1, 0.5]} />
-              <mesh geometry={GEO.pupil} material={M.pupil} position={[0, -0.004, 0.043]} scale={[1, 1.1, 0.4]} />
-              <mesh geometry={GEO.glint} material={M.glint} position={[0.018, 0.022, 0.05]} />
-              {look.lashes && <mesh geometry={GEO.lash} material={M.pupil} position={[0, 0.012, 0.03]} rotation={[0, 0, Math.PI * 0.15]} />}
-            </group>
-          ))}
+          {/* MẮT: lòng trắng + tròng + con ngươi + ánh sáng (Ghibli: mắt anime to, mí trên đậm, 2 đốm sáng) */}
+          {[-1, 1].map((s) =>
+            isGhibli ? (
+              <group key={`e${s}`} ref={s < 0 ? leftEyeRef : rightEyeRef} position={[s * 0.13, -0.01, 0.302]}>
+                <mesh geometry={GEO.sclera} material={M.sclera} scale={[1.1, 1.45, 0.72]} />
+                <mesh geometry={GEO.iris} material={M.iris} position={[0, -0.012, 0.034]} scale={[1.28, 1.8, 0.5]} />
+                <mesh geometry={GEO.pupil} material={M.pupil} position={[0, -0.018, 0.049]} scale={[1.25, 1.65, 0.4]} />
+                <mesh geometry={GEO.glint} material={M.glint} position={[s * -0.022, 0.026, 0.058]} scale={1.7} />
+                <mesh geometry={GEO.glint} material={M.glint} position={[s * 0.019, -0.042, 0.056]} scale={0.8} />
+                <mesh geometry={GEO.lid} material={M.pupil} position={[0, 0.004, 0.036]} rotation={[0, 0, Math.PI * 0.07]} scale={[1.08, 1.3, 1]} />
+              </group>
+            ) : (
+              <group key={`e${s}`} ref={s < 0 ? leftEyeRef : rightEyeRef} position={[s * 0.125, 0.02, 0.29]}>
+                <mesh geometry={GEO.sclera} material={M.sclera} scale={[1, 1.12, 0.6]} />
+                <mesh geometry={GEO.iris} material={M.iris} position={[0, -0.004, 0.028]} scale={[1, 1.1, 0.5]} />
+                <mesh geometry={GEO.pupil} material={M.pupil} position={[0, -0.004, 0.043]} scale={[1, 1.1, 0.4]} />
+                <mesh geometry={GEO.glint} material={M.glint} position={[0.018, 0.022, 0.05]} />
+                {look.lashes && <mesh geometry={GEO.lash} material={M.pupil} position={[0, 0.012, 0.03]} rotation={[0, 0, Math.PI * 0.15]} />}
+              </group>
+            )
+          )}
 
           {/* LÔNG MÀY */}
           <mesh ref={leftBrowRef} geometry={GEO.brow} material={M.hair} position={[-0.125, 0.15, 0.32]} rotation={[0, 0, Math.PI / 2 + 0.06]} />
           <mesh ref={rightBrowRef} geometry={GEO.brow} material={M.hair} position={[0.125, 0.15, 0.32]} rotation={[0, 0, Math.PI / 2 - 0.06]} />
 
           {/* MŨI */}
-          <mesh geometry={GEO.nose} material={M.skin} position={[0, -0.04, 0.335]} scale={[1, 0.85, 0.9]} />
+          <mesh geometry={GEO.nose} material={M.skin} position={[0, -0.05, 0.335]} scale={isGhibli ? [0.5, 0.45, 0.6] : [1, 0.85, 0.9]} />
 
           {/* MIỆNG: nụ cười khi khép + khoang miệng khi nói */}
           <group position={[0, -0.135, 0.31]}>
-            <mesh ref={smileRef} geometry={GEO.smile} material={M.lip} rotation={[0, 0, Math.PI]} position={[0, 0.03, 0]} />
+            <mesh ref={smileRef} geometry={GEO.smile} material={M.lip} rotation={[0, 0, Math.PI]} position={[0, 0.03, 0.012]} scale={isGhibli ? [0.55, 0.45, 0.6] : 1} />
             <group ref={mouthRef} scale={[0.9, 0.05, 1]}>
               <mesh geometry={GEO.mouth} material={M.mouth} scale={[1, 1, 0.45]} />
               <mesh geometry={GEO.teeth} material={M.white} position={[0, 0.03, 0.018]} />
@@ -537,8 +571,23 @@ const Hair: React.FC<{ look: LookConfig; M: Mats }> = ({ look, M }) => {
   }
   return (
     <group>
-      {/* Mũ tóc cơ bản */}
-      <mesh geometry={GEO.hairCap} material={M.hair} position={[0, 0.06, -0.025]} />
+      {/* Tóc cơ bản: vỏ sau/hai bên + chỏm đỉnh + mái lọn trước trán */}
+      <mesh geometry={GEO.hairCap} material={M.hair} position={[0, 0.06, -0.025]}>
+        <Ol t={0.012} />
+      </mesh>
+      <mesh geometry={GEO.hairCrown} material={M.hair} position={[0, 0.06, -0.01]}>
+        <Ol t={0.012} />
+      </mesh>
+      {[-0.17, -0.06, 0.05, 0.16].map((x, i) => (
+        <mesh
+          key={i}
+          geometry={GEO.fringe}
+          material={M.hair}
+          position={[x, 0.235 - Math.abs(x) * 0.25, 0.3 - Math.abs(x) * 0.35]}
+          rotation={[0.75, x * 1.6, (i - 1.5) * 0.18]}
+          scale={[1, 1, 0.75]}
+        />
+      ))}
       {st === 'swoop' && (
         <>
           <mesh geometry={GEO.hairBlob} material={M.hair} position={[0.06, 0.3, 0.2]} scale={[1.5, 0.85, 1]} rotation={[0.4, 0, -0.35]} />

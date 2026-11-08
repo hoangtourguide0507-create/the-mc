@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { TileKind } from '../../types/game';
 import { GRID, GridData, gridToWorld, ROAD_COLS, ROAD_ROWS } from './cityMap';
+import { GHIBLI, isGhibli } from '../artStyle';
 
 /* Texture mặt đất vẽ bằng canvas (1 ô = 1 texture) */
 const groundTex = new Map<string, THREE.CanvasTexture>();
@@ -123,7 +124,7 @@ interface TileSpec {
   rough: number;
 }
 
-const SPEC: Record<Exclude<TileKind, 'water'>, TileSpec> = {
+const SPEC_NEON: Record<Exclude<TileKind, 'water'>, TileSpec> = {
   grass: { top: 0.06, tex: 'grass', colors: ['#3FA94E', '#39A048', '#45B054'], rough: 0.95 },
   park: { top: 0.06, tex: 'grass', colors: ['#4DBA5C', '#47B256'], rough: 0.95 },
   walk: { top: 0.07, tex: 'walk', colors: ['#C9C1B5', '#C3BBAF'], rough: 0.85 },
@@ -133,6 +134,19 @@ const SPEC: Record<Exclude<TileKind, 'water'>, TileSpec> = {
   'road-y': { top: 0.0, tex: 'road', colors: ['#353A46'], rough: 0.9 },
   cross: { top: 0.0, tex: 'road', colors: ['#363B46'], rough: 0.9 },
 };
+
+const SPEC_GHIBLI: Record<Exclude<TileKind, 'water'>, TileSpec> = {
+  grass: { top: 0.06, tex: 'grass', colors: GHIBLI.grass, rough: 1 },
+  park: { top: 0.06, tex: 'grass', colors: GHIBLI.park, rough: 1 },
+  walk: { top: 0.07, tex: 'plaza', colors: GHIBLI.walk, rough: 1 },
+  plaza: { top: 0.07, tex: 'plaza', colors: GHIBLI.plaza, rough: 1 },
+  sand: { top: 0.03, tex: 'sand', colors: GHIBLI.sand, rough: 1 },
+  'road-x': { top: 0.0, tex: 'walk', colors: [GHIBLI.road], rough: 1 },
+  'road-y': { top: 0.0, tex: 'walk', colors: [GHIBLI.road], rough: 1 },
+  cross: { top: 0.0, tex: 'walk', colors: ['#726B63'], rough: 1 },
+};
+
+const SPEC = isGhibli ? SPEC_GHIBLI : SPEC_NEON;
 
 const BASE_Y = -0.3;
 
@@ -229,7 +243,7 @@ const RoadMarkings: React.FC<{ grid: GridData }> = ({ grid }) => {
     <>
       <instancedMesh ref={dashRef} args={[undefined, undefined, dashes.length]} receiveShadow>
         <boxGeometry args={[0.42, 0.01, 0.05]} />
-        <meshStandardMaterial color="#F8E7A1" roughness={0.6} />
+        <meshStandardMaterial color={isGhibli ? '#EFE6D2' : '#F8E7A1'} roughness={0.8} />
       </instancedMesh>
       <instancedMesh ref={zebraRef} args={[undefined, undefined, zebras.length]} receiveShadow>
         <boxGeometry args={[0.7, 0.01, 0.09]} />
@@ -254,7 +268,7 @@ const Water: React.FC<{ night: boolean }> = ({ night }) => {
         <planeGeometry args={[GRID, half + 4]} />
         <meshStandardMaterial
           ref={matRef}
-          color={night ? '#0B3A6B' : '#1FA2D8'}
+          color={night ? '#0B3A6B' : isGhibli ? GHIBLI.water : '#1FA2D8'}
           roughness={0.12}
           metalness={0.25}
           normalMap={normal}
@@ -329,11 +343,15 @@ export const CityGround: React.FC<{ grid: GridData; night: boolean; onTile: (c: 
       {/* Bệ sa bàn */}
       <mesh position={[0, BASE_Y - 0.35, 0]} receiveShadow>
         <boxGeometry args={[GRID + 0.6, 0.7, GRID + 0.6]} />
-        <meshStandardMaterial color="#2A1B5E" roughness={0.6} />
+        <meshStandardMaterial color={isGhibli ? '#6B4F3A' : '#2A1B5E'} roughness={0.9} />
       </mesh>
       <mesh position={[0, BASE_Y - 0.02, 0]}>
         <boxGeometry args={[GRID + 0.7, 0.06, GRID + 0.7]} />
-        <meshStandardMaterial color="#FF4FD8" emissive="#FF4FD8" emissiveIntensity={night ? 1.4 : 0.35} />
+        {isGhibli ? (
+          <meshStandardMaterial color="#8A6A4E" roughness={0.9} />
+        ) : (
+          <meshStandardMaterial color="#FF4FD8" emissive="#FF4FD8" emissiveIntensity={night ? 1.4 : 0.35} />
+        )}
       </mesh>
       {layers.map(([kind, cells]) => (
         <TileLayer key={kind} kind={kind} cells={cells} />

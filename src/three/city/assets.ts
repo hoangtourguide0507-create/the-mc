@@ -3,6 +3,7 @@
  * Mọi thứ tạo một lần rồi tái sử dụng để giữ số draw call / bộ nhớ thấp trên iPhone.
  */
 import * as THREE from 'three';
+import { isGhibli, softTint } from '../artStyle';
 
 export type FacadeKind = 'apt' | 'glass' | 'house' | 'office' | 'shop';
 
@@ -158,7 +159,7 @@ export function mat(
   let m = matCache.get(k);
   if (!m) {
     m = new THREE.MeshStandardMaterial({
-      color,
+      color: softTint(color, 0.2),
       roughness: opts.rough ?? 0.6,
       metalness: opts.metal ?? 0,
       emissive: opts.emissive ? new THREE.Color(opts.emissive) : new THREE.Color('#000000'),
@@ -174,7 +175,7 @@ export function mat(
 /** Vật liệu phát sáng có cường độ đổi theo ngày/đêm — mỗi building giữ bản riêng */
 export function glowMat(color: string, emissive: string) {
   return new THREE.MeshStandardMaterial({
-    color,
+    color: isGhibli ? softTint(color, 0.15) : color,
     emissive: new THREE.Color(emissive),
     emissiveIntensity: 0.4,
     roughness: 0.35,

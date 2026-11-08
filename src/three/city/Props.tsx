@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { WorldProp } from '../../types/game';
 import { mat } from './assets';
 import { gridToWorld } from './cityMap';
+import { GHIBLI, isGhibli } from '../artStyle';
 
 type Xf = { p: [number, number, number]; s?: [number, number, number]; ry?: number; color?: string };
 
@@ -273,7 +274,7 @@ export const CityProps: React.FC<{ props: WorldProp[]; night: boolean }> = ({ pr
       seed = (seed * 16807) % 2147483647;
       return seed / 2147483647;
     };
-    const greens = ['#3FA34D', '#4CB860', '#2F9447', '#5BC46B'];
+    const greens = isGhibli ? GHIBLI.leaves : ['#3FA34D', '#4CB860', '#2F9447', '#5BC46B'];
 
     props.forEach((pr, idx) => {
       const [x, z] = gridToWorld(pr.c, pr.r);
@@ -282,7 +283,7 @@ export const CityProps: React.FC<{ props: WorldProp[]; night: boolean }> = ({ pr
         case 'tree': {
           const s = 0.85 + rnd() * 0.35;
           trunk.push({ p: [x, y + 0.25 * s, z], s: [s, s, s] });
-          const c = pr.color || greens[idx % greens.length];
+          const c = isGhibli && pr.color ? (idx % 3 === 0 ? '#F2B8C6' : greens[idx % greens.length]) : pr.color || greens[idx % greens.length];
           leaves.push({ p: [x, y + 0.62 * s, z], s: [s * 1.05, s * 0.95, s * 1.05], ry: rnd() * 6, color: c });
           leaves.push({ p: [x + 0.12 * s, y + 0.86 * s, z - 0.05 * s], s: [s * 0.78, s * 0.72, s * 0.78], ry: rnd() * 6, color: c });
           leaves.push({ p: [x - 0.1 * s, y + 0.8 * s, z + 0.1 * s], s: [s * 0.62, s * 0.6, s * 0.62], ry: rnd() * 6, color: c });
