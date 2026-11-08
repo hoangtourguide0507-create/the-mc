@@ -2372,7 +2372,7 @@ const SCENES = {
   /* ---------- 1. DAILY · Beginner ---------- */
   coffee: {
     id: 'coffee', type: 'daily', cat: 'daily', level: 'Beginner', icon: '☕', art: 'cafe', energy: 0, reqLv: 1,
-    title: 'Morning Coffee Run', sub: 'Daily Life · Mua cà phê sáng trước giờ đi dẫn',
+    title: 'Morning Coffee Run', sub: 'Daily Life · Mua cà phê sáng trước giờ đi dẫn · 07:00–11:00', duration: 30,
     reward: { cash: 0, charisma: 8, energy: 25 },
     curtain: 'Đang xỏ dép ra quán cà phê đầu ngõ…',
     npc: 'leo',
@@ -2398,7 +2398,7 @@ const SCENES = {
   /* ---------- 2. BACKSTAGE · Beginner+ ---------- */
   backstage: {
     id: 'backstage', type: 'show', cat: 'backstage', level: 'Beginner+', icon: '🎚️', art: 'backstage', energy: 20, reqLv: 1,
-    title: 'Rehearsal & Soundcheck', sub: 'Backstage · Tổng duyệt với kỹ thuật & đạo diễn',
+    title: 'Rehearsal & Soundcheck', sub: 'Backstage · Tổng duyệt với kỹ thuật & đạo diễn · 15:00', duration: 60,
     tag: 'Backstage', tagCls: 'bg-[#E6F6FF] text-[#1677A8]', tint: '#E6F6FF',
     reward: { cash: 90, charisma: 25 },
     curtain: 'Đang gỡ rối dây micro sau cánh gà…',
@@ -2428,7 +2428,7 @@ const SCENES = {
   /* ---------- 3. WEDDING STAGE · Emma & Liam ---------- */
   wedding: {
     id: 'wedding', type: 'show', cat: 'wedding', level: 'Intermediate', icon: '💍', art: 'wedding', energy: 20, reqLv: 2,
-    title: 'The Grand Entrance & First Toast', sub: 'Wedding Stage · Tiệc cưới Emma & Liam · 18:30',
+    title: 'The Grand Entrance & First Toast', sub: 'Wedding Stage · Tiệc cưới Emma & Liam · 18:30', duration: 90,
     tag: 'Wedding', tagCls: 'bg-[#FFE3EC] text-[#D6336C]', tint: '#FFE3EC',
     reward: { cash: 220, charisma: 45 },
     curtain: 'Đang ủi phẳng trang phục & học thuộc tên cô dâu chú rể…',
@@ -2463,7 +2463,7 @@ const SCENES = {
   /* ---------- 4. VIP GALA · Stage Trouble ---------- */
   gala: {
     id: 'gala', type: 'show', cat: 'gala', level: 'Advanced', icon: '🏆', art: 'gala', energy: 20, reqLv: 3,
-    title: 'Handling a Stage Delay', sub: 'VIP Gala · Sự cố sân khấu · 19:00',
+    title: 'Handling a Stage Delay', sub: 'VIP Gala · Sự cố sân khấu · 19:00', duration: 90,
     tag: 'VIP Gala', tagCls: 'bg-[#E9E5FF] text-[#5B3FD9]', tint: '#E9E5FF',
     reward: { cash: 380, charisma: 70 },
     curtain: 'Đang đeo tai nghe in-ear & kiểm tra bộ đàm…',
@@ -2501,7 +2501,7 @@ const SCENES = {
   /* ---------- 5. DAILY · Beginner — Đi siêu thị mua đồ nấu ăn ---------- */
   market: {
     id: 'market', type: 'daily', cat: 'daily', level: 'Beginner', icon: '🛒', art: 'market', energy: 0, reqLv: 1,
-    title: 'Supermarket Run', sub: 'Daily Life · Đi siêu thị mua đồ nấu bữa tối',
+    title: 'Supermarket Run', sub: 'Daily Life · Đi siêu thị mua đồ nấu bữa tối · 08:00–21:00', duration: 30,
     reward: { cash: 0, charisma: 8, energy: 25 },
     curtain: 'Đang lấy xe đẩy và tìm danh sách đi chợ…',
     npc: 'tom',
@@ -2528,7 +2528,7 @@ const SCENES = {
   /* ---------- 6. WEDDING · Intermediate — Tiệc cưới bãi biển ---------- */
   beach: {
     id: 'beach', type: 'show', cat: 'wedding', level: 'Intermediate', icon: '🏖️', art: 'beach', energy: 20, reqLv: 2,
-    title: 'Sunset Beach Wedding', sub: 'Wedding Stage · Tiệc cưới bãi biển lúc hoàng hôn · 17:30',
+    title: 'Sunset Beach Wedding', sub: 'Wedding Stage · Tiệc cưới bãi biển lúc hoàng hôn · 17:30', duration: 90,
     tag: 'Beach', tagCls: 'bg-[#FFF0DB] text-[#C26A00]', tint: '#FFF0DB',
     reward: { cash: 260, charisma: 50 },
     curtain: 'Đang giũ cát khỏi giày & kiểm tra micro chống gió…',
@@ -2555,7 +2555,7 @@ const SCENES = {
   /* ---------- 7. TALKSHOW · Advanced — Phỏng vấn CEO trên sân khấu ---------- */
   interview: {
     id: 'interview', type: 'show', cat: 'talkshow', level: 'Advanced', icon: '🎙️', art: 'talkshow', energy: 20, reqLv: 3,
-    title: 'On-Stage CEO Interview', sub: 'Talkshow · Phỏng vấn CEO trước 500 khán giả · 20:00',
+    title: 'On-Stage CEO Interview', sub: 'Talkshow · Phỏng vấn CEO trước 500 khán giả · 20:00', duration: 90,
     tag: 'Talkshow', tagCls: 'bg-[#E3F5EC] text-[#1B8A5A]', tint: '#E3F5EC',
     reward: { cash: 420, charisma: 75 },
     curtain: 'Đang kê ghế bành & in thẻ câu hỏi phỏng vấn…',
@@ -2627,12 +2627,250 @@ const SHOP = {
 };
 const bonusOf = k => SHOP.upgrades.filter(u => state.items[u.id]).reduce((a, u) => a + (u.bonus[k] || 0), 0);
 
-/* [STUB · owner: lesson-content] Người đi đường bắt chuyện — hợp đồng trong .claude/specs/world-map.md */
+/* STREET_TALK — người đi đường bắt chuyện trên bản đồ (owner: lesson-content · hợp đồng: .claude/specs/world-map.md §4)
+   { id, level: 'A2'|'B1'|'B2', loc: locId|null, prompt: { en, vi }, options: [3 × { en, vi, ok, why? }] } — đúng 1 ok:true */
 const STREET_TALK = [
-  { id: 'st-dir-1', level: 'A2', loc: null, prompt: { en: "Excuse me, do you know where the coffee shop is?", vi: 'Xin lỗi, bạn có biết quán cà phê ở đâu không?' },
-    options: [ { en: "Sure! It's just around the corner, next to the market.", vi: 'Có chứ! Ngay góc đường, cạnh siêu thị.', ok: true },
-               { en: "Yes, I am coffee.", vi: 'Vâng, tôi là cà phê.', ok: false, why: 'Sai nghĩa — hãy chỉ đường.' },
-               { en: "No thank you.", vi: 'Không, cảm ơn.', ok: false, why: 'Không trả lời câu hỏi.' } ] }
+  /* ---------- Ở đâu cũng gặp (loc: null) ---------- */
+  { id: 'st-dir-1', level: 'A2', loc: null,
+    prompt: { en: "Excuse me, do you know where the coffee shop is?", vi: "Xin lỗi, bạn có biết quán cà phê ở đâu không?" },
+    options: [
+      { en: "Sure! It's just around the corner, next to the supermarket.", vi: "Có chứ! Ngay góc phố thôi, cạnh siêu thị.", ok: true },
+      { en: "Yes, I know it.", vi: "Có, tôi biết.", ok: false, why: "Chỉ đáp “có biết” mà không chỉ đường — người hỏi vẫn chưa biết đi lối nào." },
+      { en: "It's in the corner, next the supermarket.", vi: "Nó ở trong góc, cạnh siêu thị.", ok: false, why: "Thiếu “to” (next to). Và “around the corner” là ngay góc phố, còn “in the corner” là trong góc phòng." }
+    ] },
+  { id: 'st-dir-2', level: 'B1', loc: null,
+    prompt: { en: "I think I'm lost. How do I get to the TV station from here?", vi: "Hình như tôi lạc rồi. Từ đây đến đài truyền hình đi thế nào?" },
+    options: [
+      { en: "Go straight two block, then turn left side.", vi: "Đi thẳng hai dãy nhà, rồi rẽ bên trái.", ok: false, why: "Số nhiều phải là “two blocks”; “turn left” là đủ, không thêm “side”." },
+      { en: "Go straight for two blocks, then turn left. You can't miss it.", vi: "Đi thẳng hai dãy nhà rồi rẽ trái. Bạn sẽ thấy ngay thôi.", ok: true },
+      { en: "Very far. Take taxi.", vi: "Xa lắm. Đi taxi đi.", ok: false, why: "Cộc lốc và thiếu “a” (take a taxi). Nếu xa, hãy nói nhẹ nhàng: “It's a bit far — a taxi might be easier.”" }
+    ] },
+  { id: 'st-weather-1', level: 'A2', loc: null,
+    prompt: { en: "It's so hot today, isn't it?", vi: "Hôm nay nóng quá nhỉ?" },
+    options: [
+      { en: "Yes, today is hot weather.", vi: "Vâng, hôm nay là thời tiết nóng.", ok: false, why: "Dịch từng chữ kiểu tiếng Việt. Người bản xứ nói “It's really hot today” hoặc “It really is!”." },
+      { en: "No.", vi: "Không.", ok: false, why: "Quá cụt — small talk cần đáp lại thêm một câu cho cuộc trò chuyện tiếp tục." },
+      { en: "It really is! I'm trying to stay in the shade.", vi: "Đúng thật! Mình đang cố đứng trong bóng râm đây.", ok: true }
+    ] },
+  { id: 'st-outfit-1', level: 'A2', loc: null,
+    prompt: { en: "I love your jacket! Where did you get it?", vi: "Áo khoác của bạn đẹp quá! Bạn mua ở đâu vậy?" },
+    options: [
+      { en: "Thank you! I got it at a little shop near the market.", vi: "Cảm ơn nhé! Mình mua ở một tiệm nhỏ gần chợ.", ok: true },
+      { en: "Thank you! I buy it at a shop last week.", vi: "Cảm ơn! Tuần trước mình mua ở một cửa hàng.", ok: false, why: "Sai thì — có “last week” phải dùng quá khứ: “I bought it”." },
+      { en: "Oh no, it's very cheap and old.", vi: "Ôi không, nó rẻ và cũ lắm.", ok: false, why: "Chê lại đồ của mình để khiêm tốn là thói quen của người Việt; người bản xứ chỉ cần bạn nói “Thank you!”." }
+    ] },
+  { id: 'st-voice-1', level: 'B1', loc: null,
+    prompt: { en: "You have such a clear voice. Are you a singer?", vi: "Giọng bạn trong quá. Bạn là ca sĩ à?" },
+    options: [
+      { en: "No, I am work as MC.", vi: "Không, tôi làm MC.", ok: false, why: "Không dùng “am” cùng động từ thường; nói “I work as an MC” (MC đọc /em-si/ nên dùng “an”)." },
+      { en: "No. Singer is different.", vi: "Không. Ca sĩ khác.", ok: false, why: "Cộc và khó hiểu. Hãy cảm ơn lời khen rồi giới thiệu nghề của mình." },
+      { en: "Thank you! I'm actually an event MC — I host weddings and galas.", vi: "Cảm ơn bạn! Thật ra mình là MC sự kiện — mình dẫn tiệc cưới và gala.", ok: true }
+    ] },
+  { id: 'st-fan-1', level: 'B1', loc: null,
+    prompt: { en: "Wait, aren't you the MC from that wedding video online?", vi: "Khoan, bạn có phải MC trong clip đám cưới trên mạng không?" },
+    options: [
+      { en: "Yes, I am MC of that video.", vi: "Vâng, tôi là MC của video đó.", ok: false, why: "Thiếu mạo từ (“the MC”) và nghe cứng. Tự nhiên nhất là: “Yes, that's me!”." },
+      { en: "Yes, that's me! Thanks so much for watching.", vi: "Đúng là mình đây! Cảm ơn bạn đã xem nhé.", ok: true },
+      { en: "Yes. What do you want?", vi: "Ừ. Bạn muốn gì?", ok: false, why: "Nghe như khó chịu với fan — MC luôn giữ hình ảnh thân thiện ngoài đời." }
+    ] },
+  { id: 'st-fan-2', level: 'B1', loc: null,
+    prompt: { en: "I'm a big fan! Could I take a quick selfie with you?", vi: "Mình hâm mộ bạn lắm! Cho mình chụp nhanh tấm selfie nhé?" },
+    options: [
+      { en: "Sure, you can take a selfie for me.", vi: "Được, bạn chụp selfie giúp tôi.", ok: false, why: "“for me” là chụp hộ tôi; chụp chung phải là “with me”." },
+      { en: "Okay, quickly quickly.", vi: "Ừ, nhanh nhanh.", ok: false, why: "Lặp từ kiểu tiếng Việt “nhanh nhanh” — nghe như đang hối, thiếu lịch sự với fan." },
+      { en: "Of course! Let's find some good light over here.", vi: "Tất nhiên rồi! Qua đây chỗ có ánh sáng đẹp nhé.", ok: true }
+    ] },
+  { id: 'st-book-1', level: 'B2', loc: null,
+    prompt: { en: "We're getting married in December. Do you host bilingual weddings?", vi: "Tụi mình sẽ cưới vào tháng Mười Hai. Bạn có dẫn tiệc cưới song ngữ không?" },
+    options: [
+      { en: "I do — congratulations! I'd love to hear more about your plans.", vi: "Có chứ — chúc mừng hai bạn! Mình rất muốn nghe thêm về kế hoạch của hai bạn.", ok: true },
+      { en: "Yes, I can host English and Vietnamese both.", vi: "Có, tôi dẫn được tiếng Anh và tiếng Việt cả hai.", ok: false, why: "Sai trật tự: “both English and Vietnamese”. Và đừng quên chúc mừng cặp đôi trước." },
+      { en: "Yes. How much is your budget?", vi: "Có. Ngân sách của bạn bao nhiêu?", ok: false, why: "Hỏi tiền ngay câu đầu quá đường đột. Hãy chúc mừng và hỏi về kế hoạch cưới trước." }
+    ] },
+  { id: 'st-book-2', level: 'B2', loc: null,
+    prompt: { en: "What's your rate for a three-hour evening reception?", vi: "Giá của bạn cho một tiệc tối kéo dài ba tiếng là bao nhiêu?" },
+    options: [
+      { en: "It's depend on the program.", vi: "Nó tuỳ vào chương trình.", ok: false, why: "“depend” là động từ, không đi với “is”: nói “It depends on the program”." },
+      { en: "Cheap, cheap! Don't worry about it.", vi: "Rẻ mà, rẻ mà! Đừng lo.", ok: false, why: "Quá suồng sã — khách cần một báo giá rõ ràng, chuyên nghiệp." },
+      { en: "It depends on the program. Could I send you a detailed quote?", vi: "Còn tuỳ vào chương trình. Mình gửi bạn bảng báo giá chi tiết nhé?", ok: true }
+    ] },
+  { id: 'st-thanks-1', level: 'A2', loc: null,
+    prompt: { en: "Thank you so much for your help!", vi: "Cảm ơn bạn đã giúp nhiều nhé!" },
+    options: [
+      { en: "Nothing.", vi: "Không có gì.", ok: false, why: "Dịch từng chữ “Không có gì”. Tiếng Anh nói “You're welcome!” hoặc “No problem!”." },
+      { en: "You're welcome! Have a great day.", vi: "Không có gì đâu! Chúc bạn một ngày vui nhé.", ok: true },
+      { en: "Yes.", vi: "Ừ.", ok: false, why: "Đáp “Yes” khi được cảm ơn nghe như đồng ý là mình giúp nhiều — hơi kiêu và cộc." }
+    ] },
+
+  /* ---------- Gần nhà (home) ---------- */
+  { id: 'st-home-1', level: 'A2', loc: 'home',
+    prompt: { en: "Good morning! Off to work already?", vi: "Chào buổi sáng! Đi làm sớm thế à?" },
+    options: [
+      { en: "Morning! Yes, I have a rehearsal at the theater today.", vi: "Chào buổi sáng! Vâng, hôm nay mình có buổi tổng duyệt ở nhà hát.", ok: true },
+      { en: "Yes, I'm going to work at now.", vi: "Vâng, tôi đang đi làm bây giờ.", ok: false, why: "“now” không đi với “at”: nói “I'm heading to work now”." },
+      { en: "Good morning! Have you eaten yet?", vi: "Chào buổi sáng! Ăn sáng chưa?", ok: false, why: "“Ăn cơm chưa?” là lời chào kiểu Việt; với người nước ngoài nó nghe như câu hỏi riêng tư, không phải lời chào." }
+    ] },
+  { id: 'st-home-2', level: 'B1', loc: 'home',
+    prompt: { en: "I heard you practicing your speech last night. It sounded great!", vi: "Tối qua tôi nghe bạn tập nói. Nghe hay lắm!" },
+    options: [
+      { en: "Thank you! I was practice until midnight.", vi: "Cảm ơn! Tôi tập tới nửa đêm.", ok: false, why: "Sai thì: “I was practicing” hoặc “I practiced until midnight”." },
+      { en: "Yes, I know. I'm very good.", vi: "Vâng, tôi biết. Tôi giỏi lắm.", ok: false, why: "Tự khen thẳng thừng nghe kiêu — chỉ cần cảm ơn và hỏi thăm hàng xóm." },
+      { en: "Oh, thank you! Sorry if I was a bit too loud.", vi: "Ôi, cảm ơn nhé! Xin lỗi nếu mình hơi ồn.", ok: true }
+    ] },
+  { id: 'st-home-3', level: 'A2', loc: 'home',
+    prompt: { en: "Your package arrived this afternoon, so I kept it for you.", vi: "Chiều nay có bưu kiện của bạn, tôi giữ giúp rồi đấy." },
+    options: [
+      { en: "Thank you for keep it.", vi: "Cảm ơn vì giữ nó.", ok: false, why: "Sau “for” động từ phải thêm -ing: “Thank you for keeping it”." },
+      { en: "That's so kind of you! Thank you for keeping it.", vi: "Bạn tốt quá! Cảm ơn đã giữ giúp mình.", ok: true },
+      { en: "Okay. Give me.", vi: "Ừ. Đưa đây.", ok: false, why: "Cộc lốc — thiếu “please” và lời cảm ơn hàng xóm." }
+    ] },
+
+  /* ---------- Quán cà phê (cafe) ---------- */
+  { id: 'st-cafe-1', level: 'A2', loc: 'cafe',
+    prompt: { en: "Hi there! Is this for here or to go?", vi: "Chào bạn! Uống tại chỗ hay mang đi ạ?" },
+    options: [
+      { en: "Yes, please.", vi: "Vâng, làm ơn.", ok: false, why: "Câu hỏi lựa chọn (A hay B) không trả lời bằng Yes/No — hãy chọn một: “To go” hoặc “For here”." },
+      { en: "To go, please. I'm in a bit of a hurry.", vi: "Mang đi nhé. Mình đang hơi vội.", ok: true },
+      { en: "I bring it go home.", vi: "Tôi mang nó đi về nhà.", ok: false, why: "Dịch từng chữ “mang về”. Tiếng Anh chỉ cần “To go, please” hoặc “Takeaway, please”." }
+    ] },
+  { id: 'st-cafe-2', level: 'B1', loc: 'cafe',
+    prompt: { en: "Is anyone sitting here? The café is packed this morning.", vi: "Chỗ này có ai ngồi chưa? Sáng nay quán đông quá." },
+    options: [
+      { en: "Yes, you can sit.", vi: "Có, bạn ngồi được.", ok: false, why: "Đáp “Yes” cho “Is anyone sitting here?” nghĩa là ĐÃ có người ngồi. Muốn mời ngồi phải nói “No, go ahead!”." },
+      { en: "No have people. Sit, sit.", vi: "Không có người. Ngồi đi, ngồi đi.", ok: false, why: "Dịch từng chữ “không có người”. Nói “No, it's free — go ahead!”." },
+      { en: "No, go ahead! I'm leaving in a few minutes anyway.", vi: "Chưa có ai, bạn cứ ngồi! Vài phút nữa mình cũng đi rồi.", ok: true }
+    ] },
+  { id: 'st-cafe-3', level: 'B2', loc: 'cafe',
+    prompt: { en: "We're starting an open-mic night. Would you consider being our host?", vi: "Quán sắp mở đêm nhạc open-mic. Bạn có muốn làm MC cho tụi mình không?" },
+    options: [
+      { en: "I'd be happy to! Could you send me the date and details?", vi: "Rất sẵn lòng! Bạn gửi mình ngày giờ và thông tin chi tiết nhé?", ok: true },
+      { en: "I'm considering about it.", vi: "Tôi đang cân nhắc về nó.", ok: false, why: "“consider” không đi với “about”: nói “I'll consider it” hoặc “Let me think about it”." },
+      { en: "Maybe. If you pay me a lot.", vi: "Có thể. Nếu trả tôi nhiều tiền.", ok: false, why: "Quá thẳng và trần trụi — chuyện cát-xê nên bàn sau, lịch sự hơn." }
+    ] },
+
+  /* ---------- Siêu thị (market) ---------- */
+  { id: 'st-market-1', level: 'A2', loc: 'market',
+    prompt: { en: "Excuse me, do they sell fresh herbs here?", vi: "Xin lỗi, ở đây có bán rau thơm tươi không?" },
+    options: [
+      { en: "Yes, they are sell near the entrance.", vi: "Có, chúng được bán gần lối vào.", ok: false, why: "Bị động phải là “they're sold”, hoặc nói chủ động “they sell them near the entrance”." },
+      { en: "Yes! They're in the produce section, near the entrance.", vi: "Có! Ở quầy rau củ, gần lối vào đó.", ok: true },
+      { en: "I don't know. Ask other people.", vi: "Không biết. Hỏi người khác đi.", ok: false, why: "Nghe phũ. Lịch sự hơn: “Sorry, I'm not sure — maybe ask a staff member?”." }
+    ] },
+  { id: 'st-market-2', level: 'B1', loc: 'market',
+    prompt: { en: "Oh, sorry! Did I just bump into you with my cart?", vi: "Ôi, xin lỗi! Tôi vừa đẩy xe va vào bạn phải không?" },
+    options: [
+      { en: "Yes, you hit me. Be careful.", vi: "Đúng, bạn tông tôi. Cẩn thận đi.", ok: false, why: "Quá gay gắt cho một va chạm nhỏ khi người kia đã xin lỗi." },
+      { en: "Never mind, it's nothing happen.", vi: "Không sao, không có gì xảy ra.", ok: false, why: "Sai cấu trúc: “Nothing happened” — hoặc gọn nhất “No worries!”." },
+      { en: "No worries at all! It's really busy in here today.", vi: "Không sao đâu! Hôm nay ở đây đông thật.", ok: true }
+    ] },
+  { id: 'st-market-3', level: 'B2', loc: 'market',
+    prompt: { en: "Sorry, our card machine is down. Do you mind paying in cash?", vi: "Xin lỗi, máy quẹt thẻ đang hỏng. Bạn trả tiền mặt có phiền không?" },
+    options: [
+      { en: "Not at all. Let me check — yes, I've got enough.", vi: "Không phiền gì. Để mình xem — có, mình đủ tiền.", ok: true },
+      { en: "Yes, of course!", vi: "Có, tất nhiên!", ok: false, why: "“Do you mind…?” trả lời “Yes” nghĩa là CÓ phiền. Muốn đồng ý phải nói “Not at all” hoặc “No problem”." },
+      { en: "Why your machine always broken?", vi: "Sao máy của bạn lúc nào cũng hỏng?", ok: false, why: "Sai ngữ pháp (Why is your machine always broken?) và giọng trách móc với nhân viên." }
+    ] },
+
+  /* ---------- Nhà hát (theater) ---------- */
+  { id: 'st-theater-1', level: 'B1', loc: 'theater',
+    prompt: { en: "Do you know what time the show starts tonight?", vi: "Bạn có biết tối nay mấy giờ chương trình bắt đầu không?" },
+    options: [
+      { en: "It start at eight o'clock.", vi: "Nó bắt đầu lúc tám giờ.", ok: false, why: "Thiếu -s cho ngôi thứ ba số ít: “It starts at eight”." },
+      { en: "I think it starts at eight, but the box office can confirm.", vi: "Mình nghĩ là tám giờ, nhưng quầy vé sẽ xác nhận chính xác.", ok: true },
+      { en: "I don't work here.", vi: "Tôi không làm ở đây.", ok: false, why: "Nghe phũ. Nếu không chắc, hãy gợi ý: “Sorry, I'm not sure — maybe ask the box office?”." }
+    ] },
+  { id: 'st-theater-2', level: 'B2', loc: 'theater',
+    prompt: { en: "Break a leg tonight! Are you hosting the charity concert?", vi: "Chúc tối nay diễn thật thành công! Bạn dẫn đêm nhạc từ thiện à?" },
+    options: [
+      { en: "Why? Do you want me to fall?", vi: "Sao? Bạn muốn tôi ngã à?", ok: false, why: "“Break a leg” là thành ngữ chúc may mắn trong giới biểu diễn, không phải trù ẻo." },
+      { en: "Thanks! Yes, I host it tonight.", vi: "Cảm ơn! Vâng, tôi dẫn tối nay.", ok: false, why: "Kế hoạch đã định sẵn dùng hiện tại tiếp diễn: “I'm hosting it tonight”." },
+      { en: "Thanks! Yes, I am — fingers crossed it all runs smoothly.", vi: "Cảm ơn nhé! Đúng rồi — mong mọi thứ suôn sẻ.", ok: true }
+    ] },
+
+  /* ---------- Nhà hàng tiệc cưới (wedding) ---------- */
+  { id: 'st-wedding-1', level: 'B1', loc: 'wedding',
+    prompt: { en: "Excuse me, is the wedding reception on this floor?", vi: "Xin lỗi, tiệc cưới tổ chức ở tầng này phải không?" },
+    options: [
+      { en: "It's on the second floor. The elevator is just to your right.", vi: "Tiệc ở tầng hai ạ. Thang máy ngay bên phải mình.", ok: true },
+      { en: "It's in the floor two.", vi: "Nó ở trong tầng hai.", ok: false, why: "Tầng dùng “on” + số thứ tự: “on the second floor”." },
+      { en: "Go up, go up.", vi: "Đi lên, đi lên.", ok: false, why: "Quá cụt — khách không biết lên tầng mấy, đi lối nào." }
+    ] },
+  { id: 'st-wedding-2', level: 'B2', loc: 'wedding',
+    prompt: { en: "Thank you for hosting so beautifully. Everyone loved your toast!", vi: "Cảm ơn bạn đã dẫn quá tuyệt. Ai cũng thích màn nâng ly của bạn!" },
+    options: [
+      { en: "Thank you! I'm very honor to host.", vi: "Cảm ơn! Tôi rất vinh dự được dẫn.", ok: false, why: "“honor” là danh từ. Nói “I'm honored” hoặc “It was an honor”." },
+      { en: "That means a lot. It was an honor to be part of their day.", vi: "Lời khen đó ý nghĩa lắm. Được góp mặt trong ngày vui của hai bạn là vinh dự của mình.", ok: true },
+      { en: "Yes, I know. I always do it well.", vi: "Vâng, tôi biết. Tôi lúc nào cũng làm tốt.", ok: false, why: "Nghe kiêu — MC cưới khéo léo luôn hướng lời khen về cặp đôi." }
+    ] },
+
+  /* ---------- Khách sạn Gala (hotel) ---------- */
+  { id: 'st-hotel-1', level: 'A2', loc: 'hotel',
+    prompt: { en: "Good evening! Are you here for the gala dinner?", vi: "Chào buổi tối! Bạn đến dự tiệc gala phải không?" },
+    options: [
+      { en: "Yes, I come for the gala.", vi: "Vâng, tôi đến cho gala.", ok: false, why: "Sai thì. Đáp theo đúng cấu trúc câu hỏi: “Yes, I'm here for the gala”." },
+      { en: "Yes. Backstage where?", vi: "Ừ. Hậu trường đâu?", ok: false, why: "Cộc lốc, sai trật tự. Lịch sự: “Could you tell me where the backstage entrance is?”." },
+      { en: "Yes, I'm the MC tonight. Where's the backstage entrance, please?", vi: "Vâng, tối nay mình là MC. Cho mình hỏi lối vào hậu trường ở đâu ạ?", ok: true }
+    ] },
+  { id: 'st-hotel-2', level: 'B2', loc: 'hotel',
+    prompt: { en: "Could you recommend a good place for local food nearby?", vi: "Bạn có thể gợi ý chỗ nào gần đây ăn món địa phương ngon không?" },
+    options: [
+      { en: "Definitely! Try the pho place across the street — it's a local favorite.", vi: "Chắc chắn rồi! Thử quán phở bên kia đường nhé — dân địa phương mê lắm.", ok: true },
+      { en: "You should to try pho across the street.", vi: "Bạn nên thử phở bên kia đường.", ok: false, why: "Sau “should” dùng động từ nguyên mẫu, không có “to”: “You should try…”." },
+      { en: "Many places. You go find.", vi: "Nhiều chỗ lắm. Bạn tự đi tìm.", ok: false, why: "Cộc lốc và dịch từng chữ — khách nước ngoài cần một gợi ý cụ thể." }
+    ] },
+  { id: 'st-hotel-3', level: 'B2', loc: 'hotel',
+    prompt: { en: "The CEO's speech might run long. Can you be flexible with the timing?", vi: "Bài phát biểu của CEO có thể kéo dài. Bạn linh động thời gian được không?" },
+    options: [
+      { en: "No problem, I will cut his speech.", vi: "Không sao, tôi sẽ cắt bài phát biểu của ông ấy.", ok: false, why: "MC không bao giờ tự cắt lời CEO — hãy hứa linh động và chờ tín hiệu từ ban tổ chức." },
+      { en: "Absolutely. Just give me a signal, and I'll adjust the program.", vi: "Hoàn toàn được. Chỉ cần ra hiệu, mình sẽ điều chỉnh chương trình.", ok: true },
+      { en: "Okay, I am flexible with everything time.", vi: "Được, tôi linh động với mọi thời gian.", ok: false, why: "“everything time” sai; nói “I can be flexible with the timing”." }
+    ] },
+
+  /* ---------- Bãi biển (beach) ---------- */
+  { id: 'st-beach-1', level: 'A2', loc: 'beach',
+    prompt: { en: "Excuse me, could you take a photo of us?", vi: "Xin lỗi, bạn chụp giúp tụi mình một tấm được không?" },
+    options: [
+      { en: "Sure, I take photo for you.", vi: "Được, tôi chụp ảnh cho bạn.", ok: false, why: "Thiếu “will” và “a”: “Sure, I'll take a photo for you”." },
+      { en: "Sure! Say cheese! I'll take one more, just in case.", vi: "Được chứ! Cười lên nào! Mình chụp thêm một tấm cho chắc nhé.", ok: true },
+      { en: "No, I'm busy.", vi: "Không, tôi bận.", ok: false, why: "Quá cộc. Nếu bận thật: “Sorry, I'm in a bit of a rush.”" }
+    ] },
+  { id: 'st-beach-2', level: 'B1', loc: 'beach',
+    prompt: { en: "Is the water safe for swimming here?", vi: "Ở đây nước có an toàn để bơi không?" },
+    options: [
+      { en: "Yes, you can swimming.", vi: "Có, bạn có thể bơi.", ok: false, why: "Sau “can” dùng động từ nguyên mẫu: “you can swim”." },
+      { en: "I think so. Good luck!", vi: "Chắc vậy. Chúc may mắn!", ok: false, why: "Nghe thiếu trách nhiệm với chuyện an toàn — hãy chỉ chỗ có cứu hộ." },
+      { en: "Usually, yes, but stay between the flags where the lifeguards are.", vi: "Thường là an toàn, nhưng hãy bơi giữa hai lá cờ, chỗ có cứu hộ.", ok: true }
+    ] },
+  { id: 'st-beach-3', level: 'B2', loc: 'beach',
+    prompt: { en: "Is the sunset ceremony still on? The wind is really picking up.", vi: "Lễ cưới lúc hoàng hôn vẫn diễn ra chứ? Gió đang mạnh dần lên." },
+    options: [
+      { en: "Yes, it's still on — everything is secured, so please take a seat.", vi: "Vẫn diễn ra ạ — mọi thứ đã được cố định chắc chắn, mời anh chị vào chỗ.", ok: true },
+      { en: "Yes, it is still open.", vi: "Vâng, nó vẫn mở.", ok: false, why: "“still on” = vẫn diễn ra; “open” chỉ dùng cho cửa hàng, quán xá." },
+      { en: "I don't know, maybe cancel.", vi: "Không biết, chắc huỷ.", ok: false, why: "Người dẫn chương trình không được làm khách hoang mang — hãy trấn an và mời vào chỗ." }
+    ] },
+
+  /* ---------- Đài truyền hình (tv) ---------- */
+  { id: 'st-tv-1', level: 'B1', loc: 'tv',
+    prompt: { en: "Hi, which program are you here for today?", vi: "Chào bạn, hôm nay bạn đến tham gia chương trình nào?" },
+    options: [
+      { en: "I'm here for talk show at evening.", vi: "Tôi đến cho talk show vào buổi tối.", ok: false, why: "Thiếu “the” và sai giới từ: “the talk show in the evening”." },
+      { en: "I'm a guest on the evening talk show. Here's my invitation.", vi: "Mình là khách mời talk show tối nay. Thư mời của mình đây.", ok: true },
+      { en: "You don't know me?", vi: "Bạn không biết tôi à?", ok: false, why: "Nghe kiêu — nhân viên an ninh chỉ đang làm đúng việc của họ." }
+    ] },
+  { id: 'st-tv-2', level: 'B2', loc: 'tv',
+    prompt: { en: "Quick question for our viewers: what makes a great wedding MC?", vi: "Hỏi nhanh cho khán giả nhà đài: thế nào là một MC đám cưới giỏi?" },
+    options: [
+      { en: "I think is good voice and beautiful face.", vi: "Tôi nghĩ là giọng hay và mặt đẹp.", ok: false, why: "Thiếu chủ ngữ “it” (I think it's…), và câu trả lời hời hợt trước ống kính." },
+      { en: "Sorry, no comment.", vi: "Xin lỗi, miễn bình luận.", ok: false, why: "Đây là câu hỏi tích cực — từ chối nghe như đang né tránh phóng viên." },
+      { en: "Listening closely to the couple, and keeping the energy warm but elegant.", vi: "Lắng nghe cặp đôi thật kỹ, và giữ không khí ấm áp mà vẫn sang trọng.", ok: true }
+    ] },
+  { id: 'st-tv-3', level: 'B2', loc: 'tv',
+    prompt: { en: "We're live in two minutes. Are you comfortable with the questions?", vi: "Hai phút nữa lên sóng trực tiếp. Bạn thấy ổn với bộ câu hỏi chứ?" },
+    options: [
+      { en: "Yes, I've gone through them. I'm ready whenever you are.", vi: "Ổn rồi, mình đã xem kỹ hết. Bên bạn sẵn sàng là mình sẵn sàng.", ok: true },
+      { en: "Yes, I have read them yesterday.", vi: "Vâng, hôm qua tôi đã đọc rồi.", ok: false, why: "Hiện tại hoàn thành không đi với “yesterday”: nói “I read them yesterday”." },
+      { en: "Relax, relax, everything is easy.", vi: "Thư giãn đi, dễ mà.", ok: false, why: "Nghe xuề xoà, xem nhẹ chương trình trực tiếp — nhà sản xuất cần câu trả lời rõ ràng." }
+    ] }
 ];
 
 /* =========================================================
