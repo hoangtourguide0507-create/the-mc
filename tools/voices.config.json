@@ -17,8 +17,8 @@
     "leo": {
       "accent": "en-US",
       "brief": "Barista trẻ, 22 tuổi. Sôi nổi, hay pha trò, nói nhanh khi phấn khích. Thích khoe ly cà phê mới.",
-      "voiceName": "Jessica",
-      "voiceId": "cgSgspJ2msm6clMCkdW9"
+      "voiceName": "Chris",
+      "voiceId": "iP95p4xoKVk53GoZ742B"
     },
     "ivy": {
       "accent": "en-US",
@@ -35,8 +35,8 @@
     "couple:emma": {
       "accent": "en-US",
       "brief": "Cô dâu trẻ. Ngọt ngào, dễ xúc động, hay hồi hộp và cười lẫn khóc.",
-      "voiceName": "River",
-      "voiceId": "SAz9YHcvj6GT2YYXdXww"
+      "voiceName": "Sarah",
+      "voiceId": "EXAVITQu4vr4xnSDxMaL"
     },
     "couple:liam": {
       "accent": "en-US",
@@ -47,8 +47,8 @@
     "alex": {
       "accent": "en-US",
       "brief": "Đạo diễn sân khấu, ~40 tuổi. Dứt khoát, gấp gáp, nói ngắn, mệnh lệnh rõ ràng. Không hay cười khi show đang chạy.",
-      "voiceName": "Harry",
-      "voiceId": "SOYHLrjzK2X1ezoPC6cr"
+      "voiceName": "Adam",
+      "voiceId": "pNInz6obpgDQGcFmaJgB"
     },
     "sam": {
       "accent": "en-US",
@@ -59,8 +59,8 @@
     "tom": {
       "accent": "en-US",
       "brief": "Nhân viên siêu thị trẻ, ~20 tuổi. Nhanh nhẹn, thân thiện, hay chào khách, nói chuyện như bạn bè.",
-      "voiceName": "Will",
-      "voiceId": "bIHbv24MWmeRgasZH58o"
+      "voiceName": "Liam",
+      "voiceId": "TX3LPaxmHKxFdv7VOQHJ"
     },
     "david": {
       "accent": "en-US",
@@ -71,14 +71,14 @@
     "coach": {
       "accent": "en-US",
       "brief": "Giọng mẫu cho người chơi. Rõ ràng, kiên nhẫn, phát âm chuẩn, nhịp đều và dễ nghe.",
-      "voiceName": "Sarah",
-      "voiceId": "EXAVITQu4vr4xnSDxMaL"
+      "voiceName": "Jessica",
+      "voiceId": "cgSgspJ2msm6clMCkdW9"
     },
     "passer": {
       "accent": "en-US",
       "brief": "Người qua đường hay hỏi chuyện. Thân thiện, tò mò, hơi lém lỉnh.",
-      "voiceName": "Chris",
-      "voiceId": "iP95p4xoKVk53GoZ742B"
+      "voiceName": "Will",
+      "voiceId": "bIHbv24MWmeRgasZH58o"
     }
   }
 }
