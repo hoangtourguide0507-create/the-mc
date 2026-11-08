@@ -1199,7 +1199,8 @@ const SFX = {
     return this.ctx.state !== 'running' ? this.ctx.resume().catch(() => {}) : Promise.resolve();
   },
 
-  tone({ f, f2, t = 0, d = 0.15, type = 'sine', g = 0.3, a = 0.006, detune = 0 }) {
+  // out: node đích (mặc định master) · tự disconnect khi kết thúc để không giữ node
+  tone({ f, f2, t = 0, d = 0.15, type = 'sine', g = 0.3, a = 0.006, detune = 0, out = null }) {
     const c = this.ctx, now = c.currentTime + t;
     const o = c.createOscillator(), gn = c.createGain();
     o.type = type; o.detune.value = detune;
@@ -1208,11 +1209,13 @@ const SFX = {
     gn.gain.setValueAtTime(0.0001, now);
     gn.gain.exponentialRampToValueAtTime(g, now + a);
     gn.gain.exponentialRampToValueAtTime(0.0001, now + d);
-    o.connect(gn); gn.connect(this.master);
+    o.connect(gn); gn.connect(out || this.master);
+    o.onended = () => { try { o.disconnect(); gn.disconnect(); } catch (e) {} };
     o.start(now); o.stop(now + d + 0.05);
   },
 
-  noise({ t = 0, d = 0.3, g = 0.2, from = 400, to = 3000, q = 1.2, type = 'bandpass' }) {
+  // pk: vị trí đỉnh (tỉ lệ của d) · off: điểm bắt đầu trong buffer noise (để mỗi lần nghe khác nhau)
+  noise({ t = 0, d = 0.3, g = 0.2, from = 400, to = 3000, q = 1.2, type = 'bandpass', pk = 0.35, off = 0, out = null }) {
     const c = this.ctx, now = c.currentTime + t;
     const src = c.createBufferSource(); src.buffer = this.noiseBuf;
     const flt = c.createBiquadFilter(); flt.type = type; flt.Q.value = q;
@@ -1220,10 +1223,11 @@ const SFX = {
     flt.frequency.exponentialRampToValueAtTime(to, now + d);
     const gn = c.createGain();
     gn.gain.setValueAtTime(0.0001, now);
-    gn.gain.exponentialRampToValueAtTime(g, now + d * 0.35);
+    gn.gain.exponentialRampToValueAtTime(g, now + d * pk);
     gn.gain.exponentialRampToValueAtTime(0.0001, now + d);
-    src.connect(flt); flt.connect(gn); gn.connect(this.master);
-    src.start(now); src.stop(now + d + 0.05);
+    src.connect(flt); flt.connect(gn); gn.connect(out || this.master);
+    src.onended = () => { try { src.disconnect(); flt.disconnect(); gn.disconnect(); } catch (e) {} };
+    src.start(now, off); src.stop(now + d + 0.05);
   },
 
   // Nốt "chuông" = sine chính + bồi âm quãng 8 cho cảm giác "ting" trong trẻo
@@ -1258,7 +1262,33 @@ const SFX = {
                  SFX.tone({ f: 1250, t: 0.24, d: 0.07, type: 'square', g: 0.07 });
                  SFX.noise({ t: 0.3, d: 0.1, g: 0.05, from: 2600, to: 1800, q: 3 }); },
     radioOut() { SFX.noise({ d: 0.1, g: 0.12, from: 2200, to: 1300, q: 2.5 });
-                 SFX.tone({ f: 880, t: 0.06, d: 0.09, type: 'square', g: 0.06 }); }
+                 SFX.tone({ f: 880, t: 0.06, d: 0.09, type: 'square', g: 0.06 }); },
+
+    // ── Thành phố (9b. WORLD MAP) ──
+    // Bước chân: "bộp" đế giày mềm, phát ~3 lần/giây → nhỏ, ngắn, lệch ngẫu nhiên + chân trái/phải hơi khác cao độ
+    step() {
+      const r = Math.random, foot = (SFX._foot = !SFX._foot) ? 1 : 0.9, v = 0.8 + r() * 0.35;
+      SFX.noise({ d: 0.07 + r() * 0.02, g: 0.11 * v, from: (1700 + r() * 500) * foot, to: 420, q: 0.7,
+                  type: 'lowpass', pk: 0.12, off: r() * 0.9 });
+      SFX.tone({ f: (190 + r() * 30) * foot, f2: 110, d: 0.055, type: 'sine', g: 0.06 * v, a: 0.004 });
+    },
+    // Chuông cửa "ding-dong" (Mi5 → Đô5)
+    door()  { SFX.bell(659.25, 0, 0.7, 0.24); SFX.bell(523.25, 0.3, 1.0, 0.24); },
+    // Tíc đồng hồ: click gỗ khô
+    tick()  { SFX.tone({ f: 2100, f2: 1500, d: 0.035, type: 'triangle', g: 0.12, a: 0.002 });
+              SFX.noise({ d: 0.025, g: 0.05, from: 4000, to: 6000, q: 1.5, type: 'highpass', pk: 0.1, off: Math.random() * 0.9 }); },
+    // Chuyển tối: hợp âm Fa trưởng 7 rải chậm, dịu + "ting" sao đêm
+    night() { [349.23, 440, 523.25, 659.25].forEach((f, i) =>
+                SFX.tone({ f, t: i * 0.07, d: 1.6, type: 'sine', g: 0.07, a: 0.12 }));
+              SFX.tone({ f: 174.61, d: 1.8, type: 'triangle', g: 0.05, a: 0.2 });
+              SFX.bell(1318.5, 0.4, 0.9, 0.08); SFX.bell(1760, 0.62, 0.8, 0.05); },
+    // Bong bóng thoại bật lên: "bóp" tròn hai lớp (khác 'pop')
+    chat()  { SFX.tone({ f: 460, f2: 1150, d: 0.08, type: 'sine', g: 0.18, a: 0.004 });
+              SFX.tone({ f: 1250, f2: 1700, t: 0.055, d: 0.07, type: 'sine', g: 0.07, a: 0.004 }); },
+    // Ru ngủ: Mi–Đô–Rê–Sol thấp, chậm dần
+    sleep() { [[659.25, 0, 0.6], [523.25, 0.36, 0.6], [587.33, 0.72, 0.7], [392, 1.12, 1.5]].forEach(([f, t, d]) => {
+                SFX.tone({ f, t, d, type: 'triangle', g: 0.15, a: 0.03 });
+                SFX.tone({ f: f / 2, t, d: d * 1.1, type: 'sine', g: 0.06, a: 0.05 }); }); }
   },
 
   play(name) {
@@ -1273,8 +1303,178 @@ document.addEventListener('pointerdown', () => {
   if (SFX.ctx && SFX.ctx.state !== 'running') SFX.ctx.resume().catch(() => {});
 }, { passive: true });
 
-/* [STUB · owner: audio-speech] Âm nền thành phố — thay bằng bản thật (Web Audio, tôn trọng state.muted) */
-const Ambience = { mode: null, start(mode = 'day') { this.mode = mode; }, stop() { this.mode = null; } };
+/* ---------------------------------------------------------
+   2b. AMBIENCE — âm nền thành phố (owner: audio-speech)
+   ---------------------------------------------------------
+   Ambience.start('day'|'night') · Ambience.stop()
+   • Tổng hợp 100% Web Audio: rì rầm xe xa (brown noise lọc thấp, điều biến chậm)
+     + xe chạy qua thưa thớt; ngày: chim hót thưa; đêm: tiếng dế.
+   • Đổi mode = crossfade 2.5s; gọi start() lại cùng mode = không làm gì.
+   • Cổng âm lượng (bus) tự kiểm mỗi 200ms + khi body[data-bus] đổi:
+       state.muted / mic đang thu (AudioBus arming|listening) / tab ẩn → im;
+       TTS đang nói → hạ còn 50%.
+   • Chưa mở khoá SFX.ctx → chỉ nhớ mode, tự dựng khi ctx chạy.
+   • Mọi node của một lớp được stop + disconnect khi lớp đó tắt.
+   --------------------------------------------------------- */
+const Ambience = {
+  mode: null,        // mode mong muốn: 'day' | 'night' | null
+  layer: null,       // lớp đang phát
+  bus: null,         // GainNode cổng chung (tạo 1 lần) → SFX.master
+  brown: null,       // buffer brown noise 4s, lặp liền mạch
+  timer: 0, obs: null, _lvl: -1, alive: 0,
+  FADE: 2.5,
+
+  start(mode = 'day') {
+    this.mode = mode === 'night' ? 'night' : 'day';
+    if (!this.timer) this.timer = setInterval(() => this.tick(), 200);
+    if (!this.obs && window.MutationObserver) {
+      this.obs = new MutationObserver(() => this.gate());
+      this.obs.observe(document.body, { attributes: true, attributeFilter: ['data-bus'] });
+    }
+    this.tick();
+  },
+
+  stop() {
+    this.mode = null;
+    clearInterval(this.timer); this.timer = 0;
+    if (this.obs) { this.obs.disconnect(); this.obs = null; }
+    if (this.layer) { this.retire(this.layer, 0.6); this.layer = null; }
+  },
+
+  level() {
+    if (!this.mode || state.muted || document.hidden || AudioBus.isMicBusy()) return 0;
+    return AudioBus.state === 'speaking' ? 0.5 : 1;
+  },
+
+  gate() {
+    const c = SFX.ctx; if (!c || !this.bus) return;
+    const lv = this.level(); if (lv === this._lvl) return;
+    const g = this.bus.gain, now = c.currentTime;
+    Ambience.hold(g, now);
+    // im nhanh (mic sắp thu), lên lại chậm
+    g.linearRampToValueAtTime(lv, now + (lv < this._lvl ? 0.12 : 0.9));
+    this._lvl = lv;
+  },
+
+  // Giữ giá trị hiện tại của AudioParam rồi mới ramp tiếp (tránh "bụp")
+  hold(p, now) {
+    if (p.cancelAndHoldAtTime) { try { p.cancelAndHoldAtTime(now); return; } catch (e) {} }
+    const v = p.value; p.cancelScheduledValues(now); p.setValueAtTime(v, now);
+  },
+
+  tick() {
+    const c = SFX.ctx; if (!c || !this.mode) return;
+    if (!this.bus) { this.bus = c.createGain(); this.bus.gain.value = 0; this.bus.connect(SFX.master); this._lvl = 0; }
+    this.gate();
+    if (c.state !== 'running') return;
+    if (!this.layer || this.layer.mode !== this.mode) {
+      if (this.layer) this.retire(this.layer, this.FADE);
+      this.layer = this.build(this.mode);
+    }
+    if (this._lvl > 0) this.layer.sched(c.currentTime);
+  },
+
+  brownBuf() {
+    if (this.brown) return this.brown;
+    const c = SFX.ctx, sr = c.sampleRate, len = sr * 4, X = 4096;
+    const raw = new Float32Array(len + X); let last = 0;
+    for (let i = 0; i < raw.length; i++) { last = (last + 0.02 * (Math.random() * 2 - 1)) / 1.02; raw[i] = last * 3.5; }
+    const b = c.createBuffer(1, len, sr), d = b.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = raw[i];
+    // đầu buffer = trộn dần phần đuôi → điểm lặp liền mạch, không "tách"
+    for (let i = 0; i < X; i++) { const k = i / X; d[i] = raw[i] * k + raw[len + i] * (1 - k); }
+    return (this.brown = b);
+  },
+
+  build(mode) {
+    const c = SFX.ctx, now = c.currentTime, night = mode === 'night', R = Math.random;
+    const L = { mode, nodes: [], srcs: [], dead: false, next: {} };
+    const node = n => (L.nodes.push(n), n);
+    const src = n => (L.srcs.push(n), node(n));
+    const gain = v => { const g = node(c.createGain()); g.gain.value = v; return g; };
+    const out = L.out = gain(0);
+    out.gain.setValueAtTime(0, now); out.gain.linearRampToValueAtTime(1, now + this.FADE);
+    out.connect(this.bus);
+
+    // 1) Rì rầm xe xa: brown noise → lowpass (tần số trôi chậm) → gain điều biến chậm
+    const rum = src(c.createBufferSource()); rum.buffer = this.brownBuf(); rum.loop = true;
+    const lp = node(c.createBiquadFilter()); lp.type = 'lowpass'; lp.Q.value = 0.4;
+    lp.frequency.value = night ? 300 : 440;
+    const rg = gain(night ? 0.045 : 0.075);
+    const lfoA = src(c.createOscillator()); lfoA.frequency.value = 0.05 + R() * 0.04;
+    const lfoAg = gain(rg.gain.value * 0.4); lfoA.connect(lfoAg); lfoAg.connect(rg.gain);
+    const lfoF = src(c.createOscillator()); lfoF.frequency.value = 0.023 + R() * 0.02;
+    const lfoFg = gain(night ? 50 : 90); lfoF.connect(lfoFg); lfoFg.connect(lp.frequency);
+    rum.connect(lp); lp.connect(rg); rg.connect(out);
+
+    // 2) Xe chạy qua: noise trắng → bandpass quét → gain 0, thỉnh thoảng phồng lên rồi xa dần
+    const car = src(c.createBufferSource()); car.buffer = SFX.noiseBuf; car.loop = true;
+    const cf = node(c.createBiquadFilter()); cf.type = 'bandpass'; cf.Q.value = 0.7; cf.frequency.value = 500;
+    const cg = gain(0); car.connect(cf); cf.connect(cg); cg.connect(out);
+    L.next.car = now + 2 + R() * 4;
+
+    // 3) Chim (ngày) / dế (đêm) — mỗi "con" 1 oscillator cố định, chỉ lập lịch tần số + âm lượng (không tạo node mới)
+    const voice = (type, f) => { const o = src(c.createOscillator()); o.type = type; o.frequency.value = f;
+                                 const g = gain(0); o.connect(g); g.connect(out); return { o, g }; };
+    const birds = night ? [] : [voice('sine', 3200), voice('sine', 2400)];
+    const crick = night ? [voice('sine', 4350), voice('sine', 4780)] : [];
+    birds.forEach((b, i) => L.next['b' + i] = now + 1 + R() * 3 + i * 2);
+    crick.forEach((k, i) => L.next['k' + i] = now + 0.6 + i * 0.37);
+
+    [rum, car].forEach(s => s.start(now, R() * 0.9));
+    L.srcs.forEach(s => { if (s !== rum && s !== car) s.start(now); });
+    this.alive++;
+
+    const at = (key, now) => Math.max(L.next[key], now + 0.05);
+    L.sched = now => {
+      if (L.dead) return;
+      const ahead = now + 0.5;
+      // xe chạy qua
+      if (L.next.car < ahead) {
+        const t = at('car', now), d = 2.5 + R() * 2.5, pk = (night ? 0.012 : 0.022) * (0.6 + R() * 0.6);
+        cg.gain.setValueAtTime(0, t); cg.gain.linearRampToValueAtTime(pk, t + d * 0.55); cg.gain.linearRampToValueAtTime(0, t + d);
+        cf.frequency.setValueAtTime(350, t); cf.frequency.exponentialRampToValueAtTime(900 + R() * 400, t + d * 0.55);
+        cf.frequency.exponentialRampToValueAtTime(300, t + d);
+        L.next.car = t + d + (night ? 9 + R() * 14 : 4 + R() * 9);
+      }
+      // chim: một câu 2–5 tiếng líu lo
+      birds.forEach((b, i) => {
+        const k = 'b' + i; if (L.next[k] >= ahead) return;
+        let t = at(k, now); const n = 2 + (R() * 4 | 0), base = (i ? 2300 : 3100) * (0.92 + R() * 0.16);
+        for (let j = 0; j < n; j++) {
+          const d = 0.05 + R() * 0.07, f1 = base * (0.9 + R() * 0.25), f2 = f1 * (R() < 0.5 ? 1.35 : 0.72);
+          b.o.frequency.setValueAtTime(f1, t); b.o.frequency.exponentialRampToValueAtTime(f2, t + d);
+          b.g.gain.setValueAtTime(0, t); b.g.gain.linearRampToValueAtTime(0.011 * (0.6 + R() * 0.5), t + d * 0.25);
+          b.g.gain.linearRampToValueAtTime(0, t + d);
+          t += d + 0.04 + R() * 0.1;
+        }
+        L.next[k] = t + 2.5 + R() * 6;
+      });
+      // dế: nhóm 3–4 xung ngắn, lặp ~0.6–0.9s, thỉnh thoảng nghỉ
+      crick.forEach((q, i) => {
+        const k = 'k' + i; if (L.next[k] >= ahead) return;
+        let t = at(k, now); const n = 3 + (R() < 0.5 ? 1 : 0), pk = 0.0055 * (i ? 0.7 : 1);
+        for (let j = 0; j < n; j++) {
+          q.g.gain.setValueAtTime(0, t); q.g.gain.linearRampToValueAtTime(pk, t + 0.006);
+          q.g.gain.linearRampToValueAtTime(0, t + 0.02); t += 0.032;
+        }
+        L.next[k] = t + (R() < 0.08 ? 2 + R() * 3 : 0.55 + R() * 0.35);
+      });
+    };
+    return L;
+  },
+
+  retire(L, fade) {
+    if (L.dead) return; L.dead = true;
+    const c = SFX.ctx, now = c.currentTime, g = L.out.gain;
+    this.hold(g, now); g.linearRampToValueAtTime(0, now + fade);
+    L.srcs.forEach(s => { try { s.stop(now + fade + 0.05); } catch (e) {} });
+    setTimeout(() => {
+      L.nodes.forEach(n => { try { n.disconnect(); } catch (e) {} });
+      L.nodes.length = L.srcs.length = 0; this.alive--;
+    }, (fade + 0.3) * 1000);
+  }
+};
 
 /* =========================================================
    3. AUDIO BUS — State machine bán song công (half-duplex)
