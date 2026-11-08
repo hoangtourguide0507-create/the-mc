@@ -91,7 +91,7 @@
 
   /* HUB */
   .hub-grid { display:grid; grid-template-columns:minmax(0,1fr); gap:12px; }
-  .room { height:260px; }
+  .room { height:300px; }   /* +40px để dải đồng hồ / nút Đi ngủ trên đỉnh phòng không đè bong bóng tâm trạng */
   .avatar-box { width:110px; height:165px; }
   .mood-pos { bottom:calc(6% + 190px); }
   .hub-profile { display:none; }
@@ -762,6 +762,118 @@
   }
   @keyframes flame { from{ transform: scale(1) rotate(-4deg); } to{ transform: scale(1.12) rotate(4deg); } }
 
+  /* ---------- Giờ trong ngày ở phòng MC (đồng hồ · lớp màu theo buổi · Đi ngủ) ---------- */
+  .room-top { position:absolute; z-index:12; left:10px; right:10px; top:10px; display:flex; align-items:center; justify-content:space-between; gap:8px; pointer-events:none; }
+  .room-top > * { pointer-events:auto; }
+  .clock-pill { --pc:#FFD84D; height:36px; padding:0 12px 0 8px; border-radius:999px; display:inline-flex; align-items:center; gap:6px; flex:none; position:relative; isolation:isolate;
+                color:#fff; background: rgba(12,8,36,.62); border:1px solid rgba(255,255,255,.3); border-color: color-mix(in srgb, var(--pc) 70%, transparent);
+                -webkit-backdrop-filter: blur(10px) saturate(1.3); backdrop-filter: blur(10px) saturate(1.3);
+                box-shadow: inset 0 1px 0 rgba(255,255,255,.22), 0 0 16px -4px var(--pc); }
+  .clock-pill::after { content:''; position:absolute; left:10%; right:10%; top:2px; height:40%; border-radius:999px; z-index:-1; background: linear-gradient(180deg, rgba(255,255,255,.28), transparent); }
+  .clock-pill .ck-ico { font-size:18px; line-height:1; }
+  .clock-pill b { font-family:'Baloo 2',sans-serif; font-weight:800; font-size:18px; line-height:1; letter-spacing:.02em; font-variant-numeric: tabular-nums; }
+  .clock-pill small { font-family:'Baloo 2',sans-serif; font-weight:700; font-size:12px; line-height:1; color: var(--pc); text-transform:lowercase; }
+  .clock-pill[data-period="afternoon"] { --pc:#FFB65C; } .clock-pill[data-period="evening"] { --pc:#FF4FD8; } .clock-pill[data-period="night"] { --pc:#22D3EE; }
+  .clock-pill.tick { animation: ckTick .5s cubic-bezier(.2,1.6,.4,1); }
+  @keyframes ckTick { 40%{ transform: scale(1.1); } }
+
+  .sleep-btn { height:36px; padding:0 13px 0 10px; border-radius:999px; display:inline-flex; align-items:center; gap:5px; flex:none; position:relative; isolation:isolate;
+               font-family:'Baloo 2',sans-serif; font-weight:800; font-size:14px; color:#fff; white-space:nowrap;
+               background: linear-gradient(180deg,#9F7BFF,#5B21B6); border:1px solid rgba(214,196,255,.8);
+               box-shadow: 0 0 0 2px rgba(124,58,237,.3), 0 0 20px -2px rgba(167,139,250,.85), inset 0 -3px 6px rgba(30,0,80,.35);
+               transition: transform .15s, opacity .25s, filter .25s; animation: sleepGlow 2.4s ease-in-out infinite; }
+  .sleep-btn::after { content:''; position:absolute; left:10%; right:10%; top:2px; height:42%; border-radius:999px; z-index:-1; background: linear-gradient(180deg, rgba(255,255,255,.5), transparent); }
+  .sleep-btn:active { transform: scale(.94); }
+  .sleep-btn .zz { font-size:16px; line-height:1; }
+  .sleep-btn.is-off { background: rgba(12,8,36,.55); border-color: rgba(255,255,255,.22); box-shadow:none; color: rgba(255,255,255,.62); animation:none;
+                      -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+  .sleep-btn.is-off::after { opacity:.35; } .sleep-btn.is-off .zz { filter: grayscale(.7) opacity(.75); }
+  @keyframes sleepGlow { 50%{ box-shadow: 0 0 0 4px rgba(124,58,237,.18), 0 0 30px 0 rgba(167,139,250,.95), inset 0 -3px 6px rgba(30,0,80,.35); } }
+  @media (min-width:768px){ .room-top { left:14px; right:14px; top:14px; } .clock-pill, .sleep-btn { height:42px; } .clock-pill b { font-size:21px; } .clock-pill .ck-ico { font-size:21px; } .sleep-btn { font-size:16px; padding:0 16px 0 12px; } }
+
+  /* lớp ánh sáng theo buổi phủ lên bối cảnh phòng (dưới nhân vật) */
+  .room-tint { position:absolute; inset:0; z-index:1; pointer-events:none; transition: opacity .9s ease; }
+  .room-tint::before, .room-tint::after { content:''; position:absolute; inset:0; transition: opacity .9s ease; opacity:0; }
+  .room-tint::before { mix-blend-mode: screen; }
+  #room[data-period="morning"] .room-tint::before { opacity:1;
+      background: radial-gradient(55% 60% at 22% 18%, rgba(255,236,170,.55), transparent 70%), linear-gradient(180deg, rgba(150,200,255,.30), rgba(255,210,150,.14) 70%); }
+  #room[data-period="afternoon"] .room-tint::before { opacity:1;
+      background: radial-gradient(55% 60% at 26% 22%, rgba(255,196,110,.50), transparent 70%), linear-gradient(180deg, rgba(255,186,96,.22), rgba(255,140,80,.10)); }
+  #room[data-period="evening"] .room-tint::before { opacity:1;
+      background: radial-gradient(60% 55% at 78% 10%, rgba(255,79,216,.34), transparent 70%), linear-gradient(180deg, rgba(255,120,90,.16), rgba(124,58,237,.10)); }
+  #room[data-period="night"] .room-tint::after { opacity:1;
+      background: radial-gradient(120% 90% at 50% 45%, rgba(6,4,30,.18) 40%, rgba(4,2,22,.62) 100%), linear-gradient(180deg, rgba(10,8,50,.34), rgba(4,2,24,.30)); }
+
+  /* ---------- 🗺️ Ra phố: nút neon lớn ---------- */
+  .street-btn { position:relative; isolation:isolate; overflow:hidden; flex:none; width:100%; min-height:92px; text-align:left; border-radius:22px;
+                padding:14px 14px 14px 12px; display:flex; align-items:center; gap:12px; color:#fff;
+                background: linear-gradient(115deg,#6D28D9 0%,#B620E0 42%,#FF4FD8 74%,#FF8A3D 112%);
+                border:1px solid rgba(255,205,250,.75);
+                box-shadow: 0 0 0 1px rgba(255,79,216,.35), 0 0 30px -6px rgba(255,79,216,.85), 0 0 50px -16px rgba(34,211,238,.8),
+                            inset 0 1px 0 rgba(255,255,255,.6), inset 0 -4px 0 rgba(60,0,90,.35);
+                transition: transform .15s, filter .2s; }
+  .street-btn:active { transform: translateY(2px) scale(.985); }
+  @media (hover:hover){ .street-btn:hover { filter: brightness(1.06); } }
+  .street-btn::after { content:''; position:absolute; left:5%; right:5%; top:3px; height:40%; border-radius:999px; z-index:-1; pointer-events:none;
+                       background: linear-gradient(180deg, rgba(255,255,255,.42), rgba(255,255,255,0)); }
+  .street-btn::before { content:''; position:absolute; inset:0; z-index:-1; pointer-events:none;
+                        background: linear-gradient(110deg, transparent 38%, rgba(255,255,255,.22) 50%, transparent 62%); background-size:260% 100%; animation: sheen 4.6s ease-in-out infinite; }
+  .street-btn .sb-city { position:absolute; right:30px; bottom:-1px; width:130px; height:56px; z-index:-1; opacity:.34; pointer-events:none; }
+  .street-btn .sb-orb { width:60px; height:60px; border-radius:20px; flex:none; display:grid; place-items:center; font-size:34px;
+                        background: radial-gradient(circle at 32% 26%, rgba(255,255,255,.75), rgba(255,255,255,.18) 34%, rgba(255,255,255,.08) 70%), rgba(20,8,50,.25);
+                        border:1px solid rgba(255,255,255,.45); box-shadow: inset 0 -5px 12px rgba(60,0,90,.35), 0 8px 18px -8px rgba(30,0,60,.7); }
+  .street-btn .sb-orb span { filter: drop-shadow(0 3px 4px rgba(0,0,0,.3)); }
+  .street-btn .sb-kicker { font-size:11px; font-weight:900; letter-spacing:.06em; text-transform:uppercase; color:#FFF3B0; text-shadow: 0 1px 4px rgba(80,0,60,.5); }
+  .street-btn .sb-title { font-family:'Baloo 2',sans-serif; font-weight:800; font-size:24px; line-height:1.05; text-shadow: 0 2px 10px rgba(80,0,70,.55); }
+  .street-btn .sb-sub { font-size:13px; font-weight:800; line-height:1.25; color: rgba(255,255,255,.94); text-shadow: 0 1px 4px rgba(60,0,60,.45); }
+  .street-btn .sb-go { flex:none; width:40px; height:40px; border-radius:50%; display:grid; place-items:center; font-size:24px; font-weight:900; line-height:1;
+                       background: rgba(255,255,255,.22); border:1px solid rgba(255,255,255,.5); box-shadow: inset 0 1px 0 rgba(255,255,255,.5); }
+  @media (min-width:768px){ .street-btn { min-height:104px; padding:16px; } .street-btn .sb-orb { width:68px; height:68px; font-size:38px; } .street-btn .sb-title { font-size:27px; } .street-btn .sb-sub { font-size:14px; } .street-btn .sb-city { width:190px; height:80px; } }
+
+  /* ---------- Chip giờ / trạng thái (poster lịch show + nút Daily Life) ---------- */
+  .when-chip { display:inline-flex; align-items:center; gap:4px; max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+               font-family:'Baloo 2',sans-serif; font-weight:700; font-size:11.5px; line-height:1.25; padding:2px 9px; border-radius:999px; color:#fff;
+               background: rgba(10,6,30,.66); border:1px solid rgba(255,255,255,.3); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+  .when-chip[hidden], .p-stamp[hidden] { display:none !important; }
+  .when-chip.st-open   { color:#063A1C; background: linear-gradient(180deg,#B4FF8A,#2FD07A); border-color: rgba(200,255,180,.95); box-shadow: 0 0 12px -2px rgba(124,255,107,.7); }
+  .when-chip.st-early  { color:#BDF0FF; border-color: rgba(34,211,238,.6); }
+  .when-chip.st-closed { color: rgba(255,255,255,.72); }
+  .when-chip.st-info   { color:#F4F2FF; }
+  .when-chip.st-late   { color:#4A1A00; background: linear-gradient(180deg,#FFD07A,#FF8A1F); border-color: rgba(255,226,180,.95); box-shadow: 0 0 12px -2px rgba(255,138,31,.85); animation: lateBlink 1.2s ease-in-out infinite; }
+  .when-chip.st-missed { color: rgba(255,200,208,.8); background: rgba(10,6,30,.55); border-color: rgba(255,255,255,.18); }
+  .when-chip.st-done   { color: rgba(200,255,190,.8); background: rgba(10,6,30,.55); border-color: rgba(255,255,255,.18); }
+  @keyframes lateBlink { 50%{ box-shadow: 0 0 18px 1px rgba(255,138,31,.95); } }
+  .poster .p-when { margin-bottom:6px; }
+  .poster.is-done .p-art, .poster.is-done .p-npc { filter: saturate(.55) brightness(.62); }
+  .poster.is-missed .p-art, .poster.is-missed .p-npc { filter: grayscale(1) brightness(.5); }
+  .poster.is-done::after, .poster.is-missed::after { display:none; }
+  .poster .p-stamp { position:absolute; left:50%; top:36%; transform: translate(-50%,-50%) rotate(-9deg); white-space:nowrap;
+                     font-family:'Baloo 2',sans-serif; font-weight:800; font-size:19px; line-height:1; letter-spacing:.04em; text-transform:uppercase;
+                     padding:7px 14px 5px; border-radius:12px; border:3px solid currentColor; background: rgba(10,6,30,.62);
+                     -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
+  .poster .p-stamp.done { color:#7CFF6B; box-shadow: 0 0 22px -4px rgba(124,255,107,.8); text-shadow: 0 0 10px rgba(124,255,107,.6); }
+  .poster .p-stamp.missed { color:#FF7A8A; box-shadow: 0 0 22px -4px rgba(255,90,110,.8); }
+  .d-when { position:absolute; top:-10px; right:14px; z-index:2; box-shadow: 0 6px 14px -6px rgba(0,0,0,.6); }
+
+  /* ---------- Nút xác nhận tông đêm + màn ngủ ---------- */
+  .btn3d.night-btn { position:relative; isolation:isolate; color:#fff; background-image: linear-gradient(180deg,#9F7BFF,#5B21B6); border-bottom:4px solid #3B0E8C;
+                     box-shadow: inset 0 1px 0 rgba(255,255,255,.5), 0 0 22px -6px rgba(167,139,250,.9); }
+  .btn3d.night-btn::after { content:''; position:absolute; left:6%; right:6%; top:3px; height:42%; border-radius:999px; pointer-events:none; z-index:-1;
+                            background: linear-gradient(180deg, rgba(255,255,255,.42), rgba(255,255,255,0)); }
+  #sleepFx { position:fixed; inset:0; z-index:80; display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none;
+             transition: opacity 1.2s ease;
+             background: radial-gradient(40% 30% at 70% 22%, rgba(167,139,250,.25), transparent 70%), radial-gradient(80% 60% at 50% 110%, rgba(124,58,237,.35), transparent 70%), #07041A; }
+  #sleepFx.show { opacity:1; pointer-events:auto; }
+  #sleepFx .sf-stars { position:absolute; inset:0; opacity:.7;
+             background-image: radial-gradient(1.5px 1.5px at 12% 18%, #fff, transparent), radial-gradient(1px 1px at 28% 42%, #fff, transparent), radial-gradient(1.5px 1.5px at 46% 12%, #fff, transparent),
+               radial-gradient(1px 1px at 64% 34%, #fff, transparent), radial-gradient(2px 2px at 82% 14%, #fff, transparent), radial-gradient(1px 1px at 90% 48%, #fff, transparent),
+               radial-gradient(1.5px 1.5px at 8% 64%, #fff, transparent), radial-gradient(1px 1px at 36% 78%, #fff, transparent), radial-gradient(1.5px 1.5px at 74% 70%, #fff, transparent); }
+  #sleepFx .sf-card { position:relative; text-align:center; color:#fff; transform: translateY(12px) scale(.96); transition: transform 1.2s cubic-bezier(.2,1,.3,1); }
+  #sleepFx.show .sf-card { transform:none; }
+  #sleepFx .sf-moon { font-size:64px; line-height:1; filter: drop-shadow(0 0 24px rgba(255,236,170,.7)); }
+  #sleepFx .sf-z { position:absolute; left:58%; top:-14px; font-size:26px; animation: zzz 1.8s ease-in-out infinite; }
+  @keyframes zzz { 0%{ transform: translate(0,6px) scale(.8); opacity:0; } 40%{ opacity:1; } 100%{ transform: translate(16px,-18px) scale(1.1); opacity:0; } }
+
   /* ---------- Màn tổng kết show ---------- */
   .res-card { position:relative; overflow:hidden; isolation:isolate; }
   .res-rays { position:absolute; left:50%; top:118px; width:520px; height:520px; transform:translate(-50%,-50%); z-index:-1; opacity:.55; pointer-events:none;
@@ -861,6 +973,14 @@
             </div>
             <div class="room relative mx-3 mb-3 rounded-2xl overflow-hidden" id="room">
               <div class="absolute inset-0" id="roomBg"></div>
+              <div class="room-tint" aria-hidden="true"></div>
+              <!-- giờ trong ngày + đi ngủ -->
+              <div class="room-top">
+                <span id="clockPill" class="clock-pill" data-period="morning" role="status" aria-live="polite" title="Giờ trong game">
+                  <span class="ck-ico" id="ckIco">☀️</span><b id="vClock">07:00</b><small id="vPeriod">sáng</small>
+                </span>
+                <button id="btnSleep" type="button" class="sleep-btn is-off" aria-disabled="true"><span class="zz">🌙</span>Đi ngủ</button>
+              </div>
               <div id="roomItems" class="absolute bottom-2 left-2 z-10 flex gap-1"></div>
               <!-- mood bubble -->
               <div class="mood mood-pos absolute z-10 bg-white rounded-2xl border-2 border-line border-b-4 px-3 py-1.5 text-[13px] md:text-sm font-extrabold text-center w-max max-w-[88%]" id="moodBubble">Sẵn sàng lên sóng! 🔥</div>
@@ -876,7 +996,29 @@
 
           <!-- Hành động -->
           <div class="hub-side flex flex-col gap-3">
-            <button id="btnCafe" class="btn3d pop-in w-full text-left bg-mint border-b-4 border-mint-dark active:border-b-0 active:translate-y-1 rounded-2xl p-3.5 md:p-4 flex items-center gap-3 text-white" style="animation-delay:.06s">
+            <button id="btnStreet" type="button" class="street-btn pop-in" style="animation-delay:.03s" aria-label="Ra phố — mở bản đồ thành phố">
+              <svg class="sb-city" viewBox="0 0 150 64" aria-hidden="true">
+                <g fill="rgba(30,6,60,.55)">
+                  <rect x="0" y="34" width="20" height="30" rx="2"/><rect x="22" y="18" width="24" height="46" rx="2"/><rect x="48" y="28" width="18" height="36" rx="2"/>
+                  <rect x="68" y="6" width="22" height="58" rx="2"/><path d="M79 0v6" stroke="rgba(30,6,60,.55)" stroke-width="2"/><rect x="92" y="24" width="26" height="40" rx="2"/><rect x="120" y="38" width="30" height="26" rx="2"/>
+                </g>
+                <g fill="#FFF3B0" opacity=".9">
+                  <rect x="27" y="24" width="4" height="4"/><rect x="36" y="32" width="4" height="4"/><rect x="27" y="42" width="4" height="4"/>
+                  <rect x="73" y="14" width="4" height="4"/><rect x="81" y="22" width="4" height="4"/><rect x="73" y="34" width="4" height="4"/><rect x="81" y="46" width="4" height="4"/>
+                  <rect x="97" y="30" width="4" height="4"/><rect x="108" y="40" width="4" height="4"/><rect x="52" y="36" width="4" height="4"/><rect x="126" y="44" width="5" height="4"/>
+                </g>
+              </svg>
+              <span class="sb-orb"><span>🗺️</span></span>
+              <span class="flex-1 min-w-0">
+                <span class="block sb-kicker">📍 Bản đồ thành phố</span>
+                <span class="block sb-title">Ra phố</span>
+                <span class="block sb-sub">Đi tới quán, nhà hàng, khách sạn…</span>
+              </span>
+              <span class="sb-go" aria-hidden="true">›</span>
+            </button>
+
+            <button id="btnCafe" class="relative btn3d pop-in w-full text-left bg-mint border-b-4 border-mint-dark active:border-b-0 active:translate-y-1 rounded-2xl p-3.5 md:p-4 flex items-center gap-3 text-white" style="animation-delay:.06s">
+              <span id="cafeWhen" class="when-chip d-when" hidden></span>
               <span class="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-white/25 grid place-items-center text-3xl md:text-4xl shrink-0">☕</span>
               <span class="flex-1 min-w-0">
                 <span class="block text-[11px] font-black uppercase tracking-wide opacity-90">☀️ Daily Life · Beginner</span>
@@ -886,7 +1028,8 @@
               <span class="text-2xl font-black opacity-90">›</span>
             </button>
 
-            <button id="btnMarket" class="btn3d pop-in w-full text-left bg-white border-2 border-line border-b-4 active:border-b-0 active:translate-y-1 rounded-2xl p-3 flex items-center gap-3" style="animation-delay:.09s">
+            <button id="btnMarket" class="relative btn3d pop-in w-full text-left bg-white border-2 border-line border-b-4 active:border-b-0 active:translate-y-1 rounded-2xl p-3 flex items-center gap-3" style="animation-delay:.09s">
+              <span id="marketWhen" class="when-chip d-when" hidden></span>
               <span class="w-12 h-12 rounded-xl bg-mint-light grid place-items-center text-2xl shrink-0">🛒</span>
               <span class="flex-1 min-w-0">
                 <span class="block text-[11px] font-black uppercase tracking-wide text-mint-dark">☀️ Daily Life · Beginner</span>
@@ -1075,6 +1218,14 @@
 
 <!-- Toast / Modal / Sheet -->
 <div id="updateBar"><button id="btnUpdate" type="button">✨ Có bản mới — Chạm để cập nhật <span aria-hidden="true">↻</span></button></div>
+<div id="sleepFx" aria-hidden="true">
+  <div class="sf-stars"></div>
+  <div class="sf-card">
+    <div class="sf-moon">🌙</div><span class="sf-z">💤</span>
+    <div class="font-display font-bold text-[26px] mt-3">Chúc ngủ ngon…</div>
+    <div class="text-[14px] font-bold opacity-75 mt-0.5" id="sleepFxSub">Ngày mới đang tới</div>
+  </div>
+</div>
 <div id="toast"><div id="toastInner" class="rounded-2xl border-b-4 px-4 py-2.5 font-extrabold text-[14px] text-white text-center"></div></div>
 <div id="modalRoot"><div id="modalCard" class="m-card w-full max-w-sm"></div></div>
 <div id="sheetRoot"><div id="sheet" class="bg-white"></div></div>
@@ -3116,16 +3267,17 @@ function openModal(html, { top = false } = {}) {
 }
 function closeModal() { $('#modalRoot').classList.remove('show'); }
 
-function confirmDialog(title, msg, okLabel = 'Đồng ý', cancelLabel = 'Ở lại') {
+function confirmDialog(title, msg, okLabel = 'Đồng ý', cancelLabel = 'Ở lại', { icon = '🤔', tone = 'coral' } = {}) {
+  const okCls = tone === 'night' ? 'night-btn' : 'bg-coral border-b-4 border-coral-dark';
   return new Promise(res => {
     const card = openModal(`
       <div class="bg-white rounded-2xl border-2 border-line border-b-4 p-5 text-center">
-        <div class="text-5xl mb-2">🤔</div>
+        <div class="text-5xl mb-2">${icon}</div>
         <div class="font-display font-semibold text-[21px]">${esc(title)}</div>
         <p class="text-[14px] font-bold text-mute mt-1">${esc(msg)}</p>
         <div class="grid grid-cols-2 gap-2.5 mt-5">
           <button data-a="0" class="btn3d bg-white border-2 border-line border-b-4 active:border-b-0 active:translate-y-1 rounded-2xl h-12 font-extrabold text-blu-dark">${esc(cancelLabel)}</button>
-          <button data-a="1" class="btn3d bg-coral border-b-4 border-coral-dark active:border-b-0 active:translate-y-1 rounded-2xl h-12 font-extrabold text-white">${esc(okLabel)}</button>
+          <button data-a="1" class="btn3d ${okCls} active:border-b-0 active:translate-y-1 rounded-2xl h-12 font-extrabold text-white">${esc(okLabel)}</button>
         </div>
       </div>`);
     $$('button[data-a]', card).forEach(b => b.addEventListener('click', () => {
@@ -3179,6 +3331,7 @@ function renderHUD() {
   const shows = s.stats.shows;
   $('#vShows').textContent = shows + ' show đã dẫn';
   renderProfile(shows);
+  renderRoomTime();          // nút Đi ngủ phụ thuộc năng lượng
 }
 function renderProfile(shows) {
   const all = allPhrases();
@@ -3307,7 +3460,9 @@ function renderGigs() {
       ${npc ? `<span class="p-npc ${npc.duo ? 'duo' : ''}">${npcSVG(npc)}</span>` : ''}
       <span class="p-top"><span class="tag ${sc.tagCls}">${sc.tag}</span><span class="p-lv">${sc.level}</span></span>
       ${locked ? `<span class="p-lock"><b>🔒</b><span>Cần Charisma Lv.${sc.reqLv}</span></span>` : ''}
+      <span class="p-stamp" hidden></span>
       <span class="p-bot">
+        <span class="when-chip p-when" hidden></span>
         <span class="block p-title">${esc(sc.title)}</span>
         <span class="block p-sub">${esc(sc.sub)}</span>
         <span class="p-rw">
@@ -3318,8 +3473,108 @@ function renderGigs() {
       </span>
     </button>`;
   }).join('');
-  $$('#gigList .gig').forEach(b => b.addEventListener('click', () => startScene(b.dataset.gig, b)));
+  $$('#gigList .gig').forEach(b => b.addEventListener('click', () => goPlace(b.dataset.gig, b)));
   updateBookCount();
+  renderWhen();
+}
+
+/* ---------- Giờ trong ngày ở phòng MC: đồng hồ · ánh sáng theo buổi · Đi ngủ · ra phố ---------- */
+const PERIOD_UI = { morning: { ico: '☀️', vi: 'sáng' }, afternoon: { ico: '🌤️', vi: 'chiều' }, evening: { ico: '🌆', vi: 'tối' }, night: { ico: '🌙', vi: 'đêm' } };
+const SLEEP_FROM = 18 * 60, SLEEP_LOW_ENERGY = 30;
+/** sceneId → locId trên bản đồ thành phố (.claude/specs/world-map.md §1) */
+const SCENE_LOC = { coffee: 'cafe', market: 'market', backstage: 'theater', wedding: 'wedding', gala: 'hotel', beach: 'beach', interview: 'tv' };
+const WHEN_ICO = { open: '🟢', early: '🕒', closed: '🚪', late: '⏰', missed: '⛔', done: '✅' };
+const canSleep = () => Clock.now() >= SLEEP_FROM || state.energy < SLEEP_LOW_ENERGY;
+
+/** Trạng thái giờ giấc của 1 hoạt động — lấy từ Clock.sceneStatus, thiếu nhãn thì tự ghi giờ theo SCHEDULE */
+function sceneWhen(id) {
+  let st = {};
+  try { st = Clock.sceneStatus(id) || {}; } catch (e) {}
+  const sch = (typeof SCHEDULE === 'object' && SCHEDULE[id]) || {};
+  const label = st.label || (sch.start != null ? `Bắt đầu ${Clock.label(sch.start)}`
+    : sch.open != null ? `Mở ${Clock.label(sch.open)}–${Clock.label(sch.close)}` : '');
+  // stub/thiếu nhãn → chỉ hiện giờ theo lịch, tông trung tính (không tô xanh "đang mở" sai)
+  return { state: st.state || 'open', label, tone: st.label ? (st.state || 'open') : 'info' };
+}
+function renderWhen() {
+  $$('#gigList .gig').forEach(b => {
+    const w = sceneWhen(b.dataset.gig), locked = b.classList.contains('locked');
+    const chip = $('.p-when', b), stamp = $('.p-stamp', b);
+    const fin = !locked && (w.state === 'done' || w.state === 'missed');
+    chip.className = `when-chip p-when st-${w.tone}`;
+    chip.textContent = `${WHEN_ICO[w.tone] || '🕒'} ${w.label}`;
+    chip.hidden = locked || !w.label;
+    b.classList.toggle('is-done', !locked && w.state === 'done');
+    b.classList.toggle('is-missed', !locked && w.state === 'missed');
+    stamp.hidden = !fin;
+    stamp.className = 'p-stamp ' + w.state;
+    stamp.textContent = w.state === 'done' ? '✓ Đã dẫn' : 'Lỡ show';
+    b.setAttribute('aria-label', `${SCENES[b.dataset.gig].title}${w.label ? ' · ' + w.label : ''}`);
+  });
+  [['#cafeWhen', DAILY_ID], ['#marketWhen', 'market']].forEach(([sel, id]) => {
+    const el = $(sel), w = sceneWhen(id);
+    el.className = `when-chip d-when st-${w.tone}`;
+    el.textContent = `${WHEN_ICO[w.tone] || '🕒'} ${w.label}`;
+    el.hidden = !w.label;
+  });
+}
+function renderDayLabel() { $('#dayLabel').textContent = `Ngày ${state.day} trong sự nghiệp MC`; }
+let lastClockLabel = '';
+function renderRoomTime() {
+  const now = Clock.now(), p = Clock.period(now), ui = PERIOD_UI[p] || PERIOD_UI.morning, lbl = Clock.label(now);
+  $('#room').dataset.period = p;
+  const pill = $('#clockPill');
+  pill.dataset.period = p;
+  $('#ckIco').textContent = ui.ico; $('#vClock').textContent = lbl; $('#vPeriod').textContent = ui.vi;
+  pill.title = `Bây giờ là ${lbl} (buổi ${ui.vi})`;
+  if (lastClockLabel && lastClockLabel !== lbl) retrigger(pill, 'tick');
+  lastClockLabel = lbl;
+  const ok = canSleep(), btn = $('#btnSleep');
+  btn.classList.toggle('is-off', !ok);
+  btn.setAttribute('aria-disabled', String(!ok));
+  btn.title = ok ? 'Đi ngủ — kết thúc ngày, sáng mai hồi đầy năng lượng' : `Mở từ ${Clock.label(SLEEP_FROM)} hoặc khi năng lượng dưới ${SLEEP_LOW_ENERGY}⚡`;
+  renderWhen();
+}
+
+/** Poster lịch show / nút Daily Life → ra bản đồ, tự đi bộ tới địa điểm rồi vào hoạt động */
+function goPlace(id, el) {
+  const sc = SCENES[id];
+  if (state.charisma.lv < sc.reqLv) {
+    SFX.play('error'); shake(el); toast(`🔒 Cần Charisma Lv.${sc.reqLv} để nhận show này`, 'coral'); return;
+  }
+  const w = sceneWhen(id);
+  if (sc.type !== 'daily' && (w.state === 'done' || w.state === 'missed')) {
+    SFX.play('error'); shake(el);
+    toast(w.state === 'done' ? '✅ Hôm nay đã dẫn show này rồi — mai quay lại nhé!' : '⛔ Đã lỡ giờ show hôm nay — đi ngủ để đón lịch mới', w.state === 'done' ? 'ink' : 'coral', 3000);
+    return;
+  }
+  SFX.play('tap');
+  World.open({ target: SCENE_LOC[id], enter: id });
+}
+
+let sleeping = false;
+async function goSleep() {
+  if (sleeping || routing) return;
+  if (!canSleep()) {
+    SFX.play('error'); shake('#btnSleep');
+    toast(`🌙 Chưa buồn ngủ! Đi ngủ được từ ${Clock.label(SLEEP_FROM)} hoặc khi ⚡ dưới ${SLEEP_LOW_ENERGY}`, 'ink', 3200);
+    return;
+  }
+  SFX.play('tap');
+  const ok = await confirmDialog('Đi ngủ?', `Kết thúc Ngày ${state.day} lúc ${Clock.label()}. Sáng mai 07:00 thức dậy với năng lượng đầy ⚡`,
+    '🌙 Ngủ thôi', 'Thức thêm', { icon: '😴', tone: 'night' });
+  if (!ok) return;
+  sleeping = true;
+  $('#sleepFxSub').textContent = `Ngày ${state.day + 1} đang tới…`;
+  $('#sleepFx').classList.add('show');
+  SFX.play('sleep');
+  await wait(1200);
+  try { await Clock.sleep(); } catch (e) { console.error(e); }   // Clock.sleep tự toast chào ngày mới + phát sự kiện 'clock'
+  renderHUD(); renderDayLabel(); renderGigs(); renderMood();
+  await wait(900);
+  $('#sleepFx').classList.remove('show');
+  await wait(700);
+  sleeping = false;
 }
 function phraseOf(t) {
   if (t.mode === 'free' || t.mode === 'semi') return { en: t.sample, vi: t.sampleVi };
@@ -4532,8 +4787,14 @@ function openVoicePicker() {
 /* =========================================================
    13. EVENT BINDINGS
    ========================================================= */
-$('#btnCafe').addEventListener('click', e => startScene(DAILY_ID, e.currentTarget));
-$('#btnMarket').addEventListener('click', e => startScene('market', e.currentTarget));
+$('#btnStreet').addEventListener('click', () => { if (routing || sleeping) return; SFX.play('tap'); World.open(); });
+$('#btnCafe').addEventListener('click', e => goPlace(DAILY_ID, e.currentTarget));
+$('#btnMarket').addEventListener('click', e => goPlace('market', e.currentTarget));
+$('#btnSleep').addEventListener('click', goSleep);
+// Đồng hồ trong phòng: cập nhật khi giờ game nhảy và mỗi lần quay về Hub
+document.addEventListener('clock', () => renderRoomTime());
+new MutationObserver(() => { if ($('#view-hub').classList.contains('active')) renderRoomTime(); })
+  .observe($('#view-hub'), { attributes: true, attributeFilter: ['class'] });
 $('#btnBook').addEventListener('click', openBook);
 $('#btnShop').addEventListener('click', () => openSheet('shop'));
 $('#btnMute').addEventListener('click', e => {
@@ -4676,7 +4937,7 @@ $('#btnMute').textContent = state.muted ? '🔕' : '🔔';
   $('#dayLabel').textContent = `Ngày ${plan.day} trong sự nghiệp MC`;
   if (plan.mode === 'resume') $('#btnStart').innerHTML = `▶️ Tiếp tục Ngày ${state.day} · ${Clock.label()}`;
 }
-renderGigs(); renderMood(); renderStreak();
+renderGigs(); renderMood(); renderStreak(); renderRoomTime();
 
 
 })();
