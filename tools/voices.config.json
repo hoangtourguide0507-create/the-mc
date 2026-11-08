@@ -15,34 +15,34 @@
   },
   "roles": {
     "leo": {
-      "accent": "en-AU",
+      "accent": "en-US",
       "brief": "Barista trẻ, vui, xởi lởi",
-      "voiceName": "Charlie",
-      "voiceId": "IKne3meq5aSn9XLyUdCD"
+      "voiceName": "Jessica",
+      "voiceId": "cgSgspJ2msm6clMCkdW9"
     },
     "ivy": {
-      "accent": "en-AU",
+      "accent": "en-US",
       "brief": "Wedding planner nữ ~30, ấm, rạng rỡ",
-      "voiceName": "",
-      "voiceId": ""
+      "voiceName": "Laura",
+      "voiceId": "FGY2WhTYpPnrIDTdsKH5"
     },
     "victoria": {
-      "accent": "en-GB",
+      "accent": "en-US",
       "brief": "Chủ tịch gala, sang trọng, rõ chữ",
-      "voiceName": "Lily",
-      "voiceId": "pFZP5JQG7iQjIQuC4Bku"
+      "voiceName": "Matilda",
+      "voiceId": "XrExE9yKIg1WjnnlVkGX"
     },
     "couple:emma": {
-      "accent": "en-GB",
+      "accent": "en-US",
       "brief": "Cô dâu trẻ, ngọt, xúc động",
-      "voiceName": "",
-      "voiceId": ""
+      "voiceName": "River",
+      "voiceId": "SAz9YHcvj6GT2YYXdXww"
     },
     "couple:liam": {
-      "accent": "en-GB",
+      "accent": "en-US",
       "brief": "Chú rể ~30, trầm ấm, hơi hồi hộp",
-      "voiceName": "",
-      "voiceId": ""
+      "voiceName": "Eric",
+      "voiceId": "cjVigY5qzO86Huf0OWal"
     },
     "alex": {
       "accent": "en-US",
