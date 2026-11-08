@@ -9,6 +9,8 @@ python3 .claude/qa/snap.py world world-walk world-card world-talk world-night wo
 - Bản đồ thành phố: `world` (vừa ra phố, 07:00) · `world-walk` (MC đang đi tới Nhà hát) · `world-card` (tới Quán cà phê → thẻ “Vào…”) ·
   `world-talk` (bắt chuyện người đi đường gần nhất) · `world-night` (21:30, đèn đêm) · `world-enter` (18:00, đi tới Nhà hàng cưới và vào thẳng show → Stage).
   Giờ đặt qua `WORLD_CLOCK` trong snap.py (`state.clock`, phút từ 00:00).
+- Màn Stage (`coffee wedding backstage gala interview beach`): nút ở Hub giờ mở bản đồ và show bị chặn khi chưa tới giờ,
+  nên snap.py đặt `state.clock` theo `SCENE_CLOCK` (trong khung mở cửa) rồi gọi `window.__qa.startScene(id)`; báo lỗi nếu không vào được Stage.
 - Cần `playwright` (Python) + Chrome/Chromium; lần đầu tự cài `tailwindcss@3` vào `/tmp/mc-qa-cache` để thay Tailwind CDN.
 - Dữ liệu người chơi giả lập: Charisma Lv.9 (mở hết show), $400, streak 4.
 - Thoát mã 1 nếu có lỗi JS ở bất kỳ màn nào.

@@ -26,6 +26,9 @@ WORLD = {
     'world-enter': ("W.travelTo('wedding',{enter:'wedding'})", 7000),   # vào show từ bản đồ → Stage
 }
 WORLD_CLOCK = {'world-night': 1290, 'world-enter': 1080, 'world-card': 480}
+# Vào thẳng Stage: nút ở Hub giờ mở bản đồ & show bị chặn khi chưa tới giờ → đặt state.clock trong khung mở cửa
+# (show mở cửa trước giờ bắt đầu SHOW_DOOR_OPEN=60′) rồi gọi startScene(id) như khi bấm “Vào” trên bản đồ.
+SCENE_CLOCK = {'coffee': 480, 'wedding': 1080, 'gala': 1110, 'beach': 1000, 'backstage': 860, 'interview': 1150}
 STATE = {'v': 2, 'energy': 100, 'charisma': {'lv': 9, 'pts': 0}, 'cash': 400, 'day': 3,
          'streak': {'count': 4, 'best': 6, 'last': ''}, 'items': {'goldmic': True}}
 
@@ -69,7 +72,7 @@ async def main(screens, out, only):
                 await ctx.route('https://cdn.tailwindcss.com/**', lambda r: r.fulfill(status=200, content_type='application/javascript', body=twjs))
                 async def expose(route):
                     r = await route.fetch(); body = await r.text()
-                    body = body.replace('\n})();\n</script>', '\nwindow.__qa={finishScene,Stage,SCENES,NPCS,npcSVG,World,Clock,state};\n})();\n</script>')
+                    body = body.replace('\n})();\n</script>', '\nwindow.__qa={finishScene,startScene,Stage,SCENES,NPCS,npcSVG,World,Clock,state};\n})();\n</script>')
                     await route.fulfill(response=r, body=body)
                 await ctx.route('**/index.html*', expose)
                 await ctx.add_init_script(f"localStorage.setItem('mclife.v2', {json.dumps(json.dumps(STATE))}); sessionStorage.setItem('mclife.autoUpd','x')")
@@ -78,9 +81,11 @@ async def main(screens, out, only):
                 await pg.goto(url); await pg.wait_for_timeout(900)
                 if sc != 'welcome':
                     await pg.click('#btnStart'); await pg.wait_for_timeout(1300)
-                if sc in ('coffee',): await pg.click('#btnCafe'); await pg.wait_for_timeout(2400)
-                elif sc in ('wedding', 'backstage', 'gala', 'interview', 'beach'):
-                    await pg.click(f'[data-gig="{sc}"]'); await pg.wait_for_timeout(2400)
+                if sc in SCENE_CLOCK:
+                    await pg.evaluate(f"()=>{{const q=window.__qa;q.state.clock={SCENE_CLOCK[sc]};q.Clock._emit();q.startScene('{sc}',null)}}")
+                    await pg.wait_for_timeout(2400)
+                    if not await pg.evaluate("()=>document.querySelector('#view-stage')?.classList.contains('active')"):
+                        errs.append(f'không vào được Stage {sc}')
                 elif sc == 'shop': await pg.click('#btnShop'); await pg.wait_for_timeout(900)
                 elif sc == 'book': await pg.click('#btnBook'); await pg.wait_for_timeout(900)
                 elif sc == 'finish':
