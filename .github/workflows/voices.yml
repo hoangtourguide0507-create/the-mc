@@ -1,0 +1,62 @@
+name: Render NPC voices (ElevenLabs)
+
+# Renders only lines that have no mp3 yet, commits them, then redeploys Pages.
+# Needs the repository secret ELEVENLABS_API_KEY (Settings → Secrets and variables → Actions).
+on:
+  push:
+    branches: [main]
+    paths:
+      - src/data/content.ts
+      - tools/voices.config.json
+      - tools/render-voices.mjs
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: voices
+  cancel-in-progress: false
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Render missing clips
+        env:
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+        run: node tools/render-voices.mjs --prune
+
+      - name: Commit audio
+        id: commit
+        run: |
+          git add public/audio
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No audio changes."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+            git commit -m "Render NPC voice clips"
+            git pull --rebase origin main
+            git push
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Pushes made with GITHUB_TOKEN do not trigger other workflows, so start Pages explicitly.
+      - name: Redeploy Pages
+        if: steps.commit.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run pages.yml --ref main

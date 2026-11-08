@@ -2,6 +2,147 @@ import { NPCS } from '../data/content';
 import { AudioBusState, VisemeType, VoiceConfig } from '../types/game';
 import { clamp } from '../core/clock';
 
+// ---------------------------------------------------------------------------
+// Pre-rendered voice clips (public/audio/manifest.json, made by tools/render-voices.mjs)
+// ---------------------------------------------------------------------------
+
+/** Must match normText() in tools/render-voices.mjs. */
+export function normText(s: string): string {
+  return String(s)
+    .replace(/[‘’]/g, "'")
+    .replace(/[“”]/g, '"')
+    .replace(/[–—]/g, '-')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
+/** Voice role for a speak() call: NPC id, 'couple:emma' / 'couple:liam', 'coach' or 'passer'. */
+export function roleFor(npcId: string, speaker?: 'emma' | 'liam'): string {
+  return npcId === 'couple' ? `couple:${speaker || 'emma'}` : npcId;
+}
+
+const AUDIO_BASE = `${import.meta.env.BASE_URL}audio/`;
+
+class ClipLibrary {
+  private index: Promise<Map<string, Map<string, string>>> | null = null;
+
+  load(): Promise<Map<string, Map<string, string>>> {
+    if (!this.index) {
+      this.index = fetch(`${AUDIO_BASE}manifest.json`, { cache: 'no-cache' })
+        .then((r) => (r.ok ? r.json() : { clips: {} }))
+        .catch(() => ({ clips: {} }))
+        .then((m: { clips?: Record<string, string> }) => {
+          const map = new Map<string, Map<string, string>>();
+          for (const [key, file] of Object.entries(m.clips || {})) {
+            const cut = key.indexOf('|');
+            const role = key.slice(0, cut);
+            const text = key.slice(cut + 1);
+            if (!map.has(text)) map.set(text, new Map());
+            map.get(text)!.set(role, file);
+          }
+          return map;
+        });
+    }
+    return this.index;
+  }
+
+  /** Clip URL for this role and text; falls back to the same text in any role's voice. */
+  async find(role: string, text: string): Promise<string | null> {
+    const byRole = (await this.load()).get(normText(text));
+    if (!byRole) return null;
+    const file = byRole.get(role) ?? byRole.values().next().value;
+    return file ? `${AUDIO_BASE}${file}` : null;
+  }
+}
+
+export const Clips = new ClipLibrary();
+
+type ClipEnd = 'ended' | 'stopped' | 'error';
+
+function silentWavUrl(): string {
+  const n = 800; // 0.1 s of 8 kHz 8-bit silence
+  const buf = new ArrayBuffer(44 + n);
+  const v = new DataView(buf);
+  const str = (o: number, t: string) => [...t].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
+  str(0, 'RIFF'); v.setUint32(4, 36 + n, true); str(8, 'WAVE'); str(12, 'fmt ');
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, 8000, true); v.setUint32(28, 8000, true); v.setUint16(32, 1, true); v.setUint16(34, 8, true);
+  str(36, 'data'); v.setUint32(40, n, true);
+  for (let i = 0; i < n; i++) v.setUint8(44 + i, 128);
+  return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
+}
+
+/**
+ * One reused <audio> element. iOS only lets an element play later if it first played
+ * inside a tap, so unlock() runs from the welcome tap. Slow mode changes playbackRate
+ * with preservesPitch on, so the voice gets slower without sounding deeper.
+ */
+class ClipPlayer {
+  private el: HTMLAudioElement | null = null;
+  private done: ((r: ClipEnd) => void) | null = null;
+  private unlocked = false;
+
+  private ensure(): HTMLAudioElement | null {
+    if (!this.el && typeof Audio !== 'undefined') {
+      this.el = new Audio();
+      this.el.preload = 'auto';
+      this.el.setAttribute('playsinline', '');
+    }
+    return this.el;
+  }
+
+  unlock() {
+    const el = this.ensure();
+    if (!el || this.unlocked) return;
+    this.unlocked = true;
+    el.src = silentWavUrl();
+    el.play().catch(() => {});
+    Clips.load();
+  }
+
+  play(url: string, rate: number, onProgress?: (fraction: number) => void): Promise<ClipEnd> {
+    const el = this.ensure();
+    if (!el) return Promise.resolve('error');
+    this.stop();
+    return new Promise<ClipEnd>((resolve) => {
+      this.done = (r) => {
+        el.onended = null;
+        el.onerror = null;
+        el.ontimeupdate = null;
+        this.done = null;
+        resolve(r);
+      };
+      el.onended = () => this.done?.('ended');
+      el.onerror = () => this.done?.('error');
+      el.ontimeupdate = () => {
+        if (el.duration > 0) onProgress?.(el.currentTime / el.duration);
+      };
+      const pitchKeeper = el as HTMLAudioElement & { webkitPreservesPitch?: boolean; mozPreservesPitch?: boolean };
+      pitchKeeper.preservesPitch = true;
+      pitchKeeper.webkitPreservesPitch = true;
+      pitchKeeper.mozPreservesPitch = true;
+      el.src = url;
+      el.defaultPlaybackRate = rate;
+      el.playbackRate = rate;
+      el.play().catch(() => this.done?.('error'));
+    });
+  }
+
+  stop() {
+    if (this.el && this.done) {
+      try {
+        this.el.pause();
+      } catch {
+        // ignore
+      }
+      this.done('stopped');
+    }
+  }
+}
+
+export const ClipAudio = new ClipPlayer();
+
 class SoundSystem {
   ctx: AudioContext | null = null;
   master: GainNode | null = null;
@@ -37,6 +178,7 @@ class SoundSystem {
       src.connect(this.ctx.destination);
       src.start(0);
       this.unlocked = true;
+      ClipAudio.unlock();
     } catch {
       // ignore
     }
@@ -306,6 +448,7 @@ class HalfDuplexAudioBus {
   }
 
   reset() {
+    ClipAudio.stop();
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       window.speechSynthesis.cancel();
     }
@@ -339,6 +482,7 @@ class HalfDuplexAudioBus {
 
   async armMic(): Promise<boolean> {
     this.setState('arming');
+    ClipAudio.stop();
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       window.speechSynthesis.cancel();
       const startWait = Date.now();
@@ -363,9 +507,17 @@ class HalfDuplexAudioBus {
 
 export const AudioBus = new HalfDuplexAudioBus();
 
-const FEMALE_NAMES = ['samantha', 'karen', 'moira', 'tessa', 'victoria', 'serena', 'ava', 'allison', 'susan', 'zoe', 'catherine', 'martha', 'nicky'];
-const MALE_NAMES = ['daniel', 'alex', 'tom', 'oliver', 'arthur', 'fred', 'gordon', 'lee', 'rishi', 'aaron'];
+const FEMALE_NAMES = ['samantha', 'karen', 'moira', 'tessa', 'victoria', 'serena', 'ava', 'allison', 'susan', 'zoe', 'catherine', 'martha', 'nicky', 'jenny', 'aria', 'sonia', 'libby', 'natasha'];
+const MALE_NAMES = ['daniel', 'alex', 'tom', 'oliver', 'arthur', 'fred', 'gordon', 'lee', 'rishi', 'aaron', 'guy', 'ryan', 'william', 'brian'];
 const NOVELTY_NAMES = ['albert', 'bubbles', 'zarvox', 'bad news', 'bahh', 'bells', 'boing', 'cellos', 'deranged', 'good news', 'hysterical', 'pipe organ', 'trinoids', 'whisper', 'wobble', 'jester'];
+
+/** Browser-voice settings for roles that are not NPCs. Pitch and rate stay neutral on purpose. */
+const EXTRA_VOICES: Record<string, VoiceConfig> = {
+  coach: { lang: 'en-US', gender: 'f', pitch: 1, rate: 1 },
+  passer: { lang: 'en-US', gender: 'm', pitch: 1, rate: 1 },
+};
+
+const SLOW_RATE = 0.8;
 
 export function charToViseme(ch: string): VisemeType {
   const c = (ch || '').toLowerCase();
@@ -427,22 +579,19 @@ class VoiceEngine {
     return score;
   }
 
-  forNpc(npcId: string, speaker?: 'emma' | 'liam', preferredURI?: string | null): { voice: SpeechSynthesisVoice | null; cfg: VoiceConfig } {
+  private configFor(npcId: string, speaker?: 'emma' | 'liam'): VoiceConfig {
+    if (EXTRA_VOICES[npcId]) return EXTRA_VOICES[npcId];
     const npc = NPCS[npcId] || NPCS.leo;
-    const cfg =
-      npc.isCouple && speaker && npc.coupleVoices
-        ? npc.coupleVoices[speaker]
-        : npc.voice;
+    return npc.isCouple && speaker && npc.coupleVoices ? npc.coupleVoices[speaker] : npc.voice;
+  }
 
+  /** Fallback browser voice for a role: matched by accent and gender only. */
+  forNpc(npcId: string, speaker?: 'emma' | 'liam'): { voice: SpeechSynthesisVoice | null; cfg: VoiceConfig } {
+    const cfg = this.configFor(npcId, speaker);
     const voices = this.getEnglishVoices();
     if (voices.length === 0) return { voice: null, cfg };
 
-    if (preferredURI) {
-      const found = voices.find((v) => v.voiceURI === preferredURI);
-      if (found) return { voice: found, cfg };
-    }
-
-    const cacheKey = `${npcId}:${speaker || 'default'}`;
+    const cacheKey = `${cfg.lang}:${cfg.gender}`;
     if (this.cache.has(cacheKey)) {
       return { voice: this.cache.get(cacheKey)!, cfg };
     }
@@ -469,6 +618,7 @@ class VoiceEngine {
       window.clearInterval(this.lipInterval);
       this.lipInterval = null;
     }
+    ClipAudio.stop();
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       window.speechSynthesis.cancel();
     }
@@ -476,6 +626,11 @@ class VoiceEngine {
     AudioBus.exitSpeaking();
   }
 
+  /**
+   * Speak a line. Plays the pre-rendered ElevenLabs clip when one exists; otherwise uses
+   * the browser voice at natural pitch. npcId defaults to 'coach' (sample answers,
+   * phrasebook, single words). preferredURI is kept for old callers and ignored.
+   */
   async speak(
     text: string,
     opts: {
@@ -493,28 +648,34 @@ class VoiceEngine {
 
     this.stop();
 
+    const npcId = opts.npcId || 'coach';
+    const clipUrl = await Clips.find(roleFor(npcId, opts.speaker), text);
+
     if (opts.channel === 'inear') {
       SFX.play('radioIn');
       await new Promise((r) => setTimeout(r, 450));
-      if (!AudioBus.canSpeak()) return;
     }
+    if (!AudioBus.canSpeak()) return;
 
     AudioBus.enterSpeaking();
 
     const words = text.trim().split(/\s+/).filter(Boolean);
-    const { voice, cfg } = this.forNpc(opts.npcId || 'leo', opts.speaker, opts.preferredURI);
-    const rate = clamp(cfg.rate * (opts.slow ? 0.75 : 1), 0.5, 1.6);
-    const pitch = clamp(cfg.pitch, 0.5, 2.0);
+    const rateMul = opts.slow ? SLOW_RATE : 1;
 
     return new Promise<void>((resolve) => {
       let finished = false;
       let currentWordIdx = 0;
+      let safetyTimer: number | null = null;
+      let lipTimer: number | null = null;
 
       const finish = () => {
         if (finished) return;
         finished = true;
-        if (this.activeTimer) window.clearTimeout(this.activeTimer);
-        if (this.lipInterval) window.clearInterval(this.lipInterval);
+        // Clear only this call's timers: a newer speak() may already own this.activeTimer.
+        if (safetyTimer) window.clearTimeout(safetyTimer);
+        if (lipTimer) window.clearInterval(lipTimer);
+        if (this.activeTimer === safetyTimer) this.activeTimer = null;
+        if (this.lipInterval === lipTimer) this.lipInterval = null;
         this.emitViseme('rest', -1);
         AudioBus.exitSpeaking();
         if (opts.channel === 'inear') {
@@ -523,8 +684,14 @@ class VoiceEngine {
         resolve();
       };
 
-      // Start fallback lip-sync animation loop every 105ms
-      this.lipInterval = window.setInterval(() => {
+      const setWord = (idx: number) => {
+        currentWordIdx = clamp(idx, 0, Math.max(0, words.length - 1));
+        this.lastBoundaryAt = Date.now();
+        opts.onWord?.(currentWordIdx);
+      };
+
+      // Lip-sync loop every 105ms
+      lipTimer = this.lipInterval = window.setInterval(() => {
         if (finished) return;
         const now = Date.now();
         if (now - this.lastBoundaryAt < 300 && words[currentWordIdx]) {
@@ -538,43 +705,57 @@ class VoiceEngine {
         }
       }, 105);
 
-      // Safety timeout (2.5s + words * 650ms / rate)
-      const safetyMs = 2500 + (words.length * 650) / rate;
-      this.activeTimer = window.setTimeout(finish, safetyMs);
+      const armSafety = (ms: number) => {
+        if (safetyTimer) window.clearTimeout(safetyTimer);
+        safetyTimer = this.activeTimer = window.setTimeout(finish, ms);
+      };
 
-      // Read the check into a boolean: an inline `in` check narrows `window` to `never` in this branch
-      const hasSpeechSynthesis: boolean = 'speechSynthesis' in window;
-      if (!hasSpeechSynthesis) {
-        window.setTimeout(finish, Math.min(2500, safetyMs * 0.5));
+      const speakWithBrowser = () => {
+        if (finished) return;
+        const { voice, cfg } = this.forNpc(npcId, opts.speaker);
+        const rate = clamp(rateMul, 0.5, 1.6);
+        armSafety(2500 + (words.length * 650) / rate);
+
+        const hasSpeechSynthesis: boolean = 'speechSynthesis' in window;
+        if (!hasSpeechSynthesis) {
+          window.setTimeout(finish, 1500);
+          return;
+        }
+        try {
+          const utter = new SpeechSynthesisUtterance(text);
+          if (voice) utter.voice = voice;
+          utter.lang = cfg.lang;
+          utter.rate = rate;
+          utter.pitch = 1;
+          utter.onboundary = (ev) => {
+            if (typeof ev.charIndex === 'number') {
+              const prefix = text.slice(0, ev.charIndex);
+              setWord(prefix.trim() ? prefix.trim().split(/\s+/).length : 0);
+              this.emitViseme(charToViseme((words[currentWordIdx] || 'a')[0]), currentWordIdx);
+            }
+          };
+          utter.onend = finish;
+          utter.onerror = finish;
+          window.speechSynthesis.speak(utter);
+        } catch {
+          finish();
+        }
+      };
+
+      if (!clipUrl) {
+        speakWithBrowser();
         return;
       }
 
-      try {
-        const utter = new SpeechSynthesisUtterance(text);
-        if (voice) utter.voice = voice;
-        utter.lang = cfg.lang;
-        utter.rate = rate;
-        utter.pitch = pitch;
-
-        utter.onboundary = (ev) => {
-          this.lastBoundaryAt = Date.now();
-          if (typeof ev.charIndex === 'number') {
-            const prefix = text.slice(0, ev.charIndex);
-            const idx = prefix.trim() ? prefix.trim().split(/\s+/).length : 0;
-            currentWordIdx = clamp(idx, 0, Math.max(0, words.length - 1));
-            opts.onWord?.(currentWordIdx);
-            const w = words[currentWordIdx] || 'a';
-            this.emitViseme(charToViseme(w[0]), currentWordIdx);
-          }
-        };
-
-        utter.onend = finish;
-        utter.onerror = finish;
-
-        window.speechSynthesis.speak(utter);
-      } catch {
-        finish();
-      }
+      armSafety(4000 + (words.length * 900) / rateMul);
+      ClipAudio.play(clipUrl, rateMul, (fraction) => {
+        const idx = Math.floor(fraction * words.length);
+        if (idx !== currentWordIdx) setWord(idx);
+        else this.lastBoundaryAt = Date.now();
+      }).then((end) => {
+        if (end === 'error') speakWithBrowser();
+        else finish();
+      });
     });
   }
 }

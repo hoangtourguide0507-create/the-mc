@@ -12,7 +12,6 @@ export const HubView: React.FC = () => {
   const openWorldWithTarget = useGameStore((s) => s.openWorldWithTarget);
   const setBookOpen = useGameStore((s) => s.setBookOpen);
   const setShopOpen = useGameStore((s) => s.setShopOpen);
-  const setVoiceModalOpen = useGameStore((s) => s.setVoiceModalOpen);
   const toggleMute = useGameStore((s) => s.toggleMute);
   const sleepDay = useGameStore((s) => s.sleepDay);
   const toast = useGameStore((s) => s.toast);
@@ -79,15 +78,6 @@ export const HubView: React.FC = () => {
               <span>🔥</span>
               <span>{streakCount}</span>
             </div>
-
-            {/* Voice Selector Button */}
-            <button
-              onClick={() => setVoiceModalOpen(true)}
-              title="Chọn giọng đọc tiếng Anh"
-              className="rounded-full border border-white/15 bg-white/10 p-2 text-xs text-white transition hover:bg-white/20"
-            >
-              🗣️
-            </button>
 
             {/* Mute Toggle */}
             <button

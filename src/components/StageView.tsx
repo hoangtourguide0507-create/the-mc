@@ -192,7 +192,7 @@ export const StageView: React.FC = () => {
     const text = turn.cue || turn.sample || '';
     if (!text) return;
     Voice.speak(text, {
-      npcId: 'leo',
+      npcId: 'coach',
       slow,
       preferredURI: state.voiceURI,
     });
@@ -559,7 +559,7 @@ export const StageView: React.FC = () => {
                   onClick={() => handlePlayNpcAudio(true)}
                   className="rounded-xl border border-white/15 bg-white/10 px-2.5 py-1 text-xs font-extrabold text-cyan-200 transition hover:bg-white/20"
                 >
-                  🐢 0.75×
+                  🐢 0.8×
                 </button>
                 <button
                   onClick={() => {
@@ -890,7 +890,7 @@ export const StageView: React.FC = () => {
                       onClick={() => handlePlaySampleCue(true)}
                       className="rounded-xl border border-white/15 bg-white/10 px-2.5 py-2 text-xs font-extrabold text-cyan-200 transition hover:bg-white/20"
                     >
-                      🐢 0.75×
+                      🐢 0.8×
                     </button>
                     <button
                       onClick={() => setShowFallbackBox((v) => !v)}

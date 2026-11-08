@@ -23,7 +23,8 @@ Sau đó mở trình duyệt tại `http://localhost:5173` (hoặc địa chỉ 
   - `SFX`: Tổng hợp 19 hiệu ứng âm thanh bằng Web Audio API + DynamicsCompressor.
   - `Ambience`: Âm nền thành phố Ngày/Đêm.
   - `AudioBus`: Máy trạng thái bán song công (`idle → speaking → arming → listening`) bảo vệ phiên âm thanh iOS.
-  - `Voice`: Chấm điểm giọng đọc TTS theo vùng/giới tính của từng NPC, phát sự kiện `Viseme` (`a, e, o, m, rest`) theo ranh giới từ (`onboundary`).
+  - `Voice`: Phát file giọng ElevenLabs render sẵn (`public/audio/manifest.json`) theo vai (`leo`, `couple:emma`, `coach`, `passer`…); câu chưa có file thì dùng giọng trình duyệt theo accent/giới tính, cao độ và tốc độ giữ nguyên (không bóp méo). Chế độ chậm = `playbackRate 0.8` giữ cao độ. Phát sự kiện `Viseme` (`a, e, o, m, rest`).
+  - Giọng NPC: chọn vai trong `tools/voices.config.json`, render bằng `tools/render-voices.mjs` (workflow `.github/workflows/voices.yml`, cần secret `ELEVENLABS_API_KEY`). Mỗi câu chỉ render một lần; chơi lại không tốn credit.
   - `SpeechEngine`: Nhận dạng giọng nói `webkitSpeechRecognition` kèm `mergeChunks` chống lặp từ trên iOS.
 - [`src/three/ClayCharacter3D.tsx`](src/three/ClayCharacter3D.tsx): Nhân vật 3D Stylized Clay với trang phục/đạo cụ gắn rời (`goldmic`, `gown`, `inear`), 5 khẩu hình `Viseme` nội suy mượt, chớp mắt tự nhiên (`Blink`) và 4 biểu cảm (`idle`, `listening`, `happy`, `confused`).
 - [`src/three/HubRoom3D.tsx`](src/three/HubRoom3D.tsx): Phòng Studio 3D của MC Thiên Ân với cửa sổ đổi màu bầu trời theo giờ và kệ trưng bày nâng cấp 3D.

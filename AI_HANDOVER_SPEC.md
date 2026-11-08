@@ -36,7 +36,7 @@ mc-life-3d/
     │   ├── evaluator.ts         # PronunciationEvaluator (Normalize, Levenshtein, Metaphone, Soundex, NW DP Alignment)
     │   └── store.ts             # Zustand Store (mclife.v2, deepMerge, v1->v2 migration, gain(), startScene, finishScene)
     ├── audio/
-    │   └── audioSystem.ts       # SFX (19 âm WebAudio), Ambience (day/night), AudioBus (Half-Duplex), Voice (TTS), SpeechEngine (STT)
+    │   └── audioSystem.ts       # SFX (19 âm WebAudio), Ambience (day/night), AudioBus (Half-Duplex), Voice (clip ElevenLabs render sẵn + TTS trình duyệt dự phòng), ClipAudio, SpeechEngine (STT)
     ├── three/
     │   ├── ClayCharacter3D.tsx  # Model nhân vật 3D Claymorphism + 5 Viseme miệng + Chớp mắt + 4 Mood + Trang phục/Đạo cụ
     │   ├── HubRoom3D.tsx        # Phòng Studio 3D của MC Thiên Ân (cửa sổ theo buổi, bàn Sổ tay, kệ Nâng cấp)
@@ -51,7 +51,7 @@ mc-life-3d/
         ├── HUD.tsx              # Thanh 4 viên chỉ số (Energy, Charisma, XP, Cash) đếm số mượt 800ms + số bay (+N/-N)
         ├── HubView.tsx          # Giao diện Phòng MC (chia 2 cột trên iPad, 1 cột trên iPhone, dải Poster GIG_ORDER)
         ├── StageView.tsx        # Máy trạng thái 5 loại lượt diễn, Blind Listening, Micro & bộ Giả lập dự phòng
-        └── SheetsAndModals.tsx  # WelcomeOverlay, PhrasebookSheet (kèm Luyện từ yếu), ShopSheet, ResultModal, StreetTalkModal, VoiceSelectorModal, GlobalOverlays
+        └── SheetsAndModals.tsx  # WelcomeOverlay, PhrasebookSheet (kèm Luyện từ yếu), ShopSheet, ResultModal, StreetTalkModal, GlobalOverlays (đã bỏ VoiceSelectorModal)
 ```
 
 ---

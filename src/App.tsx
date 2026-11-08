@@ -8,7 +8,6 @@ import {
   ResultModal,
   ShopSheet,
   StreetTalkModal,
-  VoiceSelectorModal,
   WelcomeOverlay,
 } from './components/SheetsAndModals';
 import { StageView } from './components/StageView';
@@ -72,7 +71,6 @@ export const App: React.FC = () => {
       <ShopSheet />
       <ResultModal />
       <StreetTalkModal />
-      <VoiceSelectorModal />
       <GlobalOverlays />
     </div>
   );

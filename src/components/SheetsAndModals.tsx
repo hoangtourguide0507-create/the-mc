@@ -310,7 +310,7 @@ export const PhrasebookSheet: React.FC = () => {
                         }
                         className="rounded-xl border border-white/15 bg-white/10 px-2.5 py-1 text-xs font-bold text-cyan-200 hover:bg-white/20"
                       >
-                        🐢 0.75×
+                        🐢 0.8×
                       </button>
                     </div>
                   )}
@@ -651,7 +651,7 @@ export const StreetTalkModal: React.FC = () => {
     setShowViPrompt(false);
     setPickedIdx(null);
     Voice.speak(streetTalkActive.item.prompt.en, {
-      npcId: 'leo',
+      npcId: 'passer',
       preferredURI: state.voiceURI,
     });
   }, [streetTalkActive]);
@@ -670,7 +670,7 @@ export const StreetTalkModal: React.FC = () => {
       SFX.play('correct');
       gain({ xp: 3 }); // +3 XP without bonus multiplier as per spec
       Voice.speak(chosen.en, {
-        npcId: 'ivy',
+        npcId: 'coach',
         preferredURI: state.voiceURI,
       });
     } else {
@@ -782,93 +782,7 @@ export const StreetTalkModal: React.FC = () => {
   );
 };
 
-// 6. VOICE SELECTOR MODAL
-export const VoiceSelectorModal: React.FC = () => {
-  const open = useGameStore((s) => s.voiceModalOpen);
-  const setVoiceModalOpen = useGameStore((s) => s.setVoiceModalOpen);
-  const state = useGameStore((s) => s.state);
-  const setVoiceURI = useGameStore((s) => s.setVoiceURI);
-
-  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
-
-  useEffect(() => {
-    if (!open) return;
-    const update = () => setVoices(Voice.getEnglishVoices());
-    update();
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.onvoiceschanged = update;
-    }
-  }, [open]);
-
-  if (!open) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-md">
-      <div className="flex max-h-[80vh] w-full max-w-md flex-col overflow-hidden rounded-3xl border border-white/20 bg-[#150C38] p-5 shadow-2xl">
-        <div className="flex items-center justify-between border-b border-white/10 pb-3">
-          <h3 className="font-display text-base font-black text-white">
-            🗣️ Chọn Giọng Đọc Tiếng Anh (TTS)
-          </h3>
-          <button
-            onClick={() => setVoiceModalOpen(false)}
-            className="rounded-full bg-white/10 px-2.5 py-1 text-xs font-bold text-white"
-          >
-            Đóng ✕
-          </button>
-        </div>
-
-        <div className="mt-3 flex-1 space-y-2 overflow-y-auto pr-1">
-          <button
-            onClick={() => {
-              setVoiceURI(null);
-              Voice.speak('Hello Thien An! Automatic voice selection is active.', {
-                preferredURI: null,
-              });
-            }}
-            className={`flex w-full items-center justify-between rounded-2xl border p-3 text-left text-xs font-bold ${
-              !state.voiceURI
-                ? 'border-cyan-400 bg-cyan-500/20 text-white'
-                : 'border-white/15 bg-white/5 text-slate-300'
-            }`}
-          >
-            <span>✨ Tự động chọn giọng chuẩn nhất theo từng NPC</span>
-            {!state.voiceURI && <span>✓</span>}
-          </button>
-
-          {voices.map((v) => (
-            <div
-              key={v.voiceURI}
-              className={`flex items-center justify-between rounded-2xl border p-2.5 text-xs ${
-                state.voiceURI === v.voiceURI
-                  ? 'border-pink-400 bg-pink-500/20 text-white'
-                  : 'border-white/10 bg-white/5 text-slate-200'
-              }`}
-            >
-              <button
-                onClick={() => setVoiceURI(v.voiceURI)}
-                className="flex-1 text-left font-bold"
-              >
-                {v.name} <span className="text-[10px] text-cyan-300">({v.lang})</span>
-              </button>
-              <button
-                onClick={() =>
-                  Voice.speak('Welcome to English Stage Tonight!', {
-                    preferredURI: v.voiceURI,
-                  })
-                }
-                className="rounded-xl bg-white/10 px-2.5 py-1 text-[11px] font-bold text-white hover:bg-white/20"
-              >
-                🔊 Thử
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// 7. CURTAIN TRANSITION, SLEEP OVERLAY & TOASTS
+// 6. CURTAIN TRANSITION, SLEEP OVERLAY & TOASTS
 export const GlobalOverlays: React.FC = () => {
   const curtain = useGameStore((s) => s.curtain);
   const sleepOverlay = useGameStore((s) => s.sleepOverlay);

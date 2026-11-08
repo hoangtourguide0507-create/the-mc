@@ -1,0 +1,22 @@
+{
+  "_help": "Chọn giọng ElevenLabs cho từng vai. voiceId rỗng = vai đó tạm dùng giọng trình duyệt (không tốn credit). Đổi voiceId thì các câu của vai đó được render lại ở lần chạy sau.",
+  "model": "eleven_multilingual_v2",
+  "outputFormat": "mp3_44100_64",
+  "maxCharsPerRun": 5200,
+  "phases": ["scenes"],
+  "_phasesHelp": "Thứ tự ưu tiên khi render: scenes (thoại show), streettalk, phrasebook, words. Thêm phase khi còn credit.",
+  "defaultSettings": { "stability": 0.45, "similarity_boost": 0.8, "style": 0.2, "use_speaker_boost": true },
+  "roles": {
+    "leo":         { "accent": "en-AU", "brief": "Barista trẻ, vui, xởi lởi",            "voiceName": "", "voiceId": "" },
+    "ivy":         { "accent": "en-AU", "brief": "Wedding planner nữ ~30, ấm, rạng rỡ",   "voiceName": "", "voiceId": "" },
+    "victoria":    { "accent": "en-GB", "brief": "Chủ tịch gala, sang trọng, rõ chữ",     "voiceName": "", "voiceId": "" },
+    "couple:emma": { "accent": "en-GB", "brief": "Cô dâu trẻ, ngọt, xúc động",            "voiceName": "", "voiceId": "" },
+    "couple:liam": { "accent": "en-GB", "brief": "Chú rể ~30, trầm ấm, hơi hồi hộp",      "voiceName": "", "voiceId": "" },
+    "alex":        { "accent": "en-US", "brief": "Đạo diễn sân khấu, dứt khoát, gấp",     "voiceName": "", "voiceId": "" },
+    "sam":         { "accent": "en-US", "brief": "Kỹ thuật âm thanh, thư thả",            "voiceName": "", "voiceId": "" },
+    "tom":         { "accent": "en-US", "brief": "Nhân viên siêu thị trẻ, nhanh, thân thiện", "voiceName": "", "voiceId": "" },
+    "david":       { "accent": "en-US", "brief": "CEO trung niên, tự tin, chậm rãi",      "voiceName": "", "voiceId": "" },
+    "coach":       { "accent": "en-US", "brief": "Đọc câu mẫu cho người chơi: rõ, chuẩn", "voiceName": "", "voiceId": "" },
+    "passer":      { "accent": "en-US", "brief": "Người qua đường hỏi chuyện (Street Talk)", "voiceName": "", "voiceId": "" }
+  }
+}
