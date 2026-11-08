@@ -31,3 +31,9 @@ Sau đó mở trình duyệt tại `http://localhost:5173` (hoặc địa chỉ 
 - [`src/core/career.ts`](src/core/career.ts): Thang nghề 10 cấp + Danh tiếng (sao trung bình) để mở khoá show lớn.
 - QA: `npm run build && npx vite preview --port 4173 &` rồi `python3 tools/qa_shot.py world hub stage` (ảnh iPhone 390×844 + iPad 1180×820).
 - [`src/three/Stage3D.tsx`](src/three/Stage3D.tsx): 8 bối cảnh sân khấu 3D với đèn Spotlight động, sóng âm 3D Hologram cầu vồng và Camera tự động lia theo người nói.
+
+## Nhân vật anime
+
+- Mặc định: nhân vật anime chibi dựng bằng code — `src/three/ClayCharacter3D.tsx` (mặt decal vẽ tay trong `src/three/anime/faceTextures.ts`, tóc lọn trong `src/three/anime/hair.ts`, tô màu toon + viền).
+- Mô hình VRM (VRoid Studio, miễn phí): xuất file `.vrm` → đặt vào `public/vrm/` → điền vào `VRM_MODELS` trong `src/data/content.ts` (ví dụ `mc: 'vrm/mc.vrm'`). Game tự dùng khẩu hình `aa/ee/oh`, chớp mắt `blink`, cảm xúc `happy/surprised/relaxed`, hạ tay khỏi tư thế chữ T và tự đi bộ (`src/three/VrmCharacter3D.tsx`).
+- Phong cách đồ hoạ thử nghiệm Ghibli: mở link kèm `?style=ghibli` (tắt: `?style=neon`).

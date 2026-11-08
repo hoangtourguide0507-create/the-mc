@@ -28,6 +28,7 @@ export interface LookConfig {
   propArt?: PropArtType;
   prop?: string;
   glbUrl?: string; // Optional external .glb model override
+  vrmUrl?: string; // Mô hình VRM anime (VRoid Studio), ví dụ 'vrm/mc.vrm' trong thư mục public/
 }
 
 export interface VoiceConfig {

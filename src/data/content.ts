@@ -81,8 +81,27 @@ export const SHOP: ShopItem[] = [
   },
 ];
 
+/**
+ * Mô hình VRM anime (tạo bằng VRoid Studio) cho từng nhân vật.
+ * Đặt file vào public/vrm/ rồi điền đường dẫn, ví dụ: mc: 'vrm/mc.vrm', emma: 'vrm/emma.vrm'.
+ * Để trống = dùng nhân vật anime chibi dựng bằng code.
+ */
+export const VRM_MODELS: Record<string, string> = {
+  // mc: 'vrm/mc.vrm',
+  // leo: 'vrm/leo.vrm',
+  // alex: 'vrm/alex.vrm',
+  // emma: 'vrm/emma.vrm',
+  // liam: 'vrm/liam.vrm',
+  // victoria: 'vrm/victoria.vrm',
+  // sam: 'vrm/sam.vrm',
+  // tom: 'vrm/tom.vrm',
+  // ivy: 'vrm/ivy.vrm',
+  // david: 'vrm/david.vrm',
+};
+
 export function getPlayerLook(items: Record<string, boolean>): LookConfig {
   return {
+    vrmUrl: VRM_MODELS.mc || undefined,
     skin: '#FAD2B8',
     hair: '#231829',
     eye: '#2A1E3F',
@@ -268,6 +287,15 @@ export const NPCS: Record<string, NpcData> = {
     },
   },
 };
+
+// Gắn mô hình VRM (nếu có) cho NPC
+for (const [id, npc] of Object.entries(NPCS)) {
+  if (VRM_MODELS[id]) npc.look = { ...npc.look, vrmUrl: VRM_MODELS[id] };
+  if (npc.coupleLooks) {
+    if (VRM_MODELS.emma) npc.coupleLooks.emma = { ...npc.coupleLooks.emma, vrmUrl: VRM_MODELS.emma };
+    if (VRM_MODELS.liam) npc.coupleLooks.liam = { ...npc.coupleLooks.liam, vrmUrl: VRM_MODELS.liam };
+  }
+}
 
 export const WORLD_LOCS: Record<string, WorldLocation> = {
   home: {

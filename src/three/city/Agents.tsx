@@ -68,7 +68,7 @@ export const Walker: React.FC<{
   return (
     <>
       <group ref={g}>
-        <ClayCharacter3D look={look} scale={scale} isWalking={walking} highlightRing={highlight} />
+        <ClayCharacter3D look={look} scale={scale} isWalking={walking} highlightRing={highlight} lod={highlight ? 'high' : 'low'} />
         {onClick && (
           // Vùng chạm rộng hơn thân nhân vật cho dễ bấm trên điện thoại
           <mesh position={[0, 0.45, 0]} onClick={onClick}>

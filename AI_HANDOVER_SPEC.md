@@ -114,6 +114,11 @@ Khi chỉnh sửa hoặc mở rộng dự án, **AI KHÔNG ĐƯỢC LÀM SAI L�
 - Vị trí nhân vật/xe trên bản đồ đọc từ ref trong `useFrame`; không `setState` mỗi frame.
 - Nhãn `<Html>` trong cảnh: không dùng `distanceFactor` (nhãn phình to trên khung nhỏ), luôn đặt `zIndexRange` thấp để không đè HUD.
 
+### 2.3c. Nhân vật
+- `ClayCharacter3D` = anime chibi: decal mặt đổi texture theo trạng thái (mắt open/closed/happy/wide, mày neutral/up/worried, miệng rest/m/a/e/o/smile); tóc gộp 1 lưới/kiểu tóc; viền = vỏ lộn ngược (`hullMat`), KHÔNG dùng drei `<Outlines>` (không vẽ ra trong bản này).
+- `lod="low"` cho nhân vật trên bản đồ (bỏ viền/chi tiết nhỏ).
+- `look.vrmUrl` → `VrmCharacter3D` (lazy-load `@pixiv/three-vrm`); danh sách trong `VRM_MODELS` (content.ts).
+
 ### 2.4. AudioBus Bán Song Công & Chấm Phát Âm (`src/audio/audioSystem.ts` & `src/core/evaluator.ts`)
 - **Half-Duplex bắt buộc**:
   - Máy trạng thái 4 bước: `idle → speaking → arming → listening`.
