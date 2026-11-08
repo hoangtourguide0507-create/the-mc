@@ -152,7 +152,7 @@ export const HubView: React.FC = () => {
         </div>
 
         {/* Career Profile Card (visible on iPad or bottom of room) */}
-        <div className="grid grid-cols-3 gap-2 rounded-2xl border border-white/15 bg-white/5 p-3 text-center backdrop-blur-md">
+        <div data-tour="career" className="grid grid-cols-3 gap-2 rounded-2xl border border-white/15 bg-white/5 p-3 text-center backdrop-blur-md">
           <div>
             <div className="font-display text-base font-black text-cyan-300">
               {state.learned.length + 5}
@@ -184,6 +184,7 @@ export const HubView: React.FC = () => {
       <div className="flex flex-col gap-3.5 md:col-span-7 md:h-full md:overflow-y-auto md:pr-1">
         {/* Big CTA: Ra Phố (3D Isometric City Map) */}
         <button
+          data-tour="map"
           onClick={() => goTo('world', { title: '🗺️ Đang bước ra Thành phố 3D...' })}
           className="group relative flex w-full items-center justify-between overflow-hidden rounded-3xl border border-pink-400/50 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-4 text-left shadow-[0_0_30px_rgba(255,79,216,0.3)] transition hover:scale-[1.01]"
         >
@@ -249,6 +250,7 @@ export const HubView: React.FC = () => {
               return (
                 <button
                   key={dId}
+                  data-tour={dId === 'coffee' ? 'coffee' : undefined}
                   onClick={() => handleSceneCardClick(dId)}
                   className="flex flex-col justify-between rounded-2xl border border-white/15 bg-white/5 p-3.5 text-left transition hover:border-emerald-400/60 hover:bg-white/10"
                 >
@@ -338,7 +340,7 @@ export const HubView: React.FC = () => {
             </span>
           </div>
 
-          <div className="flex gap-3 overflow-x-auto pb-3 pt-1">
+          <div data-tour="gigs" className="flex gap-3 overflow-x-auto pb-3 pt-1">
             {GIG_ORDER.map((sceneId) => {
               const sc = SCENES[sceneId];
               const st = sceneStatus(sceneId, state.clock, state.doneToday);

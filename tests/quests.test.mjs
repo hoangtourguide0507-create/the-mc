@@ -114,11 +114,19 @@ console.log(`quests: ${Q.QUESTS.length} nhiệm vụ, ${Q.CHAPTERS.length} chư�
     entryPoints: [path.join(root, 'src/core/onboarding.ts')],
     bundle: true, format: 'esm', platform: 'node', outfile: outOnb, logLevel: 'silent',
   });
-  const { nextHint } = await import(pathToFileURL(outOnb).href);
+  const { nextHint, currentTourStep } = await import(pathToFileURL(outOnb).href);
   const base = () => ({ stats: { daily: 0, shows: 0 }, rep: { n: 0 } });
   assert.match(nextHint(base()), /Bước 1/);
   assert.match(nextHint({ ...base(), stats: { daily: 1, shows: 0 } }), /Bước 2/);
   assert.match(nextHint({ ...base(), stats: { daily: 1, shows: 1 } }), /Bước 3/);
   assert.equal(nextHint({ ...base(), stats: { daily: 1, shows: 2 }, rep: { n: 2 } }), null);
-  console.log('onboarding: gợi ý người mới pass');
+  const tourBase = (over = {}) => ({ stats: { daily: 0, shows: 0 }, rep: { n: 0 }, tour: { acked: {}, skipped: false }, ...over });
+  assert.equal(currentTourStep(tourBase()).id, 'career');
+  assert.equal(currentTourStep(tourBase({ tour: { acked: { career: true }, skipped: false } })).id, 'coffee');
+  assert.equal(currentTourStep(tourBase({ tour: { acked: { career: true, coffee: true }, skipped: false } })), null);
+  assert.equal(currentTourStep(tourBase({ stats: { daily: 1, shows: 0 } })).id, 'map');
+  assert.equal(currentTourStep(tourBase({ stats: { daily: 1, shows: 1 }, rep: { n: 1 } })), null);
+  assert.equal(currentTourStep(tourBase({ stats: { daily: 1, shows: 1 }, tour: { acked: {}, skipped: false } })).id, 'gigs');
+  assert.equal(currentTourStep(tourBase({ tour: { acked: {}, skipped: true } })), null);
+  console.log('onboarding: gợi ý người mới và chỉ điểm pass');
 }

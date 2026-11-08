@@ -57,6 +57,7 @@ export const DEFAULT_STATE: GameState = {
   learned: [],
   weak: [],
   quests: { phraseStars: {}, streetDone: {}, done: {}, chapterDone: {} },
+  tour: { acked: {}, skipped: false },
   muted: false,
   voiceURI: null,
 };
@@ -264,6 +265,8 @@ interface GameStore {
   setQuestOpen: (open: boolean) => void;
   helpOpen: boolean;
   setHelpOpen: (open: boolean) => void;
+  ackTour: (stepId: string) => void;
+  skipTour: () => void;
 }
 
 let toastSeq = 1;
@@ -1015,6 +1018,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (res.xp > 0 || res.charisma > 0) {
       get().gain({ xp: res.xp, charisma: res.charisma });
     }
+  },
+
+  ackTour: (stepId) => {
+    const next = deepClone(get().state);
+    next.tour.acked[stepId] = true;
+    set({ state: next });
+    persistStateDebounced(next);
+  },
+
+  skipTour: () => {
+    const next = deepClone(get().state);
+    next.tour.skipped = true;
+    set({ state: next });
+    persistStateDebounced(next);
   },
 
   setHelpOpen: (open) => {

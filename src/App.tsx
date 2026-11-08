@@ -16,6 +16,7 @@ import { useGameStore } from './core/store';
 import { CityWorld3D } from './three/CityWorld3D';
 import { QuestSheet } from './components/QuestSheet';
 import { HelpSheet } from './components/HelpSheet';
+import { TourOverlay } from './components/TourOverlay';
 
 export const App: React.FC = () => {
   const view = useGameStore((s) => s.view);
@@ -75,6 +76,7 @@ export const App: React.FC = () => {
       <StreetTalkModal />
       <QuestSheet />
       <HelpSheet />
+      <TourOverlay />
       <GlobalOverlays />
     </div>
   );
