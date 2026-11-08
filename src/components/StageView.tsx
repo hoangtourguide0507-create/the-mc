@@ -394,8 +394,8 @@ export const StageView: React.FC = () => {
       setShowFallbackBox(true);
       toast(
         res.error === 'unsupported'
-          ? 'Trình duyệt chưa hỗ trợ thu âm trực tiếp — đã mở bảng Gõ phím / Giả lập!'
-          : 'Không nghe rõ tiếng — bạn có thể nói lại hoặc dùng chế độ Gõ phím / Giả lập bên dưới!',
+          ? 'Trình duyệt chưa hỗ trợ thu âm trực tiếp — đã mở ô Gõ thay mic!'
+          : 'Không nghe rõ tiếng — bạn có thể nói lại hoặc dùng ô Gõ thay mic bên dưới!',
         'warn',
         3200
       );
@@ -899,7 +899,7 @@ export const StageView: React.FC = () => {
                       onClick={() => setShowFallbackBox((v) => !v)}
                       className="rounded-xl border border-amber-400/40 bg-amber-500/15 px-2.5 py-2 text-xs font-extrabold text-amber-200 transition hover:bg-amber-500/25"
                     >
-                      ⌨️ Giả lập / Gõ
+                      ⌨️ Gõ thay mic
                     </button>
                   </>
                 )}
@@ -935,6 +935,11 @@ export const StageView: React.FC = () => {
 
               {/* Right: Skip & Continue Buttons */}
               <div className="flex items-center gap-2">
+                {(turnStars[turnIdx] || 0) < 1 && turn.mode !== 'quiz' && (
+                  <span className="hidden text-[11px] font-bold text-amber-300 sm:inline">
+                    Cần 1★ để tiếp tục, hoặc bấm Bỏ qua
+                  </span>
+                )}
                 <button
                   onClick={() => handleNextTurn(true)}
                   className="rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-xs font-bold text-slate-300 transition hover:bg-white/15"
@@ -955,25 +960,25 @@ export const StageView: React.FC = () => {
             {showFallbackBox && turn.mode !== 'quiz' && (
               <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-white/10 pt-2.5">
                 <span className="text-[11px] font-bold text-slate-300">
-                  Chế độ dự phòng:
+                  Dùng khi mic không hoạt động:
                 </span>
                 <button
                   onClick={() => handleSimulateGrade('perfect')}
                   className="rounded-lg bg-emerald-500/25 px-2.5 py-1 text-xs font-black text-emerald-200 hover:bg-emerald-500/35"
                 >
-                  ⚡ Giả lập Chuẩn (3★)
+                  ⚡ Thử: đúng (3★)
                 </button>
                 <button
                   onClick={() => handleSimulateGrade('near')}
                   className="rounded-lg bg-amber-500/25 px-2.5 py-1 text-xs font-black text-amber-200 hover:bg-amber-500/35"
                 >
-                  ⚡ Giả lập Gần (2★)
+                  ⚡ Thử: gần đúng (2★)
                 </button>
                 <button
                   onClick={() => handleSimulateGrade('bad')}
                   className="rounded-lg bg-rose-500/25 px-2.5 py-1 text-xs font-black text-rose-200 hover:bg-rose-500/35"
                 >
-                  ⚡ Giả lập Sai (0★)
+                  ⚡ Thử: sai (0★)
                 </button>
                 <form
                   onSubmit={(e) => {
