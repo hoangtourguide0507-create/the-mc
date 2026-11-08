@@ -24,6 +24,7 @@ import {
   yesterdayKey,
 } from './clock';
 import { FUNCTION_WORDS } from './evaluator';
+import { applyQuestProgress } from './quests';
 import { chaNeed, levelTitle, MAX_LV, nextRep } from './career';
 import { Ambience, AudioBus, SFX, Voice } from '../audio/audioSystem';
 
@@ -55,6 +56,7 @@ export const DEFAULT_STATE: GameState = {
   },
   learned: [],
   weak: [],
+  quests: { phraseStars: {}, streetDone: {}, done: {}, chapterDone: {} },
   muted: false,
   voiceURI: null,
 };
@@ -254,6 +256,12 @@ interface GameStore {
   openStreetTalk: (passerName: string, lookIndex: number, item: StreetTalkItem) => void;
   closeStreetTalk: () => void;
   markStreetTalkUsed: (itemId: string) => void;
+
+  // Quests
+  recordPhraseStars: (phraseId: string, stars: number) => void;
+  evaluateQuests: () => void;
+  questOpen: boolean;
+  setQuestOpen: (open: boolean) => void;
 }
 
 let toastSeq = 1;
@@ -279,6 +287,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   streetTalkActive: null,
   streetTalkDoneIds: {},
   worldTarget: null,
+  questOpen: false,
 
   bonusOf: (key) => {
     const items = get().state.items;
@@ -770,6 +779,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       charisma: charismaEarned,
       energy: energyEarned,
     });
+    get().evaluateQuests();
     persistStateNow(get().state);
   },
 
@@ -968,5 +978,44 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set((s) => ({
       streetTalkDoneIds: { ...s.streetTalkDoneIds, [itemId]: true },
     }));
+    const st = get().state;
+    if (st.quests.streetDone[itemId]) return;
+    const next = deepClone(st);
+    next.quests.streetDone[itemId] = true;
+    set({ state: next });
+    persistStateDebounced(next);
+    get().evaluateQuests();
+  },
+
+  recordPhraseStars: (phraseId, stars) => {
+    const next = deepClone(get().state);
+    next.quests.phraseStars[phraseId] = Math.max(next.quests.phraseStars[phraseId] || 0, stars);
+    set({ state: next });
+    persistStateDebounced(next);
+    get().evaluateQuests();
+  },
+
+  evaluateQuests: () => {
+    const st = get().state;
+    const res = applyQuestProgress(st);
+    if (res.newQuests.length === 0 && res.newChapters.length === 0) return;
+    const next = deepClone(st);
+    next.quests = res.quests;
+    set({ state: next });
+    persistStateDebounced(next);
+    for (const d of res.newQuests) {
+      get().toast(`✅ Hoàn thành nhiệm vụ: ${d.title}`, 'success', 3200);
+    }
+    for (const c of res.newChapters) {
+      get().toast(`🏆 Hoàn thành ${c.title}!`, 'success', 3800);
+    }
+    if (res.xp > 0 || res.charisma > 0) {
+      get().gain({ xp: res.xp, charisma: res.charisma });
+    }
+  },
+
+  setQuestOpen: (open) => {
+    SFX.play('page');
+    set({ questOpen: open });
   },
 }));

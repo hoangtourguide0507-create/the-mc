@@ -1,6 +1,6 @@
 # Thiết kế C: Hệ thống nhiệm vụ (Quest) gắn với học tiếng Anh
 
-Trạng thái: **bản thiết kế đã chốt các quyết định ở mục 9, chưa có code.**
+Trạng thái: **đã triển khai** (dữ liệu, store, logic thuần, giao diện, test). Mục 6 mô tả nội dung thực tế.
 
 ## 1. Mục tiêu
 
@@ -59,14 +59,20 @@ interface QuestDef {
 - **Toast** khi hoàn thành mục tiêu, và **thẻ thưởng** khi xong quest (dùng lại `Confetti`).
 - Trên lượt diễn, nếu mẫu câu đang luyện thuộc một quest, hiện nhãn "Nhiệm vụ: …" ở góc.
 
-## 6. Nội dung đề xuất (Chương 1, 2 quest đầu)
+## 6. Nội dung đã triển khai
 
-| Quest | Mục tiêu | Thưởng |
+Nội dung nằm trong `src/data/quests.ts`, chỉ đọc từ `content.ts`, không thêm thoại mới nên không tốn credit ElevenLabs.
+
+| Chương | Quest | Mục tiêu |
 |---|---|---|
-| C1-Q1 Gọi cà phê | `phrase` coffee-0 đạt ≥1★; `phrase` coffee-1 đạt ≥1★ | +10 XP, +5 Cha |
-| C1-Q2 Hỏi đường | 2 mục `street` nhóm A2 (st-dir-1 và một mục khác) | +15 XP |
+| 1 · Ngày đầu tiên | Luyện mẫu câu Morning Coffee Run, Supermarket | mọi lượt đạt ≥1★ |
+| 1 | Lên sân khấu lần đầu (Backstage) | mẫu câu backstage + show ≥1★ |
+| 2 · Lên sân khấu | Tiệc cưới, Ven biển | mẫu câu + show ≥2★ |
+| 3 · Đêm tiệc lớn | Gala, Phỏng vấn | mẫu câu + show ≥2★ |
+| 4 · Đường phố | Trò chuyện với 5 / 15 / 30 người đi đường | đếm số `STREET_TALK` đã trả lời |
+| 5 · Ngôi sao MC | Dẫn đủ 5 show với trung bình 3★ | show ≥3★ |
 
-Chương 2 (hậu trường) sẽ dựa vào `backstage` và các mục `phrase` của show đó. Số lượng quest đầy đủ sẽ chốt sau khi bạn duyệt phạm vi nội dung (mục 9).
+Thưởng: quest +10 đến +30 XP và +3 đến +15 Charisma tùy quest; chương +25 đến +60 XP. Mọi khoản đi qua `gain()`.
 
 ## 7. Kiểm thử
 

@@ -5,6 +5,7 @@ import { chaNeed, useGameStore } from '../core/store';
 import { fmtRep, levelTitle, MAX_LV } from '../core/career';
 import { HUD_PAD } from './HUD';
 import { HubRoom3D } from '../three/HubRoom3D';
+import { currentQuest, questProgress } from '../core/quests';
 
 export const HubView: React.FC = () => {
   const state = useGameStore((s) => s.state);
@@ -15,6 +16,9 @@ export const HubView: React.FC = () => {
   const toggleMute = useGameStore((s) => s.toggleMute);
   const sleepDay = useGameStore((s) => s.sleepDay);
   const toast = useGameStore((s) => s.toast);
+  const setQuestOpen = useGameStore((s) => s.setQuestOpen);
+  const quest = currentQuest(state);
+  const questProg = quest ? questProgress(quest, state) : null;
 
   const periodMeta = getPeriodMeta(state.clock);
   const today = dayKey();
@@ -186,6 +190,29 @@ export const HubView: React.FC = () => {
           </div>
           <span className="rounded-full bg-white/20 px-3.5 py-1.5 text-xs font-black text-white transition group-hover:translate-x-1">
             Khám phá ➔
+          </span>
+        </button>
+
+        {/* Quest hiện tại: mở bảng nhiệm vụ đầy đủ */}
+        <button
+          onClick={() => setQuestOpen(true)}
+          className="flex items-center justify-between gap-3 rounded-2xl border border-emerald-400/35 bg-emerald-500/10 p-3.5 text-left transition hover:border-emerald-400 hover:bg-emerald-500/20"
+        >
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-400/20 text-xl">
+              📜
+            </span>
+            <div className="min-w-0">
+              <div className="text-[11px] font-black uppercase tracking-wider text-emerald-300">
+                Nhiệm vụ hiện tại
+              </div>
+              <div className="truncate font-display text-sm font-black text-white">
+                {quest ? quest.title : 'Bạn đã hoàn thành tất cả nhiệm vụ! 🏆'}
+              </div>
+            </div>
+          </div>
+          <span className="flex-shrink-0 rounded-full bg-white/10 px-2.5 py-1 text-xs font-black text-white">
+            {questProg ? `${questProg.met}/${questProg.total}` : '✓'}
           </span>
         </button>
 
