@@ -2029,25 +2029,611 @@ const SCENE_ART = {
   </svg>`
 };
 
-/* [STUB · owner: character-artist] Đồ hoạ bản đồ thành phố (isometric) — hợp đồng trong .claude/specs/world-map.md
-   building(id): SVG viewBox 0 0 240 260; chân đế = hình thoi 2×2 ô: top(120,140) right(240,200) bottom(120,260) left(0,200)
-   prop(kind):   SVG viewBox 0 0 60 80, điểm chạm đất (30,78) */
-const WORLD_ART = {
-  building(id) {
-    const c = { home: '#7C3AED', cafe: '#C08552', market: '#2EA8FF', theater: '#22D3EE', wedding: '#FF7FA5', hotel: '#A78BFA', beach: '#FF9E4A', tv: '#2EE6A8' }[id] || '#888';
-    return `<svg viewBox="0 0 240 260" class="wm-bld-svg"><polygon points="120,140 240,200 120,260 0,200" fill="#2a2150"/>
-      <polygon points="20,190 120,240 120,120 20,70" fill="${shade(c, -.25)}"/><polygon points="120,240 220,190 220,70 120,120" fill="${shade(c, -.4)}"/>
-      <polygon points="20,70 120,20 220,70 120,120" fill="${c}"/><text x="120" y="78" text-anchor="middle" font-size="22" fill="#fff" font-family="'Baloo 2',sans-serif">${id}</text></svg>`;
-  },
-  prop(kind) {
-    return kind === 'tree' ? `<svg viewBox="0 0 60 80"><rect x="27" y="50" width="6" height="28" fill="#6b4a2b"/><circle cx="30" cy="40" r="20" fill="#3FD07A"/></svg>`
-      : `<svg viewBox="0 0 60 80"><rect x="28" y="20" width="4" height="58" fill="#6E6A8E"/><circle cx="30" cy="18" r="7" fill="#FFD84D"/></svg>`;
-  },
-  passerLooks: [
-    { skin: '#E8B48A', hair: '#3A2418', hairStyle: 'side', eye: '#3B2416', outfit: 'crew', cloth: '#2EA8FF', accent: '#fff' },
-    { skin: '#C68642', hair: '#1E1E24', hairStyle: 'long', eye: '#2D1B10', outfit: 'crew', cloth: '#FF7FA5', accent: '#fff', lashes: true }
-  ]
-};
+/* =========================================================
+   5a. WORLD ART — đồ hoạ thành phố isometric (owner: character-artist)
+   ---------------------------------------------------------
+   Hợp đồng: .claude/specs/world-map.md mục 2. SVG viết tay, phong cách clay mềm, ánh sáng từ trái-trên.
+   Lưới isometric 2:1, ô 120×60: ô (gx, gy) ↦ màn hình x = (gx − gy)·60, y = (gx + gy)·30.
+     u = trục gx (↘ xuống-phải) · v = trục gy (↙ xuống-trái).
+     Mặt trước-trái (nhìn về +gy) sáng · mặt trước-phải (nhìn về +gx) tối · nóc sáng nhất.
+
+   building(id) → SVG viewBox 0 0 240 260; chân đế 2×2 ô: top(120,140) right(240,200) bottom(120,260) left(0,200).
+     Góc trên chân đế = góc trên của ô (gx, gy) → toà chiếm ô gx..gx+1 × gy..gy+1.
+     Cửa: WORLD_ART.doors[id] = { face, tile: [dx, dy], x, y }
+       face 'left'  — cửa ở mặt trước-trái, bước ra ô (gx + dx, gy + 2)   (dy luôn = 2)
+       face 'right' — cửa ở mặt trước-phải, bước ra ô (gx + 2, gy + dy)   (dx luôn = 2)
+       (x, y) = chân cửa trong viewBox 240×260.
+       home: trái · ô [1,2] | cafe: phải · ô [2,1] | market: trái · ô [1,2] | theater: phải · ô [2,1]
+       wedding: trái · ô [1,2] | hotel: phải · ô [2,1] | beach: trái · ô [1,2] | tv: trái · ô [1,2]
+     class: .win (kính cửa sổ → bật sáng đêm), .sign (biển neon), .door (cánh cửa), .led (đèn nháy), .wa-halo (quầng đèn).
+     id SVG có tiền tố wa-<id>- (mỗi toà 1 lần/trang; vẽ lại nhiều lần thì qua uniqIds()).
+   prop(kind, color?, dir?) → SVG viewBox 0 0 60 80, chạm đất (30,78): tree palm lamp bench bush car hydrant.
+     car: color (mặc định #FF4FD8), dir = hướng đầu xe 'se' (↘ +gx, mặc định) | 'nw' (↖ −gx) | 'sw' (↙ +gy) | 'ne' (↗ −gy).
+     bench: dir 'u' (dọc trục gx, mặc định) | 'v' (dọc trục gy).
+   tile(kind, variant?) → SVG viewBox 0 0 120 60 (top 60,0 · right 120,30 · bottom 60,60 · left 0,30).
+     grass road road-x plaza sand water. 'road' chạy dọc trục gx; trục gy: tile('road', 'y') hoặc tile('road-y').
+     grass/sand/water nhận variant số (vd (gx*7+gy*3)%4) để đỡ lặp. Mỗi ô có viền đè 0.7px cùng màu → ghép lưới không hở.
+   Tile & prop KHÔNG dùng id/gradient/filter → chèn bao nhiêu lần cũng được, nhẹ cho iPhone.
+   ========================================================= */
+const WORLD_ART = (() => {
+  const r1 = n => Math.round(n * 10) / 10;
+  const FONT = `font-family="'Baloo 2', 'Arial Rounded MT Bold', sans-serif" font-weight="800"`;
+  const pts = a => a.map(p => p.join(',')).join(' ');
+  const poly = (a, fill, ex = '') => `<polygon points="${pts(a)}" fill="${fill}"${ex ? ' ' + ex : ''}/>`;
+  const pline = (a, stroke, w = 1.5, ex = '') => `<polyline points="${pts(a)}" fill="none" stroke="${stroke}" stroke-width="${w}" stroke-linejoin="round" stroke-linecap="round"${ex ? ' ' + ex : ''}/>`;
+  /** Hộp isometric dùng chung cho toà nhà / đạo cụ: P(u,v,z) → [x,y] */
+  const boxWith = P => (u0, v0, u1, v1, z0, z1, c, o = {}) => {
+    const Lf = o.L || shade(c, -.03), Rf = o.R || shade(c, -.3), Tf = o.T || shade(c, .24), hw = o.hw ?? 1.4;
+    return poly([P(u0, v1, z0), P(u1, v1, z0), P(u1, v1, z1), P(u0, v1, z1)], Lf) +
+      poly([P(u1, v1, z0), P(u1, v0, z0), P(u1, v0, z1), P(u1, v1, z1)], Rf) +
+      (o.noTop ? '' : poly([P(u0, v0, z1), P(u1, v0, z1), P(u1, v1, z1), P(u0, v1, z1)], Tf)) +
+      (o.edge === false ? '' : pline([P(u0, v1, z0 + .5), P(u0, v1, z1), P(u1, v1, z1), P(u1, v0, z1)], '#fff', hw, 'stroke-opacity=".5"') +
+        pline([P(u1, v1, z0 + .5), P(u1, v1, z1)], '#fff', hw * .8, 'stroke-opacity=".28"'));
+  };
+
+  /* ---------- Hệ toạ độ toà nhà (viewBox 240×260) ---------- */
+  const P = (u, v, z = 0) => [r1(120 + 60 * u - 60 * v), r1(140 + 30 * u + 30 * v - z)];
+  const box = boxWith(P);
+  // Gắn hình phẳng lên tường: gốc (0,0) = chân tường tại (u,v); X theo mặt tường (60px = 1 ô), Y âm = lên cao.
+  const onL = (u, v, z = 0) => { const [x, y] = P(u, v, z); return `matrix(1 .5 0 1 ${x} ${y})`; };   // mặt trước-trái: X↑ ⇒ u↑
+  const onR = (u, v, z = 0) => { const [x, y] = P(u, v, z); return `matrix(1 -.5 0 1 ${x} ${y})`; };  // mặt trước-phải: X↑ ⇒ v↓
+  const fL = (u, v, inner, z = 0) => `<g transform="${onL(u, v, z)}">${inner}</g>`;
+  const fR = (u, v, inner, z = 0) => `<g transform="${onR(u, v, z)}">${inner}</g>`;
+  const lg = (id, n, c, a = .14, b = -.12, h = false) => `<linearGradient id="wa-${id}-${n}" x1="0" y1="0" x2="${h ? 1 : 0}" y2="${h ? 0 : 1}"><stop offset="0" stop-color="${shade(c, a)}"/><stop offset="1" stop-color="${shade(c, b)}"/></linearGradient>`;
+  const U = (id, n) => `url(#wa-${id}-${n})`;
+  /** 3 gradient cho 1 khối tường: nL (trái, sáng) · nR (phải, tối) · nT (nóc) */
+  const tone = (id, n, c) => lg(id, n + 'L', c, .16, -.08) + lg(id, n + 'R', shade(c, -.3), .08, -.14) + lg(id, n + 'T', shade(c, .3), .12, -.05);
+  const T3 = (id, n) => ({ L: U(id, n + 'L'), R: U(id, n + 'R'), T: U(id, n + 'T') });
+
+  /** Chân đế 2×2 + bóng đổ mềm của khối (u0..u1 × v0..v1) về phía phải-dưới */
+  const base = (fill, fp, o = {}) => {
+    const D = [P(0, 0), P(2, 0), P(2, 2), P(0, 2)];
+    let s = poly(D, fill) + pline([P(0, 2), P(0, 0), P(2, 0)], '#fff', 1.6, 'stroke-opacity=".35"') +
+      pline([P(2, 0), P(2, 2), P(0, 2)], '#1B1440', 1.4, 'stroke-opacity=".12"');
+    if (o.inner) s += poly([P(.1, .1), P(1.9, .1), P(1.9, 1.9), P(.1, 1.9)], o.inner);
+    if (fp) {
+      const [u0, v0, u1, v1] = fp, e = .06, sl = Math.min(2, u1 + (o.shadow ?? .3));
+      s += poly([P(u1, v0 + .05), P(sl, v0 + .18), P(sl, Math.min(2, v1 + .08)), P(u1, v1)], '#1B1440', 'opacity=".16"') +
+        poly([P(u0 - e, v0 - e), P(u1 + e, v0 - e), P(u1 + e, v1 + e), P(u0 - e, v1 + e)], '#1B1440', 'opacity=".14"');
+    }
+    return s;
+  };
+  /** Cửa sổ (toạ độ mặt tường): khung + kính .win + vệt bóng */
+  const win = (x, y, w, h, o = {}) => {
+    const rx = o.rx ?? 2.5, fr = o.frame || '#FFFFFF';
+    return `<rect x="${x - 1.8}" y="${y - 1.8}" width="${w + 3.6}" height="${h + 3.6}" rx="${rx + 1.4}" fill="${fr}"/>` +
+      `<rect class="win" x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}" fill="${o.glass || '#A9DEFF'}"/>` +
+      (o.bar ? `<path d="M${x + w / 2} ${y} v${h}${h > 15 && !o.vonly ? ` M${x} ${y + h / 2} h${w}` : ''}" stroke="${fr}" stroke-width="1.5"/>` : '') +
+      (o.sill ? `<rect x="${x - 3}" y="${y + h + 1}" width="${w + 6}" height="2.6" rx="1.3" fill="${o.sill}"/>` : '') +
+      `<path d="M${x + 2.5} ${r1(y + h * .66)} L${r1(x + w * .42)} ${y + 2.5}" stroke="#fff" stroke-opacity=".6" stroke-width="2" stroke-linecap="round"/>`;
+  };
+  /** Cửa ra vào (toạ độ mặt tường, chân cửa y = 0) */
+  const door = (x, w, h, c, o = {}) => `<g class="door">` +
+    `<rect x="${x - 2.2}" y="${-h - 2.2}" width="${w + 4.4}" height="${h + 2.2}" rx="${o.rx ?? 3}" fill="${o.frame || '#FFFFFF'}"/>` +
+    (o.double
+      ? [0, 1].map(i => `<rect class="win" x="${r1(x + i * w / 2 + .6)}" y="${-h}" width="${r1(w / 2 - 1.2)}" height="${h}" rx="1.5" fill="${c}"/>`).join('') +
+        `<path d="M${r1(x + w / 2 - 2)} ${r1(-h * .5)} v5 M${r1(x + w / 2 + 2)} ${r1(-h * .5)} v5" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/>`
+      : `<rect x="${x}" y="${-h}" width="${w}" height="${h}" rx="${o.rx ? o.rx - 1 : 2}" fill="${c}"/>` +
+        `<rect class="win" x="${x + 3}" y="${r1(-h + 3.5)}" width="${w - 6}" height="${r1(h * .38)}" rx="${o.rx ? o.rx - 2 : 1.5}" fill="#C8ECFF"/>` +
+        `<rect x="${x + 3}" y="${r1(-h * .42)}" width="${w - 6}" height="${r1(h * .3)}" rx="1.5" fill="#000" opacity=".1"/>` +
+        `<circle cx="${x + w - 4}" cy="${r1(-h * .47)}" r="1.7" fill="#FFD84D"/>`) +
+    `<path d="M${x + 1.5} -1.5 L${x + 1.5} ${r1(-h + 3)}" stroke="#fff" stroke-opacity=".45" stroke-width="1.6" stroke-linecap="round"/></g>`;
+  /** Chữ neon: quầng màu (nét dày mờ) + lõi sáng */
+  const neon = (x, y, t, c, s, ex = '') =>
+    `<text x="${x}" y="${y}" text-anchor="middle" ${FONT} font-size="${s}"${ex} fill="none" stroke="${c}" stroke-width="${r1(s * .34)}" stroke-opacity=".3" stroke-linejoin="round">${t}</text>` +
+    `<text x="${x}" y="${y}" text-anchor="middle" ${FONT} font-size="${s}"${ex} fill="${shade(c, .62)}" stroke="${c}" stroke-width="${r1(s * .07)}" paint-order="stroke">${t}</text>`;
+  const glowLine = (d, c, w = 2.4, ex = '') => `<path d="${d}" fill="none" stroke="${c}" stroke-width="${w * 3}" stroke-opacity=".25" stroke-linecap="round" stroke-linejoin="round"${ex}/><path d="${d}" fill="none" stroke="${shade(c, .45)}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"${ex}/>`;
+  const star = (cx, cy, r, fill, ex = '') => `<path d="${Array.from({ length: 10 }, (_, i) => { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * .45 : r; return (i ? 'L' : 'M') + r1(cx + rr * Math.cos(a)) + ' ' + r1(cy + rr * Math.sin(a)); }).join('')}Z" fill="${fill}"${ex}/>`;
+  /** Vạt mái hiên sọc: nhô ra từ tường (mặt trái nếu side='L', phải nếu 'R') */
+  const awning = (side, a0, a1, wall, out, zIn, zOut, n, c1, c2) => {
+    let s = '';
+    const Pt = (a, d, z) => side === 'L' ? P(a, d, z) : P(d, a, z);
+    for (let i = 0; i < n; i++) {
+      const a = a0 + (a1 - a0) * i / n, b = a0 + (a1 - a0) * (i + 1) / n, c = i % 2 ? c2 : c1;
+      s += poly([Pt(a, wall, zIn), Pt(b, wall, zIn), Pt(b, out, zOut), Pt(a, out, zOut)], c);
+      const [mx, my] = Pt((a + b) / 2, out, zOut);
+      s += `<ellipse cx="${mx}" cy="${r1(my + 1)}" rx="${r1(Math.abs(b - a) * 30)}" ry="3.2" fill="${shade(c, -.08)}"/>`;
+    }
+    return s + pline([Pt(a0, out, zOut), Pt(a1, out, zOut)], '#fff', 1.2, 'stroke-opacity=".5"');
+  };
+  const DOORS = {
+    home:    { face: 'left',  tile: [1, 2] }, cafe:  { face: 'right', tile: [2, 1] },
+    market:  { face: 'left',  tile: [1, 2] }, theater: { face: 'right', tile: [2, 1] },
+    wedding: { face: 'left',  tile: [1, 2] }, hotel: { face: 'right', tile: [2, 1] },
+    beach:   { face: 'left',  tile: [1, 2] }, tv:    { face: 'left',  tile: [1, 2] }
+  };
+  const doorAt = (id, u, v) => { const [x, y] = P(u, v); Object.assign(DOORS[id], { x, y }); };
+
+  /* ================= 8 TOÀ NHÀ ================= */
+  const B = {
+    /* Nhà MC Thiên Ân — 2 tầng, mái dốc tím, ban công + chữ neon trên nóc. Cửa: mặt trước-trái (u≈1.28) → ô [1,2] */
+    home(id) {
+      const u0 = .3, u1 = 1.7, v0 = .3, v1 = 1.6, ue0 = .2, ue1 = 1.78, ve0 = .26, ve1 = 1.72, vm = .95, zr = 124;
+      doorAt(id, 1.28, v1);
+      const defs = tone(id, 'a', '#FFE6CF') + tone(id, 'b', '#C9B3FF') + lg(id, 'rf', '#9A6BFF', .22, -.12);
+      const flowers = [[.42, 1.68], [.62, 1.7], [.84, 1.69], [1.62, 1.68]].map(([u, v], i) => { const [x, y] = P(u, v); return `<circle cx="${x}" cy="${y - 3}" r="5.5" fill="#3FAE5C"/><circle cx="${x - 1}" cy="${y - 4}" r="4.6" fill="#55C46E"/><circle cx="${x - 1.5}" cy="${y - 6}" r="1.6" fill="${['#FF7FA5', '#FFD84D', '#FFFFFF', '#FF7FA5'][i]}"/><circle cx="${x + 2}" cy="${y - 3}" r="1.4" fill="${['#FFD84D', '#FF7FA5', '#FF7FA5', '#fff'][i]}"/>`; }).join('');
+      return { defs, body:
+        base('#8BD46C', [u0, v0, u1, v1], { inner: '#96DB78' }) +
+        poly([P(1.12, v1), P(1.46, v1), P(1.5, 2), P(1.1, 2)], '#F3E7D8') +
+        [1.72, 1.86].map(v => poly([P(1.17, v), P(1.41, v), P(1.42, v + .09), P(1.16, v + .09)], '#E2D2BE')).join('') +
+        // tầng trệt + gờ + tầng lầu
+        box(u0, v0, u1, v1, 0, 46, '#FFE6CF', T3(id, 'a')) +
+        fL(u0, v1, win(8, -36, 24, 20, { bar: true, sill: '#FF7FA5' }) + door(50, 18, 32, '#FF7FA5') +
+          `<circle cx="59" cy="-39" r="2.6" fill="#FFF3B0" class="win"/>`) +
+        fR(u1, v1, win(12, -36, 22, 20, { bar: true }) + win(46, -36, 22, 20, { bar: true })) +
+        box(u0 - .03, v0 - .03, u1 + .03, v1 + .03, 44, 49, '#FFFFFF', { hw: 1 }) +
+        box(u0, v0, u1, v1, 49, 90, '#C9B3FF', T3(id, 'b')) +
+        fL(u0, v1, win(6, -80, 15, 20, { bar: true }) + win(30, -85, 22, 31, { bar: true, vonly: true, glass: '#B9E6FF' }) + win(64, -80, 15, 20, { bar: true })) +
+        fR(u1, v1, win(12, -80, 22, 20, { bar: true }) + win(46, -80, 22, 20, { bar: true })) +
+        // ban công
+        box(.6, v1, 1.4, 1.86, 47, 51, '#FFFFFF', { hw: 1 }) +
+        fL(.6, 1.86, `<rect x="0" y="-65" width="48" height="2.8" rx="1.4" fill="#FFFFFF"/>` +
+          Array.from({ length: 9 }, (_, i) => `<rect x="${1 + i * 5.6}" y="-63" width="1.8" height="12" fill="#FFFFFF" opacity=".95"/>`).join('') +
+          `<circle cx="40" cy="-58" r="4.6" fill="#55C46E"/><circle cx="38" cy="-61" r="1.6" fill="#FF4FD8"/><rect x="36" y="-56" width="8" height="5" rx="1.5" fill="#E9805F"/>`) +
+        fR(1.4, 1.86, `<rect x="0" y="-65" width="16" height="2.8" rx="1.4" fill="#E6E0F2"/>` + [4, 9, 14].map(x => `<rect x="${x}" y="-63" width="1.8" height="12" fill="#E6E0F2"/>`).join('')) +
+        // ống khói + mái
+        box(1.2, .42, 1.38, .6, 96, 132, '#E9805F', { hw: 1 }) +
+        poly([P(ue0, ve0, 90), P(ue1, ve0, 90), P(ue1, vm, zr), P(ue0, vm, zr)], U(id, 'bR')) +
+        poly([P(u1, v1, 90), P(u1, v0, 90), P(u1, v0, 94), P(u1, vm, zr - 4), P(u1, v1, 94)], U(id, 'bR')) +
+        fR(u1, v1, `<circle cx="39" cy="-104" r="6" fill="#fff"/><circle class="win" cx="39" cy="-104" r="4.4" fill="#A9DEFF"/>`) +
+        poly([P(ue0, ve1, 90), P(ue1, ve1, 90), P(ue1, vm, zr), P(ue0, vm, zr)], U(id, 'rf')) +
+        [.25, .5, .75].map(t => pline([P(ue0 + .02, ve1 - (ve1 - vm) * t, 90 + (zr - 90) * t), P(ue1 - .02, ve1 - (ve1 - vm) * t, 90 + (zr - 90) * t)], '#5B2BBF', 1.2, 'stroke-opacity=".35"')).join('') +
+        poly([P(ue0, ve1, 90), P(ue1, ve1, 90), P(ue1, ve1, 86), P(ue0, ve1, 86)], '#5B2BBF') +
+        pline([P(ue1, ve1, 88), P(ue1, vm, zr), P(ue1, ve0, 90)], '#5B2BBF', 3) +
+        pline([P(ue0, vm, zr + .5), P(ue1, vm, zr + .5)], '#fff', 2, 'stroke-opacity=".55"') +
+        pline([P(ue0, ve1, 90), P(ue0, vm, zr)], '#fff', 1.6, 'stroke-opacity=".45"') +
+        flowers +
+        // biển neon "MC Thiên Ân" đứng trên nóc
+        `<g class="sign">${fL(.32, vm, `<rect x="10" y="-4" width="3" height="6" fill="#3A1A6A"/><rect x="78" y="-4" width="3" height="6" fill="#3A1A6A"/>` +
+          `<rect x="-2" y="-27" width="96" height="24" rx="8" fill="#22104A" stroke="#FF4FD8" stroke-width="2"/>` +
+          neon(46, -9.5, 'MC Thiên Ân', '#FF4FD8', 15) + star(-2, -27, 4.5, '#FFD84D'), zr)}</g>`
+      };
+    },
+
+    /* Quán cà phê — tường kem, mái hiên sọc hồng, ly latte khổng lồ trên nóc. Cửa: mặt trước-phải (v≈1.12) → ô [2,1] */
+    cafe(id) {
+      const u0 = .3, u1 = 1.7, v0 = .45, v1 = 1.7;
+      doorAt(id, u1, 1.12);
+      const defs = tone(id, 'w', '#FFF1DE') + tone(id, 'p', '#FF7FA5') +
+        `<radialGradient id="wa-${id}-cup" cx="32%" cy="30%" r="80%"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".6" stop-color="#FFF4EC"/><stop offset="1" stop-color="#EBCDBE"/></radialGradient>`;
+      const [cx, cy] = P(1, 1.075, 60);
+      return { defs, body:
+        base('#F4DCC4', [u0, v0, u1, v1], { inner: '#F8E4CF' }) +
+        box(u0, v0, u1, v1, 0, 54, '#FFF1DE', T3(id, 'w')) +
+        box(u0 - .02, v0, u1 + .02, v1 + .02, 0, 13, '#9A5B3A', { hw: 1 }) +
+        fL(u0, v1, win(8, -40, 50, 24, { bar: true, frame: '#9A5B3A', vonly: true }) +
+          `<circle cx="20" cy="-21" r="3" fill="#fff"/><circle cx="34" cy="-21" r="3" fill="#FFD1DC"/><circle cx="48" cy="-21" r="3" fill="#fff"/>` +
+          win(66, -40, 12, 24, { frame: '#9A5B3A' }) +
+          `<g class="sign"><rect x="6" y="-53" width="56" height="10" rx="4" fill="#3A1F14"/>${neon(34, -45, 'CAFÉ', '#FF4FD8', 10, ' letter-spacing="1.5"')}</g>`) +
+        fR(u1, v1, win(4, -38, 16, 22, { frame: '#9A5B3A' }) + door(26, 18, 34, '#9A5B3A', { frame: '#FFF7EC' }) + win(52, -38, 18, 22, { frame: '#9A5B3A' })) +
+        awning('R', v1 + .02, v0, u1, 1.96, 48, 38, 6, '#FF6FAE', '#FFF6EA') +
+        box(u0 - .03, v0 - .03, u1 + .03, v1 + .03, 54, 60, '#FF7FA5', T3(id, 'p')) +
+        poly([P(u0 + .06, v0 + .06, 60), P(u1 - .06, v0 + .06, 60), P(u1 - .06, v1 - .06, 60), P(u0 + .06, v1 - .06, 60)], '#F3D6CC') +
+        // bảng menu chữ A trước quán
+        fL(.5, 1.92, `<path d="M0 0 L3 -16 L13 -16 L16 0" fill="#3E4A3D" stroke="#9A5B3A" stroke-width="1.6"/><path d="M4 -11 h8 M4 -7 h6" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/>`) +
+        // ly latte khổng lồ (biển hiệu)
+        `<g class="sign">
+          <ellipse cx="${cx}" cy="${cy + 2}" rx="34" ry="9" fill="#1B1440" opacity=".15"/>
+          <ellipse cx="${cx}" cy="${cy - 1}" rx="32" ry="9" fill="#FFFFFF"/><ellipse cx="${cx}" cy="${cy - 3}" rx="24" ry="6" fill="#EBD8CE"/>
+          <path d="M${cx + 22} ${cy - 34} q16 -2 15 11 q-1 11 -17 10" stroke="#F3E2D8" stroke-width="7" fill="none" stroke-linecap="round"/>
+          <path d="M${cx - 26} ${cy - 44} L${cx + 26} ${cy - 44} Q${cx + 24} ${cy - 10} ${cx + 14} ${cy - 5} Q${cx} ${cy - 1} ${cx - 14} ${cy - 5} Q${cx - 24} ${cy - 10} ${cx - 26} ${cy - 44} Z" fill="url(#wa-${id}-cup)"/>
+          <ellipse cx="${cx}" cy="${cy - 44}" rx="26" ry="7.5" fill="#FFFFFF"/><ellipse cx="${cx}" cy="${cy - 43.5}" rx="22" ry="5.6" fill="#B87445"/>
+          <path d="M${cx} ${cy - 40.5} q-7 -4 -3.5 -6.5 q2.6 -1.4 3.5 1 q.9 -2.4 3.5 -1 q3.5 2.5 -3.5 6.5z" fill="#FFF3E2"/>
+          <rect x="${cx - 19}" y="${cy - 33}" width="38" height="15" rx="7" fill="#FF4FD8" opacity=".14"/>
+          <text x="${cx}" y="${cy - 21}" text-anchor="middle" ${FONT} font-size="13" fill="#9A4A2A" letter-spacing=".5">CAFÉ</text>
+          <ellipse cx="${cx - 15}" cy="${cy - 32}" rx="4" ry="8" fill="#fff" opacity=".7"/>
+          ${glowLine(`M${cx - 9} ${cy - 54} q-6 -7 0 -14 q6 -7 0 -14`, '#22D3EE', 2.2)}${glowLine(`M${cx + 7} ${cy - 54} q-6 -7 0 -14 q6 -7 0 -12`, '#22D3EE', 2.2)}
+        </g>`
+      };
+    },
+
+    /* Siêu thị — khối rộng trắng-xanh, mái hiên sọc xanh lá, bảng MART neon, xe đẩy. Cửa kính đôi: mặt trước-trái (u≈1.07) → ô [1,2] */
+    market(id) {
+      const u0 = .2, u1 = 1.8, v0 = .5, v1 = 1.62;
+      doorAt(id, 1.07, v1);
+      const defs = tone(id, 'w', '#F2F7FF') + tone(id, 'f', '#2EA8FF');
+      const [bx, by] = P(1.0, 1.06, 50);
+      const fruit = (u, v, cs) => box(u, v, u + .14, v + .14, 0, 7, '#C98A4E', { hw: .8 }) +
+        cs.map((c, i) => { const [x, y] = P(u + .04 + (i % 2) * .06, v + .04 + (i > 1 ? .06 : 0), 8); return `<circle cx="${x}" cy="${y}" r="2.6" fill="${c}"/>`; }).join('');
+      // xe đẩy siêu thị (dây kim loại)
+      const cart = fL(.36, 1.86, `<g stroke="#5B6B86" stroke-width="1.6" fill="none" stroke-linejoin="round" stroke-linecap="round">
+          <path d="M-2 -20 L2 -20 L5 -6 L20 -6 L23 -17 L4 -17"/><path d="M8 -17 L9 -6 M13 -17 L13 -6 M18 -17 L17 -6 M4 -12 L21 -12"/></g>
+          <circle cx="7" cy="-2.4" r="2.2" fill="#2D2F3A"/><circle cx="18" cy="-2.4" r="2.2" fill="#2D2F3A"/>
+          <rect x="9" y="-15" width="5" height="5" rx="1.5" fill="#FF7A59"/><circle cx="17" cy="-12" r="2.6" fill="#7CFF6B"/>`);
+      return { defs, body:
+        base('#DCE7F2', [u0, v0, u1, v1], { inner: '#E6EEF7' }) +
+        box(u0, v0, u1, v1, 0, 46, '#F2F7FF', T3(id, 'w')) +
+        fL(u0, v1, win(5, -32, 30, 26, { bar: true, vonly: true }) + door(42, 20, 30, '#B9E6FF', { double: true, frame: '#2EA8FF' }) + win(68, -32, 26, 26, { bar: true, vonly: true }) +
+          `<circle cx="12" cy="-12" r="3" fill="#FF4B4B"/><circle cx="19" cy="-12" r="3" fill="#FFC800"/><circle cx="26" cy="-12" r="3" fill="#58CC02"/><rect x="5" y="-9" width="30" height="2" fill="#fff" opacity=".7"/>`) +
+        fR(u1, v1, win(6, -32, 54, 22, { bar: true, vonly: true }) +
+          `${[12, 22, 32, 42, 52].map((x, i) => `<rect x="${x}" y="-20" width="6" height="8" rx="1.5" fill="${['#FF7A59', '#FFC800', '#58CC02', '#FF4FD8', '#22D3EE'][i]}" opacity=".8"/>`).join('')}`) +
+        awning('L', u0, u1, v1, 1.88, 37, 29, 8, '#3FCF6A', '#F4FFF2') +
+        fruit(1.84, 1.05, ['#FF4B4B', '#FF7A59', '#FF4B4B', '#FFC800']) + fruit(1.84, 1.25, ['#7CFF6B', '#58CC02', '#A6E36A', '#58CC02']) + fruit(1.84, .85, ['#FFC800', '#FFD84D', '#FF9600', '#FFC800']) +
+        box(u0 - .03, v0 - .03, u1 + .03, v1 + .03, 42, 52, '#2EA8FF', T3(id, 'f')) +
+        poly([P(u0 + .05, v0 + .05, 52), P(u1 - .05, v0 + .05, 52), P(u1 - .05, v1 - .05, 52), P(u0 + .05, v1 - .05, 52)], '#D7E9F7') +
+        fL(u0 - .03, v1 + .03, [16, 40, 64, 88].map(x => `<circle cx="${x}" cy="-47" r="2" fill="#fff" opacity=".85"/>`).join('')) +
+        box(1.35, .65, 1.6, .9, 52, 60, '#C9D6E2', { hw: 1 }) +
+        cart +
+        // bảng MART trên nóc
+        `<g class="sign"><rect x="${bx - 30}" y="${by - 26}" width="3" height="26" fill="#30405A"/><rect x="${bx + 27}" y="${by - 26}" width="3" height="26" fill="#30405A"/>
+          <rect x="${bx - 46}" y="${by - 56}" width="92" height="32" rx="10" fill="#0F2A3A" stroke="#7CFF6B" stroke-width="2.4"/>
+          ${neon(bx + 9, by - 32, 'MART', '#7CFF6B', 22, ' letter-spacing="1"')}
+          <g transform="translate(${bx - 38} ${by - 49})"><path d="M0 2 L4 2 L7 14 L19 14 L22 5 L5 5" stroke="#FFD84D" stroke-width="2.2" fill="none" stroke-linejoin="round" stroke-linecap="round"/><circle cx="9" cy="18" r="2" fill="#FFD84D"/><circle cx="17" cy="18" r="2" fill="#FFD84D"/></g></g>`
+      };
+    },
+
+    /* Nhà hát — đỏ rượu viền vàng, trán tường tam giác, rèm đỏ, bảng SHOW đèn bóng, đèn pha. Cửa: mặt trước-phải (v≈1.15) → ô [2,1] */
+    theater(id) {
+      const u0 = .25, u1 = 1.72, v0 = .45, v1 = 1.85, zt = 64;
+      doorAt(id, u1, 1.15);
+      const defs = tone(id, 'w', '#A8305E') + lg(id, 'rf', '#5A1E44', .1, -.1) + lg(id, 'ped', '#FFE7A8', .1, -.12) +
+        `<linearGradient id="wa-${id}-beam" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#FFF6C8" stop-opacity=".5"/><stop offset="1" stop-color="#FFF6C8" stop-opacity="0"/></linearGradient>`;
+      const curtain = (x, w) => `<path d="M${x} -16 L${x} ${-34 - w / 2} Q${x + w / 2} ${-34 - w} ${x + w} ${-34 - w / 2} L${x + w} -16 Z" fill="#FFE7A8"/>` +
+        `<path d="M${x + 1.5} -17 L${x + 1.5} ${-34 - w / 2} Q${x + w / 2} ${-32.5 - w} ${x + w - 1.5} ${-34 - w / 2} L${x + w - 1.5} -17 Z" fill="#E0263F"/>` +
+        `<path d="M${x + w * .3} -17 V${-33 - w / 2} M${x + w * .5} -17 V${-32 - w / 2} M${x + w * .7} -17 V${-33 - w / 2}" stroke="#A3122A" stroke-width="1.3"/>` +
+        `<path d="M${x + 1.5} ${-30 - w / 2} Q${x + w / 2} ${-22 - w / 2} ${x + w - 1.5} ${-30 - w / 2}" fill="#FFC94D" opacity=".9"/>`;
+      const col = x => `<rect x="${x}" y="-58" width="5" height="58" fill="#FFE7A8"/><rect x="${x}" y="-58" width="1.6" height="58" fill="#fff" opacity=".6"/><rect x="${x - 1.5}" y="-60" width="8" height="3" fill="#FFC94D"/><rect x="${x - 1.5}" y="-3" width="8" height="3" fill="#FFC94D"/>`;
+      const [m1x, m1y] = P(.55, .7, zt + 6), [m2x, m2y] = P(.95, .55, zt + 6);
+      const mq = (1.62 - .68) * 60;
+      return { defs, body:
+        base('#E6D6EE', [u0, v0, u1, v1], { inner: '#EFE3F4' }) +
+        // đèn pha quét lên trời (sau toà)
+        `<polygon points="${m1x - 3},${m1y} ${m1x + 3},${m1y} ${m1x - 34},0 ${m1x - 60},0" fill="url(#wa-${id}-beam)"/>` +
+        `<polygon points="${m2x - 3},${m2y} ${m2x + 3},${m2y} ${m2x + 20},0 ${m2x - 6},0" fill="url(#wa-${id}-beam)"/>` +
+        box(u0, v0, u1, v1, 0, zt, '#A8305E', T3(id, 'w')) +
+        fL(u0, v1, [10, 52].map((x, i) => `<rect x="${x - 2}" y="-50" width="26" height="36" rx="3" fill="#FFC94D"/><rect x="${x}" y="-48" width="22" height="32" rx="2" fill="${['#2A1250', '#103A5A'][i]}"/>` +
+          star(x + 11, -38, 6, ['#FF4FD8', '#22D3EE'][i]) + `<rect x="${x + 3}" y="-27" width="16" height="2.6" rx="1.3" fill="#fff" opacity=".8"/><rect x="${x + 5}" y="-22" width="12" height="2" rx="1" fill="#fff" opacity=".5"/>`).join('') +
+          `<g class="sign">${neon(44, -54, 'THEATRE', '#FFD84D', 9.5, ' letter-spacing="1.2"')}</g>`) +
+        fR(u1, v1, col(4) + curtain(12, 14) + col(29) + door(35, 18, 36, '#5A1E44', { rx: 9, frame: '#FFC94D' }) + col(56) + curtain(62, 14) + col(79)) +
+        // gờ mái, mái dốc, trán tường
+        box(u0 - .03, v0 - .03, u1 + .03, v1 + .03, zt, zt + 6, '#FFC94D', { hw: 1 }) +
+        poly([P(u0 - .03, v0 - .03, zt + 6), P(u1 + .03, v0 - .03, zt + 6), P(u1 + .03, 1.15, zt + 32), P(u0 - .03, 1.15, zt + 32)], '#4A1838') +
+        poly([P(u0 - .03, v1 + .03, zt + 6), P(u1 + .03, v1 + .03, zt + 6), P(u1 + .03, 1.15, zt + 32), P(u0 - .03, 1.15, zt + 32)], U(id, 'rf')) +
+        pline([P(u0 - .03, 1.15, zt + 32.5), P(u1 + .03, 1.15, zt + 32.5)], '#FFC94D', 2) +
+        poly([P(u1 + .04, v1 + .04, zt + 6), P(u1 + .04, v0 - .04, zt + 6), P(u1 + .04, 1.15, zt + 34)], U(id, 'ped')) +
+        poly([P(u1 + .045, v1 - .1, zt + 9), P(u1 + .045, v0 + .1, zt + 9), P(u1 + .045, 1.15, zt + 28)], '#A8305E') +
+        fR(u1 + .05, 1.15, `<g class="sign">${star(0, -84, 6, '#FFD84D', ' class="twinkle"')}</g>`) +
+        fR(u1 + .04, 1.15, star(0, -zt - 40, 7, '#FFD84D')) +
+        // bảng SHOW đèn bóng (marquee) trên cửa
+        box(u1, .68, 1.97, 1.62, 40, 52, '#2A1250', { hw: 1, T: '#FFC94D' }) +
+        `<g class="sign">${fR(1.97, 1.62, `<rect x="2" y="-50" width="${mq - 4}" height="8" rx="2" fill="#140A30"/>` + neon(mq / 2, -43, 'SHOW', '#FFD84D', 10, ' letter-spacing="2"') +
+          Array.from({ length: 9 }, (_, i) => `<circle cx="${r1(3 + i * (mq - 6) / 8)}" cy="-40.5" r="1.4" fill="#FFF3B0"${i % 2 ? ' class="twinkle"' : ''}/>`).join(''))}</g>` +
+        // 2 đèn pha trên nóc
+        [[.55, .7], [.95, .55]].map(([u, v]) => box(u - .05, v - .05, u + .05, v + .05, zt + 6, zt + 12, '#2D2F3A', { hw: .8 })).join('')
+      };
+    },
+
+    /* Nhà hàng tiệc cưới — trắng hồng, mái hồng 4 mái, cổng hoa trước cửa, tim neon, dây đèn. Cửa: mặt trước-trái (u≈1.12) → ô [1,2] */
+    wedding(id) {
+      const u0 = .3, u1 = 1.7, v0 = .3, v1 = 1.55, z1 = 52, ue0 = .2, ue1 = 1.8, ve0 = .2, ve1 = 1.65, zr = 84;
+      const r0 = [.85, .925], r2 = [1.15, .925];
+      doorAt(id, 1.12, v1);
+      const defs = tone(id, 'w', '#FFF5F8') + lg(id, 'rf', '#FF9CC2', .2, -.08) + lg(id, 'rr', '#E06E9C', .05, -.1);
+      const R1 = P(r0[0], r0[1], zr), R2 = P(r2[0], r2[1], zr);
+      const arch = [];
+      for (let i = 0; i <= 14; i++) {
+        const a = Math.PI * i / 14, x = 49 - 15 * Math.cos(a), y = -30 - 15 * Math.sin(a);
+        arch.push(`<circle cx="${r1(x)}" cy="${r1(y)}" r="${i % 3 ? 3.6 : 4.4}" fill="${['#FF7FA5', '#FFFFFF', '#FFB5C9', '#FFC8A8'][i % 4]}"/>`);
+      }
+      for (let k = 0; k < 6; k++) [34, 64].forEach((x, j) => arch.push(`<circle cx="${x + (k % 2 ? 1 : -1)}" cy="${-4 - k * 5}" r="3.3" fill="${['#FFFFFF', '#FF7FA5', '#7FD48A'][(k + j) % 3]}"/>`));
+      const bulbs = Array.from({ length: 11 }, (_, i) => { const u = ue0 + .05 + (ue1 - ue0 - .1) * i / 10, [x, y] = P(u, ve1, z1 - 3); return `<circle cx="${x}" cy="${r1(y + 2 + (i % 2) * 2)}" r="1.8" fill="#FFE27A"${i % 3 ? '' : ' class="twinkle"'}/>`; }).join('');
+      return { defs, body:
+        base('#F6E3EA', [u0, v0, u1, v1], { inner: '#FAEDF2' }) +
+        poly([P(.9, v1), P(1.34, v1), P(1.36, 2), P(.88, 2)], '#FFFFFF', 'opacity=".9"') +
+        box(u0, v0, u1, v1, 0, z1, '#FFF5F8', T3(id, 'w')) +
+        fL(u0, v1, win(8, -40, 16, 26, { rx: 7, bar: true, vonly: true, frame: '#FFB5C9' }) + door(40, 18, 34, '#FF9CC2', { rx: 9, frame: '#FFB5C9' }) + win(66, -40, 16, 26, { rx: 7, bar: true, vonly: true, frame: '#FFB5C9' })) +
+        fR(u1, v1, [6, 30, 54].map(x => win(x, -40, 15, 26, { rx: 7, bar: true, vonly: true, frame: '#FFB5C9' })).join('')) +
+        pline([P(ue0, ve1, z1 - 3), P((ue0 + ue1) / 2, ve1, z1 - 8), P(ue1, ve1, z1 - 3)], '#E7B9C6', 1) + bulbs +
+        // mái 4 mái
+        poly([P(ue0, ve0, z1), P(ue1, ve0, z1), R2, R1], U(id, 'rr')) + poly([P(ue0, ve0, z1), P(ue0, ve1, z1), R1], U(id, 'rr')) +
+        poly([P(ue0, ve1, z1), P(ue1, ve1, z1), R2, R1], U(id, 'rf')) +
+        poly([P(ue1, ve1, z1), P(ue1, ve0, z1), R2], '#D35C8C') +
+        pline([P(ue0, ve1, z1), P(ue1, ve1, z1), P(ue1, ve0, z1)], '#fff', 2.4, 'stroke-opacity=".9"') +
+        pline([R1, R2], '#fff', 2, 'stroke-opacity=".6"') + pline([P(ue0, ve1, z1), R1], '#fff', 1.4, 'stroke-opacity=".5"') +
+        // biển WEDDING trên mặt tường + tim neon trên nóc
+        fL(u0, v1, `<g class="sign"><rect x="18" y="-50" width="48" height="9" rx="4.5" fill="#4A1238"/>${neon(42, -42.6, 'WEDDING', '#FF4FD8', 8.5, ' letter-spacing="1"')}</g>`) +
+        `<g class="sign" transform="translate(${r1((R1[0] + R2[0]) / 2)} ${r1((R1[1] + R2[1]) / 2 - 6)})">
+          <rect x="-1.5" y="-4" width="3" height="10" fill="#B04878"/>
+          ${glowLine('M0 -6 C-4 -14 -20 -16 -20 -27 C-20 -36 -7 -38 0 -29 C7 -38 20 -36 20 -27 C20 -16 4 -14 0 -6 Z', '#FF4FD8', 2.8)}
+          <path d="M0 -10 C-3 -15 -14 -17 -14 -26 C-14 -32 -5 -33 0 -27 C5 -33 14 -32 14 -26 C14 -17 3 -15 0 -10 Z" fill="#FF7FA5" opacity=".55"/></g>` +
+        // cổng hoa trước cửa
+        fL(u0, 1.86, `<path d="M34 0 V-30 A15 15 0 0 1 64 -30 V0" stroke="#FFFFFF" stroke-width="3.5" fill="none"/>` + arch.join(''))
+      };
+    },
+
+    /* Khách sạn Gala — tháp kính tím 8 tầng, đế sảnh, mái vàng, bảng HOTEL 5 sao. Cửa kính đôi: mặt trước-phải (v≈1.25) → ô [2,1] */
+    hotel(id) {
+      const p0 = .15, p1 = 1.85, t0 = .45, t1 = 1.55, zp = 26, zt = 136;
+      doorAt(id, p1, 1.25);
+      const defs = tone(id, 't', '#9A86F5') + tone(id, 'p', '#EDE7FF') + lg(id, 'gl', '#B9AEFF', .2, -.1);
+      const floors = Array.from({ length: 8 }, (_, i) => zp + 14 + i * 12.5);
+      const grid = side => floors.map(z => [6, 26, 46].map(x => `<rect class="win" x="${x}" y="${r1(-z - 8)}" width="14" height="8" rx="1.5" fill="${side === 'L' ? '#D8F1FF' : '#9FC8F0'}"/>`).join('')).join('');
+      const [sx, sy] = P(1, 1, zt + 6);
+      return { defs, body:
+        base('#E3DDF2', [p0, p0, p1, p1], { shadow: .15 }) +
+        box(p0, p0, p1, p1, 0, zp, '#EDE7FF', T3(id, 'p')) +
+        fL(p0, p1, [4, 30, 56, 80].map(x => win(x, -22, 18, 16, { frame: '#FFD84D', glass: '#BFE6FF' })).join('')) +
+        fR(p1, p1, door(26, 20, 22, '#C8ECFF', { double: true, frame: '#FFD84D' }) + [54, 78].map(x => win(x, -22, 18, 16, { frame: '#FFD84D', glass: '#9FCFF0' })).join('') + win(4, -22, 16, 16, { frame: '#FFD84D', glass: '#9FCFF0' })) +
+        // mái sảnh trước cửa
+        box(p1, 1.05, 2.0, 1.45, 22, 26, '#FFD84D', { hw: 1 }) +
+        [[2.0, 1.08], [2.0, 1.42]].map(([u, v]) => { const [x, y] = P(u - .02, v); return `<rect x="${x - 1}" y="${y - 22}" width="2" height="22" fill="#C99A1E"/>`; }).join('') +
+        // tháp
+        box(t0, t0, t1, t1, zp, zt, '#9A86F5', T3(id, 't')) +
+        fL(t0, t1, grid('L') + `<rect x="0" y="${-zt}" width="3" height="${zt - zp}" fill="#FFD84D" opacity=".7"/>`) + fR(t1, t1, grid('R')) +
+        pline([P(t1, t1, zp), P(t1, t1, zt)], '#FFE9A0', 2, 'stroke-opacity=".9"') +
+        box(t0 - .04, t0 - .04, t1 + .04, t1 + .04, zt, zt + 6, '#FFD84D', { hw: 1 }) +
+        poly([P(t0 + .02, t0 + .02, zt + 6), P(t1 - .02, t0 + .02, zt + 6), P(t1 - .02, t1 - .02, zt + 6), P(t0 + .02, t1 - .02, zt + 6)], '#7A68D8') +
+        // bồn cây hai bên sảnh
+        [[1.94, .55], [1.94, 1.72]].map(([u, v]) => { const [x, y] = P(u, v); return `<ellipse cx="${x}" cy="${y - 1}" rx="7" ry="3" fill="#C99A1E"/><circle cx="${x + 1}" cy="${y - 7}" r="6" fill="#2F9E58"/><circle cx="${x - .5}" cy="${y - 8}" r="5" fill="#4CC870"/><circle cx="${x - 2}" cy="${y - 10}" r="1.6" fill="#B6F2A8"/>`; }).join('') +
+        // bảng HOTEL 5 sao trên nóc
+        `<g class="sign"><rect x="${sx - 26}" y="${sy - 12}" width="3" height="12" fill="#5A4AB8"/><rect x="${sx + 23}" y="${sy - 12}" width="3" height="12" fill="#5A4AB8"/>
+          <rect x="${sx - 44}" y="${sy - 40}" width="88" height="30" rx="9" fill="#1C1250" stroke="#FFD84D" stroke-width="2.2"/>
+          ${neon(sx, sy - 18, 'HOTEL', '#FFD84D', 17, ' letter-spacing="2"')}
+          ${[-2, -1, 0, 1, 2].map(i => star(sx + i * 9, sy - 33, 3.4, '#FFE27A')).join('')}</g>`
+      };
+    },
+
+    /* Bãi biển — cát + nước sóng, chòi lá BEACH BAR, dù sọc, ghế nằm, cây dừa. Lối vào quầy: mặt trước-trái (u≈1.17) → ô [1,2] */
+    beach(id) {
+      doorAt(id, 1.17, 1.62);
+      const defs = lg(id, 'sea', '#2FB6E8', .18, -.12) + lg(id, 'th', '#F0C26A', .12, -.1) + lg(id, 'thR', '#C7913F', .05, -.12);
+      const shore = [[2, 0], [2, .42], [1.6, .55], [1.2, .48], [.85, .62], [.58, .56], [.52, .9], [.62, 1.25], [.5, 1.6], [.45, 2]];
+      const sea = poly([P(0, 0), ...shore.map(([u, v]) => P(u, v)), P(0, 2)].reverse(), U(id, 'sea'));
+      const hu0 = .82, hu1 = 1.52, hv0 = .9, hv1 = 1.6, ue0 = .66, ue1 = 1.7, ve0 = .74, ve1 = 1.78, zr = 46, ap = P(1.18, 1.26, 82);
+      const fringe = (a, b, side) => Array.from({ length: 9 }, (_, i) => {
+        const t0 = a + (b - a) * i / 9, t1 = a + (b - a) * (i + 1) / 9, Pt = (t, z) => side === 'L' ? P(t, ve1, z) : P(ue1, t, z);
+        return poly([Pt(t0, zr), Pt(t1, zr), Pt((t0 + t1) / 2, zr - 5)], side === 'L' ? '#E2AE55' : '#B07E36');
+      }).join('');
+      const [px, py] = P(.38, 1.55), [cx2, cy2] = P(.62, 1.86);
+      return { defs, body:
+        base('#F7DCA8', null) +
+        sea +
+        pline(shore.map(([u, v]) => P(Math.min(2, u + .05), Math.min(2, v + .05))), '#FFFFFF', 3, 'stroke-opacity=".75"') +
+        pline(shore.map(([u, v]) => P(Math.max(0, Math.min(2, u - .12)), Math.max(0, v - .1))), '#BDEBFF', 1.6, 'stroke-opacity=".7" stroke-dasharray="8 7"') +
+        [[.3, .35], [1.1, .2], [.25, 1.1], [1.6, .2]].map(([u, v]) => { const [x, y] = P(u, v); return `<path d="M${x - 8} ${y} q4 -3 8 0 t8 0" stroke="#fff" stroke-width="1.6" fill="none" opacity=".6"/>`; }).join('') +
+        [[1.3, 1.85], [1.75, 1.2], [.9, 1.9], [1.85, .9]].map(([u, v]) => { const [x, y] = P(u, v); return `<circle cx="${x}" cy="${y}" r="1.4" fill="#E2BE80"/><circle cx="${x + 5}" cy="${y + 2}" r="1" fill="#E2BE80"/>`; }).join('') +
+        // chòi lá: quầy, cột, mái
+        poly([P(hu1 + .02, hv0), P(1.8, hv0 + .15), P(1.8, hv1 + .1), P(hu1, hv1)], '#1B1440', 'opacity=".12"') +
+        [[hu0, hv0], [hu1, hv0], [hu1, hv1], [hu0, hv1]].map(([u, v]) => box(u - .025, v - .025, u + .025, v + .025, 0, zr, '#B8834A', { hw: .6 })).join('') +
+        box(hu0, hv0 + .2, hu1, hv1, 0, 20, '#D9A066', { hw: 1, T: '#F2C98E' }) +
+        fL(hu0, hv1, Array.from({ length: 8 }, (_, i) => `<rect x="${2 + i * 5.2}" y="-20" width="1.4" height="20" fill="#A8743E" opacity=".55"/>`).join('') +
+          `<g class="sign"><rect x="5" y="-17" width="32" height="11" rx="3" fill="#123A4A" stroke="#22D3EE" stroke-width="1.2"/>${neon(21, -8.6, 'BAR', '#22D3EE', 8.5, ' letter-spacing="1.5"')}</g>`) +
+        fR(hu1, hv1, Array.from({ length: 6 }, (_, i) => `<rect x="${2 + i * 5.6}" y="-20" width="1.4" height="20" fill="#8A5A2A" opacity=".55"/>`).join('')) +
+        [[1.0, 1.55], [1.2, 1.5]].map(([u, v], i) => { const [x, y] = P(u, v, 20); return `<path d="M${x - 2.5} ${y - 7} L${x + 2.5} ${y - 7} L${x + 1.5} ${y} L${x - 1.5} ${y} Z" fill="${['#FF9E4A', '#7CFF6B'][i]}" opacity=".9"/><path d="M${x} ${y - 7} L${x + 2} ${y - 11}" stroke="#fff" stroke-width=".9"/>`; }).join('') +
+        poly([P(ue0, ve0, zr), P(ue1, ve0, zr), ap], '#C7913F') + poly([P(ue0, ve0, zr), P(ue0, ve1, zr), ap], '#D9A456') +
+        poly([P(ue0, ve1, zr), P(ue1, ve1, zr), ap], U(id, 'th')) + poly([P(ue1, ve1, zr), P(ue1, ve0, zr), ap], U(id, 'thR')) +
+        [.3, .55, .8].map(t => pline([P(ue0 + (1.18 - ue0) * t, ve1 + (1.26 - ve1) * t, zr + (82 - zr) * t), P(ue1 + (1.18 - ue1) * t, ve1 + (1.26 - ve1) * t, zr + (82 - zr) * t)], '#B07E36', 1, 'stroke-opacity=".5"')).join('') +
+        fringe(ue0, ue1, 'L') + fringe(ve1, ve0, 'R') +
+        pline([P(ue0, ve1, zr), ap], '#FFE3A6', 1.6, 'stroke-opacity=".8"') +
+        // biển BEACH trên đỉnh chòi
+        `<g class="sign"><rect x="${ap[0] - 1.5}" y="${ap[1] - 8}" width="3" height="10" fill="#8A5A2A"/>
+          <rect x="${ap[0] - 46}" y="${ap[1] - 32}" width="92" height="26" rx="13" fill="#3A1A10" stroke="#FF9E4A" stroke-width="2.2"/>
+          <circle cx="${ap[0] - 33}" cy="${ap[1] - 19}" r="6" fill="#FFD84D"/>${[0, 1, 2, 3, 4, 5, 6, 7].map(i => { const a = i * Math.PI / 4; return `<path d="M${r1(ap[0] - 33 + 8 * Math.cos(a))} ${r1(ap[1] - 19 + 8 * Math.sin(a))} L${r1(ap[0] - 33 + 10.5 * Math.cos(a))} ${r1(ap[1] - 19 + 10.5 * Math.sin(a))}" stroke="#FFD84D" stroke-width="1.6" stroke-linecap="round"/>`; }).join('')}
+          ${neon(ap[0] + 9, ap[1] - 13, 'BEACH', '#FF9E4A', 15, ' letter-spacing="1"')}</g>` +
+        // dù sọc + khăn + phao
+        `<g transform="translate(${cx2} ${cy2})"><path d="M-14 -3 L4 6 L16 0 L-2 -9Z" fill="#22D3EE"/><path d="M-8 0 L10 9" stroke="#fff" stroke-width="2" opacity=".8"/></g>` +
+        `<g transform="translate(${px} ${py})"><ellipse cx="0" cy="0" rx="12" ry="4" fill="#1B1440" opacity=".15"/><rect x="-1" y="-34" width="2" height="34" fill="#8A5A2A"/>
+          <path d="M-22 -30 Q-20 -46 0 -46 Q20 -46 22 -30 Q16.5 -27 11 -30 Q5.5 -27 0 -30 Q-5.5 -27 -11 -30 Q-16.5 -27 -22 -30Z" fill="#FF4FD8"/>
+          <path d="M0 -46 Q-9 -44 -11 -30 Q-5.5 -27 0 -30 Q-3 -40 0 -46Z" fill="#FFFFFF"/><path d="M0 -46 Q14 -44 22 -30 Q16.5 -27 11 -30 Q8 -42 0 -46Z" fill="#FFD84D"/>
+          <circle cx="0" cy="-47" r="1.8" fill="#8A5A2A"/><ellipse cx="-12" cy="-40" rx="4" ry="1.8" fill="#fff" opacity=".45"/></g>` +
+        `<g transform="translate(${P(1.68, 1.72)[0]} ${P(1.68, 1.72)[1]})"><circle cx="0" cy="-5" r="5" fill="#FF4B4B"/><path d="M-5 -5 A5 5 0 0 1 0 -10 L0 -5Z M5 -5 A5 5 0 0 1 0 0 L0 -5Z" fill="#fff"/><circle cx="-1.6" cy="-7" r="1.2" fill="#fff" opacity=".7"/></g>` +
+        `<g transform="translate(${r1(P(1.8, .64)[0] - 25.5)} ${r1(P(1.8, .64)[1] - 66.3)}) scale(.85)">${PROP.palm()}</g>`
+      };
+    },
+
+    /* Đài truyền hình — khối kính xanh đêm, màn hình lớn, bảng ON AIR đỏ, ăng-ten lưới đèn nháy + chảo vệ tinh. Cửa: mặt trước-trái (u≈1.43) → ô [1,2] */
+    tv(id) {
+      const u0 = .25, u1 = 1.75, v0 = .3, v1 = 1.7, zt = 76;
+      doorAt(id, 1.43, v1);
+      const defs = tone(id, 'w', '#4D60B0') + tone(id, 'b', '#2EE6A8') +
+        `<linearGradient id="wa-${id}-scr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF4FD8"/><stop offset=".5" stop-color="#7C3AED"/><stop offset="1" stop-color="#22D3EE"/></linearGradient>`;
+      const [ax, ay] = P(1.3, .62, zt + 6), atop = 12, [ox, oy] = P(1.0, 1.0, zt + 6);
+      const lattice = Array.from({ length: 7 }, (_, i) => { const y = ay - (ay - atop) * i / 7, w = 9 * (1 - i / 7.5), y2 = ay - (ay - atop) * (i + 1) / 7, w2 = 9 * (1 - (i + 1) / 7.5); return `<path d="M${r1(ax - w)} ${r1(y)} L${r1(ax + w2)} ${r1(y2)} M${r1(ax + w)} ${r1(y)} L${r1(ax - w2)} ${r1(y2)}" stroke="#C9D2E6" stroke-width="1"/>`; }).join('');
+      return { defs, body:
+        base('#D9E2F0', [u0, v0, u1, v1], { inner: '#E3EAF5' }) +
+        box(u0, v0, u1, v1, 0, zt, '#4D60B0', T3(id, 'w')) +
+        fL(u0, v1, `<rect x="5" y="-70" width="56" height="34" rx="4" fill="#1A1C2E"/><rect x="8" y="-67" width="50" height="28" rx="2.5" fill="url(#wa-${id}-scr)"/>` +
+          `<path d="M28 -59 L28 -47 L38 -53 Z" fill="#fff"/><path d="M10 -64 L24 -64" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".55"/>` +
+          win(66, -70, 18, 30, { bar: true, frame: '#2EE6A8', glass: '#9FD8FF' }) +
+          `<g class="sign"><rect x="6" y="-30" width="44" height="14" rx="4" fill="#1A0A16" stroke="#FF3B5C" stroke-width="1.4"/><circle cx="13" cy="-23" r="3" fill="#FF3B5C" class="led twinkle"/>${neon(32, -19, 'ON AIR', '#FF3B5C', 9, ' letter-spacing=".8"')}</g>` +
+          door(62, 18, 30, '#C8ECFF', { double: true, frame: '#2EE6A8' })) +
+        fR(u1, v1, [0, 1, 2, 3].map(r => [0, 1, 2, 3].map(c => `<rect class="win" x="${5 + c * 19.5}" y="${-68 + r * 16}" width="16" height="12" rx="1.5" fill="#86B8EC"/>`).join('')).join('') +
+          `<path d="M4 -4 h76" stroke="#2EE6A8" stroke-width="2"/>`) +
+        box(u0 - .03, v0 - .03, u1 + .03, v1 + .03, zt, zt + 6, '#2EE6A8', T3(id, 'b')) +
+        poly([P(u0 + .04, v0 + .04, zt + 6), P(u1 - .04, v0 + .04, zt + 6), P(u1 - .04, v1 - .04, zt + 6), P(u0 + .04, v1 - .04, zt + 6)], '#33427E') +
+        // ăng-ten lưới + đèn nháy
+        `<path d="M${ax - 9} ${ay} L${ax} ${atop} L${ax + 9} ${ay}" stroke="#E6ECF8" stroke-width="2" fill="none" stroke-linejoin="round"/>${lattice}` +
+        `<circle cx="${ax}" cy="${atop - 2}" r="5" fill="#FF3B5C" opacity=".3" class="wa-halo"/><circle cx="${ax}" cy="${atop - 2}" r="2.6" fill="#FF3B5C" class="led twinkle"/>` +
+        `<circle cx="${ax}" cy="${r1((ay + atop) / 2)}" r="1.8" fill="#FF3B5C" class="led twinkle" style="animation-delay:.5s"/>` +
+        // chảo vệ tinh
+        (() => { const [dx, dy] = P(.62, .75, zt + 6); return `<rect x="${dx - 1.2}" y="${dy - 12}" width="2.4" height="12" fill="#9AA6C0"/><g transform="rotate(-28 ${dx} ${dy - 16})"><ellipse cx="${dx}" cy="${dy - 16}" rx="13" ry="6" fill="#F2F5FB"/><ellipse cx="${dx}" cy="${dy - 15}" rx="10" ry="4" fill="#C9D2E6"/><path d="M${dx} ${dy - 15} L${dx} ${dy - 27}" stroke="#9AA6C0" stroke-width="1.4"/><circle cx="${dx}" cy="${dy - 27}" r="1.8" fill="#2EE6A8"/></g>`; })() +
+        // bảng TV neon trên nóc
+        `<g class="sign"><rect x="${ox - 1.5}" y="${oy - 12}" width="3" height="12" fill="#2A3460"/>
+          <rect x="${ox - 30}" y="${oy - 36}" width="60" height="25" rx="8" fill="#0E1638" stroke="#2EE6A8" stroke-width="2.2"/>
+          ${neon(ox, oy - 17, 'TV', '#2EE6A8', 17, ' letter-spacing="1"')}
+          <path d="M${ox - 22} ${oy - 31} l4 4 l4 -4" stroke="#2EE6A8" stroke-width="1.6" fill="none" stroke-linecap="round"/><circle cx="${ox + 21}" cy="${oy - 24}" r="3" fill="#FF3B5C" class="led twinkle"/></g>`
+      };
+    }
+  };
+
+  /* ================= ĐẠO CỤ (60×80, chạm đất 30,78) ================= */
+  const sh = (rx, op = .2) => `<ellipse cx="30" cy="77" rx="${rx}" ry="${r1(rx * .36)}" fill="#1B1440" opacity="${op}"/>`;
+  /** khối tròn clay: viền tối dưới-phải + thân + đốm sáng trái-trên */
+  const blob = (x, y, r, c) => `<circle cx="${r1(x + r * .1)}" cy="${r1(y + r * .12)}" r="${r}" fill="${shade(c, -.22)}"/><circle cx="${x}" cy="${y}" r="${r1(r * .92)}" fill="${c}"/>`;
+  const gloss = (x, y, rx, ry, op = .55) => `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="#fff" opacity="${op}"/>`;
+  const Pm = (k, cx, cy) => (u, v, z = 0) => [r1(cx + (u - v) * k), r1(cy + (u + v) * k / 2 - z)];
+  const PROP = {
+    tree() {
+      return sh(15) + `<path d="M27 78 L27.6 50 L32.4 50 L33 78Z" fill="#9A6440"/><path d="M30.4 78 L30.4 50 L32.4 50 L33 78Z" fill="#7A4A2E"/>` +
+        blob(30, 24, 12, '#45C06C') + blob(20, 42, 12, '#3DB463') + blob(40, 43, 12, '#38AA5C') + blob(30, 36, 15, '#45C06C') +
+        gloss(23, 21, 6, 3.5) + gloss(17, 37, 3.5, 2.2, .45) + gloss(28, 31, 5, 3, .35) +
+        `<circle cx="38" cy="34" r="1.8" fill="#FF7FA5"/><circle cx="22" cy="49" r="1.6" fill="#FFD84D"/>`;
+    },
+    palm() {
+      const leaf = (rot, len, c) => `<path transform="rotate(${rot} 35 22)" d="M35 22 Q${35 + len * .5} ${22 - len * .38} ${35 + len} ${22 + len * .1} Q${35 + len * .5} ${22 - len * .1} 35 22Z" fill="${c}"/>`;
+      return sh(10) +
+        `<path d="M29 78 C28 62 30 42 35 24" stroke="#A8703F" stroke-width="7" fill="none" stroke-linecap="round"/><path d="M31 78 C30.5 62 32 42 36.5 25" stroke="#8A5A2E" stroke-width="2.6" fill="none" stroke-linecap="round"/>` +
+        [70, 62, 54, 46, 38, 31].map((y, i) => `<path d="M${r1(25.6 + i * .7)} ${y} q3.6 1.6 7 0" stroke="#7A4A26" stroke-width="1.2" fill="none" opacity=".6"/>`).join('') +
+        leaf(200, 25, '#2E9A55') + leaf(-20, 25, '#2E9A55') + leaf(150, 24, '#3DB463') + leaf(30, 24, '#38AA5C') +
+        leaf(240, 20, '#45C06C') + leaf(-60, 20, '#45C06C') + leaf(100, 16, '#3DB463') +
+        `<circle cx="32" cy="26" r="3.2" fill="#7A4A2A"/><circle cx="37.5" cy="27" r="3.2" fill="#6A3E22"/><circle cx="31" cy="25" r="1" fill="#fff" opacity=".4"/>` +
+        gloss(26, 15, 5, 1.8, .4);
+    },
+    lamp() {
+      return sh(8) + `<circle class="wa-halo" cx="30" cy="24" r="15" fill="#FFE27A" opacity=".16"/>` +
+        `<rect x="24.5" y="71" width="11" height="7" rx="2.5" fill="#3A3858"/><rect x="26" y="66" width="8" height="6" rx="2" fill="#4C4A70"/>` +
+        `<rect x="28.4" y="22" width="3.2" height="46" fill="#4C4A70"/><rect x="28.4" y="22" width="1.2" height="46" fill="#8C89B8"/>` +
+        `<ellipse class="win" cx="30" cy="24.5" rx="6.2" ry="4.2" fill="#FFF3C2"/>` +
+        `<path d="M20.5 22 Q30 7 39.5 22 Z" fill="#3A3858"/><path d="M23 19 Q27 12 31 11" stroke="#fff" stroke-width="1.4" fill="none" opacity=".4" stroke-linecap="round"/>` +
+        `<circle cx="30" cy="9.5" r="2" fill="#3A3858"/><circle cx="28" cy="25" r="1.8" fill="#fff" opacity=".9"/>`;
+    },
+    bench(_, dir = 'u') {
+      const Pq = Pm(13, 30, 64), bx = boxWith(Pq);
+      const g = bx(-.85, -.08, -.75, .3, 0, 9, '#4C4A70', { edge: false }) + bx(.75, -.08, .85, .3, 0, 9, '#4C4A70', { edge: false }) +
+        bx(-.85, -.34, -.75, -.24, 0, 24, '#4C4A70', { edge: false }) + bx(.75, -.34, .85, -.24, 0, 24, '#4C4A70', { edge: false }) +
+        bx(-1, -.3, 1, -.22, 14, 18.5, '#E08A4E', { hw: .8 }) + bx(-1, -.3, 1, -.22, 20, 24.5, '#E08A4E', { hw: .8 }) +
+        bx(-1, -.22, 1, .32, 9, 12.5, '#E08A4E', { hw: .9 });
+      return sh(18, .18) + (dir === 'v' ? `<g transform="translate(60 0) scale(-1 1)">${g}</g>` : g);
+    },
+    bush() {
+      return sh(15) + blob(20, 66, 10, '#3DB463') + blob(40, 66, 10, '#38AA5C') + blob(30, 60, 12, '#45C06C') +
+        gloss(25, 54, 5, 2.6) + gloss(15, 63, 2.6, 1.6, .4) +
+        [[22, 60, '#FF7FA5'], [36, 57, '#FFFFFF'], [42, 64, '#FF7FA5'], [28, 66, '#FFD84D'], [16, 68, '#FFFFFF']].map(([x, y, c]) => `<circle cx="${x}" cy="${y}" r="2" fill="${c}"/><circle cx="${x}" cy="${y}" r=".8" fill="${c === '#FFD84D' ? '#FF9E4A' : '#FFD84D'}"/>`).join('');
+    },
+    car(color = '#FF4FD8', dir = 'se') {
+      const flip = dir === 'sw' || dir === 'ne', rear = dir === 'nw' || dir === 'ne';
+      const Pq = Pm(14, 30, 62), bx = boxWith(Pq), c = color;
+      const cab = rear ? [-.42, .5] : [-.5, .42];
+      const wheel = (u, v) => { const [x, y] = Pq(u, v, 3.6); return `<g transform="matrix(1 .5 0 1 ${x} ${y})"><circle r="4.6" fill="#22202F"/><circle r="2" fill="#C9C6E0"/></g>`; };
+      const face = (u, v, z, inner, R) => { const [x, y] = Pq(u, v, z); return `<g transform="matrix(1 ${R ? -.5 : .5} 0 1 ${x} ${y})">${inner}</g>`; };
+      const lights = rear ? '#FF3B5C' : '#FFF3B0';
+      const g = `<ellipse cx="30" cy="70" rx="24" ry="7" fill="${c}" opacity=".18"/>` +
+        wheel(.55, -.42) +
+        bx(-.92, -.44, .92, .44, 3, 12.5, c, { hw: 1.2 }) +
+        // cabin kính
+        bx(cab[0], -.36, cab[1], .36, 12.5, 21, c, { L: '#BFE8FF', R: '#8FC6EE', T: shade(c, .3), hw: 1 }) +
+        face(cab[0], .36, 12.5, `<rect x="${r1((cab[1] - cab[0]) * 14 * .48)}" y="-8.5" width="2" height="8.5" fill="${shade(c, -.1)}"/><path d="M2 -2 L6 -7" stroke="#fff" stroke-width="1.4" opacity=".7" stroke-linecap="round"/>`) +
+        face(.92, .44, 3, `<rect x="1.5" y="-7.5" width="3" height="2.6" rx="1" fill="${lights}"/><rect x="${r1(.88 * 14 - 4.5)}" y="-7.5" width="3" height="2.6" rx="1" fill="${lights}"/><rect x="3" y="-3" width="${r1(.88 * 14 - 6)}" height="1.6" rx=".8" fill="#22202F" opacity=".6"/>`, true) +
+        face(-.92, .44, 3, `<rect x="${r1(1.84 * 14 * .5 - 1)}" y="-8" width="2" height="1.2" rx=".6" fill="#fff" opacity=".6"/>`) +
+        wheel(-.55, .44) + wheel(.55, .44) +
+        gloss(r1(Pq(cab[0] + .1, -.2, 21)[0] + 3), r1(Pq(cab[0] + .1, -.2, 21)[1] + 1), 4, 1.4, .5);
+      return sh(22, .22) + (flip ? `<g transform="translate(60 0) scale(-1 1)">${g}</g>` : g);
+    },
+    hydrant() {
+      return sh(9) + `<rect x="22" y="72" width="16" height="5" rx="2" fill="#B8322C"/>` +
+        `<path d="M24 73 L24 54 Q24 51 27 51 L33 51 Q36 51 36 54 L36 73Z" fill="#E8463C"/><path d="M30.5 73 L30.5 51 L33 51 Q36 51 36 54 L36 73Z" fill="#B8322C"/>` +
+        `<path d="M23 52 Q30 38 37 52Z" fill="#E8463C"/><path d="M30 41 Q35 44 37 52 L30 52Z" fill="#C93A31"/><rect x="28" y="38" width="4" height="4" rx="1.2" fill="#B8322C"/>` +
+        `<rect x="18.5" y="58" width="6.5" height="6" rx="2" fill="#E8463C"/><rect x="35" y="58" width="6.5" height="6" rx="2" fill="#A12E28"/>` +
+        `<rect x="22.5" y="51" width="15" height="3" rx="1.5" fill="#FF6B5E"/><rect x="25.6" y="56" width="2" height="14" rx="1" fill="#fff" opacity=".5"/>` +
+        gloss(26, 45, 2.6, 1.6, .5);
+    }
+  };
+
+  /* ================= Ô NỀN (120×60) ================= */
+  const Q = (u, v) => [r1(60 + 60 * u - 60 * v), r1(30 * u + 30 * v)];
+  const qp = (a, fill, seam = false, ex = '') => `<polygon points="${a.map(p => Q(...p).join(',')).join(' ')}" fill="${fill}"${seam ? ` stroke="${fill}" stroke-width="1.4"` : ''}${ex ? ' ' + ex : ''}/>`;
+  const ql = (a, b, stroke, w, ex = '') => { const [x1, y1] = Q(...a), [x2, y2] = Q(...b); return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${stroke}" stroke-width="${w}" stroke-linecap="round"${ex ? ' ' + ex : ''}/>`; };
+  const DIA = [[0, 0], [1, 0], [1, 1], [0, 1]];
+  const rect = (u0, v0, u1, v1) => [[u0, v0], [u1, v0], [u1, v1], [u0, v1]];
+  const dot = (u, v, r, c, op = 1) => { const [x, y] = Q(u, v); return `<ellipse cx="${x}" cy="${y}" rx="${r}" ry="${r1(r * .55)}" fill="${c}"${op < 1 ? ` opacity="${op}"` : ''}/>`; };
+  const ROAD = '#5D5F8A', WALK = '#DCD5EE', CURB = '#A49CC8';
+  const road = (swap) => {
+    const S = swap ? ([u, v]) => [v, u] : p => p, R = (...a) => rect(...a).map(S);
+    return qp(DIA, ROAD, true) +
+      qp(R(0, 0, 1, .17), WALK, true) + qp(R(0, .83, 1, 1), WALK, true) +
+      ql(S([0, .17]), S([1, .17]), CURB, 1.6) + ql(S([0, .83]), S([1, .83]), CURB, 1.6) +
+      ql(S([0, .17]), S([1, .17]), '#fff', .6, 'opacity=".5" transform="translate(0 -1)"') +
+      [.5, 0].map(t => ql(S([t, 0]), S([t, .17]), CURB, .8, 'opacity=".55"') + ql(S([t, .83]), S([t, 1]), CURB, .8, 'opacity=".55"')).join('') +
+      ql(S([.12, .5]), S([.38, .5]), '#FFE27A', 2.4) + ql(S([.62, .5]), S([.88, .5]), '#FFE27A', 2.4) +
+      [[.3, .3], [.7, .66], [.18, .7], [.85, .32]].map(([u, v]) => dot(...S([u, v]), 1.4, '#4A4C74', .7)).join('');
+  };
+  const TILE = {
+    grass(n = 0) {
+      const sets = [[[.3, .35], [.62, .7], [.75, .28]], [[.4, .62], [.7, .4], [.25, .22]], [[.55, .25], [.3, .7], [.8, .75]], [[.45, .45], [.2, .55], [.7, .8]]][n % 4];
+      return qp(DIA, '#86CF66', true) +
+        dot(...sets[0], 14, '#97DA77', .8) + dot(...sets[1], 9, '#7AC25C', .6) +
+        sets.map(([u, v], i) => { const [x, y] = Q(u, v); return `<path d="M${x - 3} ${y + 4} L${x - 1} ${y} M${x} ${y + 4} L${x + 1} ${y - 1} M${x + 3} ${y + 4} L${x + 3.5} ${y + .5}" stroke="#5FAE4A" stroke-width="1.3" stroke-linecap="round"/>` + (i === n % 3 ? `<circle cx="${x + 8}" cy="${y + 3}" r="1.6" fill="${n % 2 ? '#FFFFFF' : '#FFD84D'}"/>` : ''); }).join('');
+    },
+    road() { return road(false); },
+    'road-y'() { return road(true); },
+    'road-x'() {
+      let s = qp(DIA, ROAD, true);
+      [[0, 0], [.83, 0], [0, .83], [.83, .83]].forEach(([u, v]) => { s += qp(rect(u, v, u + .17, v + .17), WALK, true); });
+      for (let i = 0; i < 5; i++) {
+        const a = .24 + i * .11;
+        s += qp(rect(.05, a, .14, a + .055), '#F1EDFF', false, 'opacity=".85"') + qp(rect(.86, a, .95, a + .055), '#F1EDFF', false, 'opacity=".85"') +
+          qp(rect(a, .05, a + .055, .14), '#F1EDFF', false, 'opacity=".85"') + qp(rect(a, .86, a + .055, .95), '#F1EDFF', false, 'opacity=".85"');
+      }
+      [[.17, .17], [.83, .17], [.17, .83], [.83, .83]].forEach(([u, v]) => { s += dot(u, v, 1.6, CURB); });
+      return s + `<ellipse cx="60" cy="30" rx="6" ry="3.2" fill="#4A4C74"/><ellipse cx="60" cy="30" rx="4" ry="2" fill="none" stroke="#6E70A0" stroke-width=".8"/>`;
+    },
+    plaza() {
+      return qp(DIA, '#E9DFF6', true) +
+        qp(rect(.04, .04, .46, .46), '#F1E9FB') + qp(rect(.54, .54, .96, .96), '#F1E9FB') +
+        ql([0, .5], [1, .5], '#CFC2E6', 1.2) + ql([.5, 0], [.5, 1], '#CFC2E6', 1.2) +
+        ql([0, 0], [1, 0], '#CFC2E6', 1.2) + ql([0, 0], [0, 1], '#CFC2E6', 1.2) +
+        dot(.25, .25, 3, '#fff', .5) + dot(.75, .75, 3, '#fff', .5);
+    },
+    sand(n = 0) {
+      const o = (n % 3) * .07;
+      return qp(DIA, '#F6DBA6', true) + dot(.4 + o, .45, 13, '#FBE6BC', .8) +
+        [[.25, .3], [.7, .3 + o], [.6, .75], [.3, .7 - o], [.82, .6]].map(([u, v], i) => dot(u, v, i % 2 ? 1.1 : 1.5, i % 3 ? '#E2BE80' : '#FFF4D6')).join('') +
+        (() => { const [x, y] = Q(.55, .5 - o); return `<path d="M${x - 10} ${y} q5 -2.4 10 0 t10 0" stroke="#E8C68E" stroke-width="1.2" fill="none"/>`; })();
+    },
+    water(n = 0) {
+      const o = (n % 3) * .08;
+      return qp(DIA, '#3DB8E5', true) + dot(.6, .35 + o, 14, '#5CC8EE', .6) + dot(.3, .7, 8, '#2EA3D6', .5) +
+        [[.3 + o, .3], [.65, .62 - o], [.78, .3]].map(([u, v]) => { const [x, y] = Q(u, v); return `<path class="wa-wave" d="M${x - 9} ${y} q4.5 -3 9 0 t9 0" stroke="#BDEBFF" stroke-width="1.6" fill="none" stroke-linecap="round" opacity=".8"/>`; }).join('') +
+        dot(.45, .5, 1.4, '#fff', .7);
+    }
+  };
+
+  return {
+    doors: DOORS,
+    building(id) {
+      const f = B[id];
+      if (!f) return `<svg viewBox="0 0 240 260" class="wm-bld-svg" xmlns="http://www.w3.org/2000/svg">${base('#B9B2D6')}</svg>`;
+      const { defs, body } = f(id);
+      return `<svg viewBox="0 0 240 260" class="wm-bld-svg wa-bld" data-bld="${id}" xmlns="http://www.w3.org/2000/svg"><defs>${defs}</defs>${body}</svg>`;
+    },
+    prop(kind, color, dir) {
+      const f = PROP[kind] || PROP.bush;
+      return `<svg viewBox="0 0 60 80" class="wa-prop" data-kind="${kind}" xmlns="http://www.w3.org/2000/svg">${f(color, dir)}</svg>`;
+    },
+    tile(kind, variant) {
+      if (kind === 'road' && (variant === 'y' || variant === 'v')) kind = 'road-y';
+      const f = TILE[kind] || TILE.grass;
+      return `<svg viewBox="0 0 120 60" class="wa-tile" data-kind="${kind}" xmlns="http://www.w3.org/2000/svg">${f(typeof variant === 'number' ? variant : 0)}</svg>`;
+    },
+    /* Người đi đường — dùng với npcSVG({ key, look }) */
+    passerLooks: [
+      // nữ sinh áo dài trắng-hồng, tóc dài
+      { skin: '#F3CFA8', hair: '#1E1717', hairStyle: 'long', eye: '#3B2416', outfit: 'blouse', cloth: '#FFC2D6', accent: '#FF7FA5', lip: '#D0607A', lashes: true },
+      // nhân viên văn phòng, vest xanh, kính
+      { skin: '#E2B48C', hair: '#1B1512', hairStyle: 'side', eye: '#3B2416', outfit: 'suit', cloth: '#3A4A7B', accent: '#22D3EE', acc: ['glasses'] },
+      // ông cụ tóc bạc, râu, áo xanh rêu
+      { skin: '#D8A47C', hair: '#E4E1DB', beard: '#D6D2CB', hairStyle: 'crew', eye: '#3B2A20', outfit: 'tee', cloth: '#6E8B4E', accent: '#FFD84D', acc: ['glasses', 'beard'] },
+      // khách Tây ba lô tóc vàng xoăn, áo phông cyan, cầm cà phê
+      { skin: '#F7D9C6', hair: '#E2B65A', hairStyle: 'curly', eye: '#3D6FA8', outfit: 'tee', cloth: '#22D3EE', accent: '#FFFFFF', propArt: 'cup' },
+      // thiếu niên áo hoodie neon, tai nghe
+      { skin: '#C98B5E', hair: '#151515', hairStyle: 'swoop', eye: '#2D1B10', outfit: 'hoodie', cloth: '#5B3FD6', accent: '#7CFF6B', acc: ['phones'] },
+      // du khách châu Phi, tóc xoăn, áo hoạ tiết cam
+      { skin: '#7A4A2E', hair: '#1A1110', hairStyle: 'curly', eye: '#2D1B10', outfit: 'blouse', cloth: '#FF9E4A', accent: '#FFD84D', lip: '#9E3A4A', lashes: true, pattern: true, acc: ['earrings'] },
+      // cô chú trung niên búi tóc, áo tím, ngọc trai
+      { skin: '#D9A57A', hair: '#2B1D17', hairStyle: 'updo', eye: '#3B2416', outfit: 'blouse', cloth: '#8B5CF6', accent: '#FFD84D', lip: '#B8455E', lashes: true, acc: ['pearls'] },
+      // anh hipster mũ len hồng, áo caro
+      { skin: '#EBC09A', hair: '#4A2E1C', hairStyle: 'beanie', hat: '#FF7FA5', eye: '#4E3420', outfit: 'tee', plaid: true, cloth: '#2E7D6B', accent: '#FFFFFF' },
+      // runner áo đỏ thể thao
+      { skin: '#B97A50', hair: '#1E140F', hairStyle: 'crew', eye: '#2D1B10', outfit: 'tee', cloth: '#FF4B4B', accent: '#FFFFFF' },
+      // nữ doanh nhân vest đen, khuyên tai, máy tính bảng
+      { skin: '#EAC0A0', hair: '#3B2219', hairStyle: 'side', eye: '#3B2416', outfit: 'suit', cloth: '#1F2937', accent: '#FF4FD8', lip: '#C2506E', lashes: true, acc: ['earrings'], propArt: 'tablet' },
+      // cô gái Hàn tóc nâu dài, kẹp hoa, áo vàng
+      { skin: '#F6D3B8', hair: '#6B4226', hairStyle: 'long', eye: '#4E3420', outfit: 'tee', cloth: '#FFD84D', accent: '#FF7FA5', lip: '#E0708A', lashes: true, acc: ['flower'] },
+      // chú xe ôm áo khoác xanh, râu
+      { skin: '#B07850', hair: '#20160F', hairStyle: 'crew', eye: '#2D1B10', outfit: 'tee', cloth: '#2EA88A', accent: '#FFD84D', acc: ['beard'] }
+    ]
+  };
+})();
 
 /* =========================================================
    5b. CLAY NPC — avatar 3D Claymorphism bằng SVG đa lớp
