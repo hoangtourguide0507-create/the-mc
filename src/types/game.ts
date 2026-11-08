@@ -261,6 +261,10 @@ export interface StreetTalkItem {
     en: string;
     vi: string;
   };
+  /** 'choose' (mặc định): chọn đáp án. 'speak': người chơi nói theo câu `say`. */
+  mode?: 'choose' | 'speak';
+  /** Câu mẫu cần nói ở chế độ 'speak'. Nếu bỏ trống, dùng đáp án đúng. */
+  say?: string;
   options: StreetTalkOption[];
 }
 

@@ -8,6 +8,16 @@ import {
   TurnData,
   WorldLocation,
 } from '../types/game';
+import { STREET_TALK_EXTRA } from './streetTalkExtra';
+import { STREET_TALK_EXTRA_2 } from './streetTalkExtra2';
+import { STREET_TALK_EXTRA_3 } from './streetTalkExtra3';
+import { STREET_TALK_EXTRA_4 } from './streetTalkExtra4';
+import { STREET_TALK_EXTRA_5 } from './streetTalkExtra5';
+import { STREET_TALK_EXTRA_6 } from './streetTalkExtra6';
+import { STREET_TALK_EXTRA_7 } from './streetTalkExtra7';
+import { STREET_TALK_EXTRA_8 } from './streetTalkExtra8';
+import { STREET_TALK_EXTRA_9 } from './streetTalkExtra9';
+import { STREET_TALK_EXTRA_10 } from './streetTalkExtra10';
 
 export const APP_VERSION = '2026.11.08-3d2';
 
@@ -1182,7 +1192,7 @@ function prepareScenes(scenes: Record<string, SceneData>): Record<string, SceneD
 
 export const SCENES: Record<string, SceneData> = prepareScenes(rawScenes);
 
-export const STREET_TALK: StreetTalkItem[] = [
+const STREET_TALK_BASE: StreetTalkItem[] = [
   {
     id: 'st-dir-1',
     level: 'A2',
@@ -2111,4 +2121,19 @@ export const STREET_TALK: StreetTalkItem[] = [
       },
     ],
   },
+];
+
+// Toàn bộ kho câu hỏi đường phố: 32 câu gốc + 1000 câu mở rộng (nghe/nói).
+export const STREET_TALK: StreetTalkItem[] = [
+  ...STREET_TALK_BASE,
+  ...STREET_TALK_EXTRA,
+  ...STREET_TALK_EXTRA_2,
+  ...STREET_TALK_EXTRA_3,
+  ...STREET_TALK_EXTRA_4,
+  ...STREET_TALK_EXTRA_5,
+  ...STREET_TALK_EXTRA_6,
+  ...STREET_TALK_EXTRA_7,
+  ...STREET_TALK_EXTRA_8,
+  ...STREET_TALK_EXTRA_9,
+  ...STREET_TALK_EXTRA_10,
 ];

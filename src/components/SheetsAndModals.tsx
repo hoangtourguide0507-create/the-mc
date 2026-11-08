@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { PASSER_LOOKS, SCENES, SHOP, STARTER } from '../data/content';
 import { dayPlan, fmtTime } from '../core/clock';
-import { wordSim } from '../core/evaluator';
+import { evaluateScripted, wordSim } from '../core/evaluator';
 import { useGameStore } from '../core/store';
 import { SFX, SpeechEngine, Voice } from '../audio/audioSystem';
 import { Confetti } from './Confetti';
@@ -628,37 +628,71 @@ export const ResultModal: React.FC = () => {
 };
 
 // 5. STREET TALK MODAL (Passerby Conversation on 3D City Map)
+// Hai chế độ:
+//  - "choose" (mặc định): chọn 1 trong 3 đáp án. Đáp án được xáo ngẫu nhiên mỗi lần mở.
+//  - "speak": đọc câu mẫu (item.say), người chơi nói theo bằng micro; chấm bằng evaluateScripted.
+//    Đạt từ 2 sao trở lên thì qua. Hết SPEAK_MAX_ATTEMPTS lượt thì hiện đáp án mẫu.
+const SPEAK_PASS_STARS = 2;
+const SPEAK_MAX_ATTEMPTS = 3;
+
+// Xáo trộn kiểu Fisher–Yates để đáp án đúng không luôn ở cùng vị trí / độ dài.
+function shuffleOptions<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 export const StreetTalkModal: React.FC = () => {
   const streetTalkActive = useGameStore((s) => s.streetTalkActive);
   const closeStreetTalk = useGameStore((s) => s.closeStreetTalk);
   const markStreetTalkUsed = useGameStore((s) => s.markStreetTalkUsed);
   const gain = useGameStore((s) => s.gain);
+  const toast = useGameStore((s) => s.toast);
   const state = useGameStore((s) => s.state);
+
+  const item = streetTalkActive?.item;
+  const isSpeak = item?.mode === 'speak';
+  // Câu cần nói trong chế độ speak: ưu tiên item.say, nếu không có thì lấy đáp án đúng.
+  const target = item ? item.say ?? item.options.find((o) => o.ok)?.en ?? '' : '';
 
   const [showViPrompt, setShowViPrompt] = useState(false);
   const [pickedIdx, setPickedIdx] = useState<number | null>(null);
   const [shakeIdx, setShakeIdx] = useState<number | null>(null);
+  const [speakResult, setSpeakResult] = useState<ReturnType<typeof evaluateScripted> | null>(null);
+  const [speakAttempts, setSpeakAttempts] = useState(0);
+  const [speakDone, setSpeakDone] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const [interim, setInterim] = useState('');
+  const [showTyped, setShowTyped] = useState(false);
+  const [typed, setTyped] = useState('');
 
-  const shuffledOptions = useMemo(() => {
-    if (!streetTalkActive) return [];
-    return [...streetTalkActive.item.options].sort(
-      (a, b) => a.en.length - b.en.length
-    );
-  }, [streetTalkActive]);
+  const shuffledOptions = useMemo(
+    () => (item ? shuffleOptions(item.options) : []),
+    [streetTalkActive]
+  );
 
   useEffect(() => {
     if (!streetTalkActive) return;
     setShowViPrompt(false);
     setPickedIdx(null);
+    setSpeakResult(null);
+    setSpeakAttempts(0);
+    setSpeakDone(false);
+    setInterim('');
+    setShowTyped(false);
+    setTyped('');
     Voice.speak(streetTalkActive.item.prompt.en, {
       npcId: 'passer',
       preferredURI: state.voiceURI,
     });
   }, [streetTalkActive]);
 
-  if (!streetTalkActive) return null;
+  if (!streetTalkActive || !item) return null;
 
-  const { passerName, item } = streetTalkActive;
+  const { passerName } = streetTalkActive;
 
   const handleChooseOption = (idx: number) => {
     if (pickedIdx !== null) return;
@@ -680,20 +714,83 @@ export const StreetTalkModal: React.FC = () => {
     }
   };
 
+  // Chấm một lần nói: lấy kết quả tốt nhất trong các phương án nhận dạng.
+  const evaluateAttempt = (candidates: string[]) => {
+    if (speakDone || !target) return;
+    const list = candidates.map((c) => c.trim()).filter(Boolean);
+    let best: ReturnType<typeof evaluateScripted> | null = null;
+    for (const c of list.length ? list : ['']) {
+      const r = evaluateScripted(target, c);
+      if (!best || r.score > best.score) best = r;
+    }
+    const result = best!;
+    const attempts = speakAttempts + 1;
+    setSpeakAttempts(attempts);
+    setSpeakResult(result);
+
+    if (result.stars >= SPEAK_PASS_STARS) {
+      setSpeakDone(true);
+      markStreetTalkUsed(item.id);
+      SFX.play('correct');
+      gain({ xp: 3 });
+      Voice.speak(target, { npcId: 'coach', preferredURI: state.voiceURI });
+    } else if (attempts >= SPEAK_MAX_ATTEMPTS) {
+      setSpeakDone(true);
+      markStreetTalkUsed(item.id);
+      SFX.play('error');
+      Voice.speak(target, { npcId: 'coach', preferredURI: state.voiceURI });
+    } else {
+      SFX.play('error');
+    }
+  };
+
+  const handleSpeak = async () => {
+    if (recording || speakDone) return;
+    SFX.play('tap');
+    setRecording(true);
+    setInterim('');
+    const res = await SpeechEngine.listen({
+      onInterim: (txt) => setInterim(txt),
+    });
+    setRecording(false);
+    if (res.reason === 'aborted') return;
+    if (res.reason === 'error' || (!res.transcript && res.reason === 'no-speech')) {
+      setShowTyped(true);
+      toast(
+        res.error === 'unsupported'
+          ? 'Trình duyệt chưa hỗ trợ thu âm — hãy gõ câu trả lời bên dưới.'
+          : 'Không nghe rõ — bạn có thể nói lại hoặc gõ câu trả lời bên dưới.',
+        'warn',
+        3200
+      );
+      return;
+    }
+    evaluateAttempt(res.alternatives.length > 0 ? res.alternatives : [res.transcript]);
+  };
+
+  const submitTyped = () => {
+    if (!typed.trim()) return;
+    evaluateAttempt([typed]);
+    setTyped('');
+  };
+
+  const answered = pickedIdx !== null;
+  const canContinue = isSpeak ? speakDone : answered;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-md">
       <div className="w-full max-w-md rounded-3xl border border-white/20 bg-[#150C38] p-5 shadow-2xl">
         <div className="flex items-center justify-between border-b border-white/10 pb-3">
           <div className="flex items-center gap-2.5">
             <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-cyan-500/20 text-xl">
-              👋
+              {isSpeak ? '🎤' : '👋'}
             </span>
             <div>
               <h3 className="font-display text-base font-black text-white">
                 Trò chuyện cùng {passerName}
               </h3>
               <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-bold text-cyan-300">
-                CEFR {item.level} · Phản xạ đường phố (+3 XP)
+                CEFR {item.level} · {isSpeak ? 'Luyện nói' : 'Phản xạ đường phố'} (+3 XP)
               </span>
             </div>
           </div>
@@ -733,43 +830,125 @@ export const StreetTalkModal: React.FC = () => {
           </div>
         </div>
 
-        {/* 3 Options */}
-        <div className="mt-3.5 space-y-2">
-          {shuffledOptions.map((opt, idx) => {
-            const answered = pickedIdx !== null;
-            const isSelected = pickedIdx === idx;
-            return (
+        {isSpeak ? (
+          <div className="mt-3.5 space-y-2.5">
+            <div className="flex gap-2">
               <button
-                key={idx}
-                disabled={answered}
-                onClick={() => handleChooseOption(idx)}
-                className={`w-full rounded-2xl border p-3 text-left text-xs transition ${shakeIdx === idx ? 'animate-shake' : ''} ${
-                  !answered
-                    ? 'border-white/15 bg-white/5 text-white hover:border-cyan-400 hover:bg-white/10'
-                    : opt.ok
-                    ? 'border-emerald-400 bg-emerald-500/25 text-white'
-                    : isSelected
-                    ? 'border-rose-500 bg-rose-500/25 text-rose-200'
-                    : 'border-white/10 bg-white/5 text-slate-400'
-                }`}
+                onClick={handleSpeak}
+                disabled={recording || speakDone}
+                className="flex-1 rounded-2xl bg-gradient-to-r from-pink-500 to-cyan-500 py-2.5 text-xs font-black text-white shadow-lg disabled:opacity-50"
               >
-                <div className="font-bold">{opt.en}</div>
-                {answered && (
-                  <div className="mt-1 text-[11px] text-amber-200">
-                    🇻🇳 {opt.vi}
-                  </div>
-                )}
-                {answered && isSelected && !opt.ok && opt.why && (
-                  <div className="mt-1 text-[11px] font-bold text-rose-300">
-                    💡 {opt.why}
-                  </div>
-                )}
+                {recording ? '🎙️ Đang nghe…' : speakDone ? '✅ Xong' : '🎤 Nói câu trả lời'}
               </button>
-            );
-          })}
-        </div>
+              {!speakDone && (
+                <button
+                  onClick={() => setShowTyped((v) => !v)}
+                  className="rounded-2xl bg-white/10 px-3 text-xs font-bold text-white hover:bg-white/20"
+                >
+                  ⌨️ Gõ
+                </button>
+              )}
+            </div>
 
-        {pickedIdx !== null && (
+            {recording && interim && (
+              <p className="rounded-xl bg-white/5 p-2 text-[11px] italic text-slate-300">{interim}</p>
+            )}
+
+            {showTyped && !speakDone && (
+              <div className="flex gap-2">
+                <input
+                  value={typed}
+                  onChange={(e) => setTyped(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && submitTyped()}
+                  placeholder="Gõ câu trả lời tiếng Anh…"
+                  className="flex-1 rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-xs text-white outline-none focus:border-cyan-400"
+                />
+                <button
+                  onClick={submitTyped}
+                  className="rounded-xl bg-cyan-500/30 px-3 text-xs font-bold text-white"
+                >
+                  Gửi
+                </button>
+              </div>
+            )}
+
+            {speakResult && (
+              <div className="rounded-2xl border border-white/15 bg-white/5 p-3">
+                <div className="flex items-center justify-between text-[11px] font-bold">
+                  <span className="text-cyan-200">Điểm: {speakResult.score}</span>
+                  <span className="text-amber-300">{'⭐'.repeat(speakResult.stars) || '—'}</span>
+                </div>
+                <p className="mt-1.5 text-xs font-bold leading-relaxed">
+                  {speakResult.tokens.map((t, i) => (
+                    <span
+                      key={i}
+                      className={
+                        t.status === 'ok'
+                          ? 'text-emerald-300'
+                          : t.status === 'near'
+                          ? 'text-amber-300'
+                          : 'text-rose-300'
+                      }
+                    >
+                      {t.word}{' '}
+                    </span>
+                  ))}
+                </p>
+                <p className="mt-1 text-[10px] text-slate-400">Bạn nói: “{speakResult.transcript}”</p>
+              </div>
+            )}
+
+            {!speakDone && speakAttempts > 0 && (
+              <p className="text-[11px] font-bold text-amber-200">
+                Chưa đạt ({SPEAK_MAX_ATTEMPTS - speakAttempts} lượt còn lại). Thử lại nhé!
+              </p>
+            )}
+
+            {speakDone && (
+              <div className="rounded-2xl border border-emerald-400/40 bg-emerald-500/15 p-3">
+                <p className="text-[11px] font-bold text-emerald-200">Câu mẫu:</p>
+                <p className="mt-1 text-xs font-bold text-white">{target}</p>
+              </div>
+            )}
+          </div>
+        ) : (
+          /* 3 Options */
+          <div className="mt-3.5 space-y-2">
+            {shuffledOptions.map((opt, idx) => {
+              const isSelected = pickedIdx === idx;
+              return (
+                <button
+                  key={idx}
+                  disabled={answered}
+                  onClick={() => handleChooseOption(idx)}
+                  className={`w-full rounded-2xl border p-3 text-left text-xs transition ${shakeIdx === idx ? 'animate-shake' : ''} ${
+                    !answered
+                      ? 'border-white/15 bg-white/5 text-white hover:border-cyan-400 hover:bg-white/10'
+                      : opt.ok
+                      ? 'border-emerald-400 bg-emerald-500/25 text-white'
+                      : isSelected
+                      ? 'border-rose-500 bg-rose-500/25 text-rose-200'
+                      : 'border-white/10 bg-white/5 text-slate-400'
+                  }`}
+                >
+                  <div className="font-bold">{opt.en}</div>
+                  {answered && (
+                    <div className="mt-1 text-[11px] text-amber-200">
+                      🇻🇳 {opt.vi}
+                    </div>
+                  )}
+                  {answered && isSelected && !opt.ok && opt.why && (
+                    <div className="mt-1 text-[11px] font-bold text-rose-300">
+                      💡 {opt.why}
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {canContinue && (
           <button
             onClick={closeStreetTalk}
             className="mt-4 w-full rounded-2xl bg-gradient-to-r from-pink-500 to-cyan-500 py-2.5 text-xs font-black text-white shadow-lg"
