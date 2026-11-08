@@ -1048,6 +1048,8 @@
         <div class="c-bar mx-auto mt-4 w-48 h-3 rounded-full bg-white/30 overflow-hidden"><i></i></div>
       </div>
     </div>
+    <!-- 🗺️ WORLD MAP — owner: world-map (xem .claude/specs/world-map.md) -->
+    <section id="view-world" class="view"></section>
   </main>
 </div>
 
@@ -1270,6 +1272,9 @@ const SFX = {
 document.addEventListener('pointerdown', () => {
   if (SFX.ctx && SFX.ctx.state !== 'running') SFX.ctx.resume().catch(() => {});
 }, { passive: true });
+
+/* [STUB · owner: audio-speech] Âm nền thành phố — thay bằng bản thật (Web Audio, tôn trọng state.muted) */
+const Ambience = { mode: null, start(mode = 'day') { this.mode = mode; }, stop() { this.mode = null; } };
 
 /* =========================================================
    3. AUDIO BUS — State machine bán song công (half-duplex)
@@ -2024,6 +2029,26 @@ const SCENE_ART = {
   </svg>`
 };
 
+/* [STUB · owner: character-artist] Đồ hoạ bản đồ thành phố (isometric) — hợp đồng trong .claude/specs/world-map.md
+   building(id): SVG viewBox 0 0 240 260; chân đế = hình thoi 2×2 ô: top(120,140) right(240,200) bottom(120,260) left(0,200)
+   prop(kind):   SVG viewBox 0 0 60 80, điểm chạm đất (30,78) */
+const WORLD_ART = {
+  building(id) {
+    const c = { home: '#7C3AED', cafe: '#C08552', market: '#2EA8FF', theater: '#22D3EE', wedding: '#FF7FA5', hotel: '#A78BFA', beach: '#FF9E4A', tv: '#2EE6A8' }[id] || '#888';
+    return `<svg viewBox="0 0 240 260" class="wm-bld-svg"><polygon points="120,140 240,200 120,260 0,200" fill="#2a2150"/>
+      <polygon points="20,190 120,240 120,120 20,70" fill="${shade(c, -.25)}"/><polygon points="120,240 220,190 220,70 120,120" fill="${shade(c, -.4)}"/>
+      <polygon points="20,70 120,20 220,70 120,120" fill="${c}"/><text x="120" y="78" text-anchor="middle" font-size="22" fill="#fff" font-family="'Baloo 2',sans-serif">${id}</text></svg>`;
+  },
+  prop(kind) {
+    return kind === 'tree' ? `<svg viewBox="0 0 60 80"><rect x="27" y="50" width="6" height="28" fill="#6b4a2b"/><circle cx="30" cy="40" r="20" fill="#3FD07A"/></svg>`
+      : `<svg viewBox="0 0 60 80"><rect x="28" y="20" width="4" height="58" fill="#6E6A8E"/><circle cx="30" cy="18" r="7" fill="#FFD84D"/></svg>`;
+  },
+  passerLooks: [
+    { skin: '#E8B48A', hair: '#3A2418', hairStyle: 'side', eye: '#3B2416', outfit: 'crew', cloth: '#2EA8FF', accent: '#fff' },
+    { skin: '#C68642', hair: '#1E1E24', hairStyle: 'long', eye: '#2D1B10', outfit: 'crew', cloth: '#FF7FA5', accent: '#fff', lashes: true }
+  ]
+};
+
 /* =========================================================
    5b. CLAY NPC — avatar 3D Claymorphism bằng SVG đa lớp
    ---------------------------------------------------------
@@ -2602,6 +2627,14 @@ const SHOP = {
 };
 const bonusOf = k => SHOP.upgrades.filter(u => state.items[u.id]).reduce((a, u) => a + (u.bonus[k] || 0), 0);
 
+/* [STUB · owner: lesson-content] Người đi đường bắt chuyện — hợp đồng trong .claude/specs/world-map.md */
+const STREET_TALK = [
+  { id: 'st-dir-1', level: 'A2', loc: null, prompt: { en: "Excuse me, do you know where the coffee shop is?", vi: 'Xin lỗi, bạn có biết quán cà phê ở đâu không?' },
+    options: [ { en: "Sure! It's just around the corner, next to the market.", vi: 'Có chứ! Ngay góc đường, cạnh siêu thị.', ok: true },
+               { en: "Yes, I am coffee.", vi: 'Vâng, tôi là cà phê.', ok: false, why: 'Sai nghĩa — hãy chỉ đường.' },
+               { en: "No thank you.", vi: 'Không, cảm ơn.', ok: false, why: 'Không trả lời câu hỏi.' } ] }
+];
+
 /* =========================================================
    7. UI HELPERS — toast, modal, sheet, confetti, floaters
    ========================================================= */
@@ -2760,6 +2793,14 @@ async function goTo(view, { title = 'Đang di chuyển…', tip } = {}) {
 }
 
 /* =========================================================
+   9b. WORLD MAP — [STUB · owner: world-map] bản đồ thành phố kiểu The Sims
+   ========================================================= */
+const World = {
+  open(opts = {}) { goTo('world', { title: '🗺️ Ra phố…' }); },
+  travelTo(locId, opts = {}) { this.open(opts); }
+};
+
+/* =========================================================
    10. HUB — Căn phòng của MC (The Sims core loop)
    ---------------------------------------------------------
    VÒNG LẶP:  ☕ Daily Life (miễn phí, hồi ⚡)  →  🎤 Nhận show (−20⚡)
@@ -2790,13 +2831,17 @@ function renderMood() {
     e >= 40 ? 'Ổn áp, chạy thêm 1 show nữa nhé 😊' :
     e >= 20 ? 'Hơi đuối… còn sức cho 1 show 😮‍💨' : 'Hết pin rồi… đi cà phê hoặc ghé Cửa hàng ☕';
 }
+/** Ngoại hình MC của người chơi (dùng ở Hub, bản đồ thành phố…) */
+function playerLook({ prop = true } = {}) {
+  const it = state.items;
+  return { skin: '#F1C9A5', hair: '#2A1C14', hairStyle: 'swoop', eye: '#3B2416',
+    outfit: it.gown ? 'velvet' : 'tux', cloth: it.gown ? '#8E1B4A' : '#232A6B', accent: it.gown ? '#FFC800' : '#FF4B4B',
+    acc: it.inear ? ['headset'] : [], propArt: prop ? (it.goldmic ? 'goldmic' : 'mic') : null };
+}
 function renderAvatar() {
   const it = state.items;
   // MC của người chơi — cùng phong cách clay 3D với NPC
-  $('#avatar').innerHTML = npcSVG({ key: 'player', look: {
-    skin: '#F1C9A5', hair: '#2A1C14', hairStyle: 'swoop', eye: '#3B2416',
-    outfit: it.gown ? 'velvet' : 'tux', cloth: it.gown ? '#8E1B4A' : '#232A6B', accent: it.gown ? '#FFC800' : '#FF4B4B',
-    acc: it.inear ? ['headset'] : [], propArt: it.goldmic ? 'goldmic' : 'mic' } });
+  $('#avatar').innerHTML = npcSVG({ key: 'player', look: playerLook() });
   $('#roomItems').innerHTML = SHOP.upgrades.filter(u => it[u.id])
     .map(u => `<span class="bg-white/90 rounded-xl border-b-4 border-black/10 px-2 py-1 text-[13px] font-extrabold" title="${esc(u.name)}">${u.icon}</span>`).join('');
 }
@@ -2920,6 +2965,23 @@ async function practiceWeak(key, row, simulated) {
     setRowStatus(row, `❌ Máy nghe thành “${esc(cands[0])}” — thử lại`, '#EA2B2B');
   }
 }
+
+/* =========================================================
+   10c. CLOCK — giờ trong ngày · [STUB · owner: game-systems]
+   ========================================================= */
+const SCHEDULE = {                     // phút tính từ 00:00
+  coffee: { open: 420, close: 660 }, market: { open: 480, close: 1260 },
+  backstage: { start: 900 }, beach: { start: 1050 }, wedding: { start: 1110 }, gala: { start: 1140 }, interview: { start: 1200 }
+};
+const Clock = {
+  now() { return state.clock ?? 420; },
+  label(m = this.now()) { m = Math.max(0, Math.min(1439, Math.round(m))); return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`; },
+  period(m = this.now()) { return m < 660 ? 'morning' : m < 1020 ? 'afternoon' : m < 1260 ? 'evening' : 'night'; },
+  advance(min) { state.clock = Math.min(1440, this.now() + min); save(); document.dispatchEvent(new CustomEvent('clock', { detail: { now: state.clock } })); },
+  travelMinutes(tiles) { return Math.max(5, Math.round(tiles * 4)); },
+  sceneStatus(id) { return { state: 'open', minutesLate: 0, label: '' }; },
+  sleep() {}
+};
 
 /* =========================================================
    11. SHEETS — Sổ tay (Phrasebook + Weak Words) & Cửa hàng
@@ -3089,7 +3151,7 @@ const isSemi = t => t && t.mode === 'semi';
 const isQuiz = t => t && t.mode === 'quiz';
 const isCatch = t => t && !!t.catchAnswers;
 
-function startScene(id, srcEl) {
+function startScene(id, srcEl, { returnTo = 'hub' } = {}) {
   const sc = SCENES[id];
   if (state.charisma.lv < sc.reqLv) {
     SFX.play('error'); shake(srcEl); toast(`🔒 Cần Charisma Lv.${sc.reqLv} để nhận show này`, 'coral'); return;
@@ -3100,7 +3162,7 @@ function startScene(id, srcEl) {
   }
   SFX.play('tap');
   if (sc.energy) gain({ energy: -sc.energy });
-  Object.assign(Stage, { sc, turn: 0, stars: [], xpEarned: 0, listenEarned: 0, listened: {}, phase: 'idle', npcKey: null });
+  Object.assign(Stage, { sc, turn: 0, stars: [], xpEarned: 0, listenEarned: 0, listened: {}, phase: 'idle', npcKey: null, returnTo });
   setupStage(sc);
   goTo('stage', { title: sc.icon + ' ' + sc.title, tip: sc.curtain }).then(() => { renderTurn(); NpcWave.start(); Blink.start(); });
 }
@@ -3741,7 +3803,7 @@ function finishScene() {
   setTimeout(() => confetti(36), 1300);
   $('#btnHome', card).addEventListener('click', () => {
     SFX.play('tap'); closeModal(); NpcWave.stop();
-    goTo('hub', { title: 'Đang về nhà…', tip: 'Cởi giày, treo đồ diễn, tắm nước ấm…' }).then(() => { renderGigs(); renderMood(); });
+    goTo(Stage.returnTo || 'hub', { title: Stage.returnTo === 'world' ? '🗺️ Ra phố…' : 'Đang về nhà…', tip: 'Cởi giày, treo đồ diễn, tắm nước ấm…' }).then(() => { renderGigs(); renderMood(); });
   }, { once: true });
 }
 
@@ -3923,7 +3985,7 @@ $('#btnLeave').addEventListener('click', async () => {
   if (!ok) return;
   Stage.attempt++; SpeechEngine.abort(); Visualizer.stop(); Voice.stop(); LipSync.stop(); NpcWave.stop(); $('#sayBubble').classList.remove('show');
   clearTimeout(Stage.radioT); clearTimeout(Stage.reflexT); setMic('idle');
-  goTo('hub', { title: 'Đang về nhà…' }).then(() => { renderGigs(); renderMood(); });
+  goTo(Stage.returnTo || 'hub', { title: Stage.returnTo === 'world' ? '🗺️ Ra phố…' : 'Đang về nhà…' }).then(() => { renderGigs(); renderMood(); });
 });
 
 /* =========================================================
