@@ -9,7 +9,7 @@ const HOMOPHONE_GROUPS: string[][] = [
   ['your', 'youre'],
   ['its', 'it'],
   ['right', 'write', 'rite'],
-  ['aisle', 'isle', 'ill'],
+  ['aisle', 'isle'],
   ['knew', 'new'],
   ['one', 'won'],
   ['sea', 'see'],
@@ -517,7 +517,6 @@ export function evaluateSemi(turn: TurnData, transcript: string): EvalResult {
   const frameWithoutBlanks = frame.replace(/___/g, '').replace(/\s+/g, ' ').trim();
   const baseEval = evaluateScripted(frameWithoutBlanks, transcript);
   const spokenTokens = normalizeText(transcript);
-  const spokenJoined = spokenTokens.join(' ');
 
   const pool = turn.blankPool || [];
   const blanksTotal = pool.length || turn.blanks || 1;
@@ -529,7 +528,7 @@ export function evaluateSemi(turn: TurnData, transcript: string): EvalResult {
       if (candTokens.length === 1) {
         return spokenTokens.some((st) => wordSim(candTokens[0], st).sim >= 0.8);
       }
-      return spokenJoined.includes(candTokens.join(' '));
+      return containsTokenSequence(spokenTokens, candTokens);
     });
     if (hit) blanksFilled++;
   }
@@ -572,10 +571,24 @@ function kwMatch(keywordVariant: string, spokenTokens: string[]): boolean {
     });
   }
 
-  // Multi-word keyword phrase
-  const joinedSpoken = spokenTokens.join(' ');
-  const joinedKw = kwTokens.join(' ');
-  return joinedSpoken.includes(joinedKw);
+  // Multi-word keyword phrase: must match whole consecutive tokens
+  return containsTokenSequence(spokenTokens, kwTokens);
+}
+
+/** True when `needle` appears as a run of consecutive whole tokens in `haystack`. */
+export function containsTokenSequence(haystack: string[], needle: string[]): boolean {
+  if (needle.length === 0 || needle.length > haystack.length) return false;
+  for (let i = 0; i + needle.length <= haystack.length; i++) {
+    let ok = true;
+    for (let k = 0; k < needle.length; k++) {
+      if (haystack[i + k] !== needle[k]) {
+        ok = false;
+        break;
+      }
+    }
+    if (ok) return true;
+  }
+  return false;
 }
 
 export function evaluateFreeform(turn: TurnData, transcript: string): EvalResult {

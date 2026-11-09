@@ -23,17 +23,26 @@ export function recordClip(maxMs = 2500): ClipHandle {
       return null;
     }
     const chunks: Blob[] = [];
-    recorder = new MediaRecorder(stream);
-    recorder.ondataavailable = (e) => e.data && e.data.size && chunks.push(e.data);
-    const stopped = new Promise<void>((resolve) => {
-      if (!recorder) return resolve();
-      recorder.onstop = () => resolve();
-    });
-    recorder.start();
+    const releaseMic = () => stream?.getTracks().forEach((t) => t.stop());
+    let stopped: Promise<void>;
+    try {
+      recorder = new MediaRecorder(stream);
+      recorder.ondataavailable = (e) => e.data && e.data.size && chunks.push(e.data);
+      // onerror cũng phải resolve, nếu không promise sẽ treo mãi khi ghi lỗi
+      stopped = new Promise<void>((resolve) => {
+        if (!recorder) return resolve();
+        recorder.onstop = () => resolve();
+        recorder.onerror = () => resolve();
+      });
+      recorder.start();
+    } catch {
+      releaseMic();
+      return null;
+    }
     timer = window.setTimeout(() => recorder?.state === 'recording' && recorder.stop(), maxMs);
     await stopped;
     window.clearTimeout(timer);
-    stream?.getTracks().forEach((t) => t.stop());
+    releaseMic();
     if (!chunks.length) return null;
     return decodeTo16k(new Blob(chunks, { type: recorder?.mimeType || 'audio/webm' }));
   })();

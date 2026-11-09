@@ -59,7 +59,7 @@ export const TourOverlay: React.FC = () => {
       <div
         role="dialog"
         aria-label="Hướng dẫn chơi"
- className="fixed inset-x-3 z-[61] mx-auto max-w-md rounded-2xl border border-amber-300/60 ghibli-panel p-4 shadow-2xl"
+        className="fixed inset-x-3 z-[61] mx-auto max-w-md rounded-2xl border border-amber-300/60 ghibli-panel p-4 shadow-2xl"
         style={tipPos}
       >
         <p className="text-xs font-black uppercase tracking-wider text-amber-700">

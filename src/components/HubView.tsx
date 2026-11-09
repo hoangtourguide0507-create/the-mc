@@ -88,7 +88,7 @@ export const HubView: React.FC = () => {
             <button
               onClick={() => setHelpOpen(true)}
               title="Hướng dẫn chơi"
- className="rounded-full border ghibli-panel px-2.5 py-1 text-xs font-black text-ghibli-ink transition hover:ghibli-panel"
+ className="rounded-full border ghibli-panel px-2.5 py-1 text-xs font-black text-ghibli-ink transition hover:brightness-95"
             >
               ❓
             </button>

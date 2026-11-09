@@ -843,7 +843,7 @@ export const StreetTalkModal: React.FC = () => {
               {!speakDone && (
                 <button
                   onClick={() => setShowTyped((v) => !v)}
- className="rounded-2xl ghibli-panel px-3 text-xs font-bold text-ghibli-ink hover:ghibli-panel"
+ className="rounded-2xl ghibli-panel px-3 text-xs font-bold text-ghibli-ink hover:brightness-95"
                 >
                   ⌨️ Gõ
                 </button>
@@ -923,7 +923,7 @@ export const StreetTalkModal: React.FC = () => {
                   onClick={() => handleChooseOption(idx)}
                   className={`w-full rounded-2xl border p-3 text-left text-xs transition ${shakeIdx === idx ? 'animate-shake' : ''} ${
                     !answered
- ? ' ghibli-panel text-ghibli-ink hover:border-cyan-400 hover:ghibli-panel'
+ ? ' ghibli-panel text-ghibli-ink hover:border-cyan-400 hover:brightness-95'
                       : opt.ok
                       ? 'border-emerald-400 bg-emerald-500/25 text-ghibli-ink'
                       : isSelected

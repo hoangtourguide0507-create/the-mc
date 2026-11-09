@@ -22,7 +22,7 @@ export const QuestSheet: React.FC = () => {
           </div>
           <button
             onClick={() => setQuestOpen(false)}
- className="rounded-full ghibli-panel px-3 py-1.5 text-xs font-black text-ghibli-ink hover:ghibli-panel"
+ className="rounded-full ghibli-panel px-3 py-1.5 text-xs font-black text-ghibli-ink hover:brightness-95"
           >
             Đóng ✕
           </button>

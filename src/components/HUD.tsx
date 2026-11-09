@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { chaNeed, useGameStore } from '../core/store';
 import { fmtRep, levelTitle, MAX_LV } from '../core/career';
 
-/** Khoảng đệm phía trên cho nội dung nằm dưới HUD (tính cả tai thỏ iPhone) */
 /** Khoảng đệm trên: chỉ còn một hàng thẻ cấp độ và tiền (tính cả tai thỏ iPhone) */
 export const HUD_PAD = 'calc(max(0.5rem, env(safe-area-inset-top)) + 84px)';
 /** Khoảng đệm dưới: dành chỗ cho thanh năng lượng nằm ở đáy màn hình */
