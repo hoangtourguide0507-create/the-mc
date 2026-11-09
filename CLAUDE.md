@@ -1,0 +1,45 @@
+# Hướng dẫn làm việc cho dự án MC Life · English Stage (3D)
+
+Đọc file này trước khi sửa code. Tài liệu kỹ thuật chi tiết hơn nằm ở `AI_HANDOVER_SPEC.md` và `README.md`.
+Lưu ý: hai file đó còn ghi Vite 5, trong khi repo đang dùng Vite 8 (`package.json`).
+
+## Stack
+- Vite 8, React 18, TypeScript 5 (strict), Three.js r169 với `@react-three/fiber` và `drei`, Zustand, Tailwind 3.
+- Giao diện và nội dung học viên bằng tiếng Việt, nội dung tiếng Anh cho luyện nói.
+
+## Lệnh thường dùng
+- `npm ci` (cài đặt đúng theo lockfile), `npm run dev`, `npm run build` (gồm `tsc -b` và `vite build`).
+- Test, chạy từng cái hoặc cả bốn:
+  - `npm run test:logic` (Python, `tests/test_core_logic.py`)
+  - `npm run test:quests`
+  - `npm run test:evaluator`
+  - `npm run test:difficulty`
+- Ảnh QA: `npm run build && npx vite preview --port 4173 &` rồi `python3 tools/qa_shot.py world hub stage`.
+- Có thể mở game với `?qa=1` để truy cập store qua `window.__mc`.
+
+## Quy trình đưa code lên
+- **Không push trực tiếp lên `main` khi chưa được người dùng đồng ý rõ ràng.** Mọi thay đổi làm trên nhánh riêng (`fix/...`, `feat/...`, `docs/...`), rồi push nhánh và báo người dùng.
+- Push lên `main` sẽ kích hoạt `.github/workflows/pages.yml`: chạy các test, build, rồi deploy lên GitHub Pages (`https://hoangtourguide0507-create.github.io/the-mc/`). Trang chỉ đổi khi `main` đổi.
+- Push lên `main` mà có thay đổi trong `src/data/content.ts`, `tools/voices.config.json` hoặc `tools/render-voices.mjs` sẽ kích hoạt `voices.yml`: render giọng ElevenLabs cho các câu chưa có mp3, commit file mới, rồi deploy lại. Cần secret `ELEVENLABS_API_KEY`.
+- Mỗi commit kết thúc bằng dòng `Co-Authored-By:` và `Claude-Session:` theo quy ước của phiên làm việc.
+
+## Lỗi đã gặp và cách xử lý
+- `npm ci` có thể lỗi tạm thời: bước tải binary của `onnxruntime-node` bị 504 hoặc timeout. Chạy lại job là thường đủ. Game dùng `device: 'wasm'` nên không cần binary CUDA; có thể đặt `npm_config_onnxruntime_node_install_cuda=skip` để bỏ bước đó (chưa áp dụng vào workflow).
+- Trong `src/three/artStyle.ts` có vá shader nội bộ của three.js (`lights_physical_pars_fragment`). Sau mỗi lần nâng `three`, cần kiểm tra vá còn áp dụng: cảnh báo `[artStyle] Không vá được shader` trong console là dấu hiệu lỗi.
+
+## Quy tắc khi sửa code
+- **React hooks phải nằm trước mọi câu lệnh `return null` sớm** trong component. Hộp thoại dùng hook `useDialog` (`src/components/useDialog.ts`) để có Esc, bấm nền và thuộc tính trợ năng.
+- Nút tương tác phải có `min-h-[44px]` (vùng chạm tối thiểu) nếu chữ nhỏ.
+- Thêm test cho mọi thay đổi logic trong `src/core/`. Logic chấm điểm nằm ở `evaluator.ts`, mở khoá nội dung nằm ở `difficulty.ts` và `quests.ts`.
+- Dữ liệu nội dung: `src/data/content.ts` (scene, shop, lịch, thế giới), `src/data/streetTalkExtra*.ts` (tình huống trò chuyện trên đường), `src/data/pronunciation.ts` (luyện phát âm), `src/data/quests.ts`.
+
+## Hằng số trò chơi quan trọng (`src/core/clock.ts`)
+- Một ngày từ 07:00 (`DAY_START = 420`) đến 24:00 (`DAY_END = 1440`).
+- Mỗi show tốn 20 năng lượng. Đi ngủ hồi 100%, ngất lúc 24:00 hồi 60%.
+- Đến trễ: 5 phút đầu không phạt, sau đó trừ 1,2% mỗi phút, tối đa 50%. Quá 45 phút là lỡ show.
+- Tầng tình huống trò chuyện: A2 mở từ Lv 1, B1 từ Lv 3, B2 từ Lv 5 (`src/core/difficulty.ts`).
+
+## Việc chưa làm và nên ưu tiên xem
+- Độ khó của luyện phát âm, lượt nói trong show và quiz chưa được phân tầng theo cấp.
+- Bộ chấm phát âm: "it"/"its" vẫn được coi là đồng âm (có thể là chủ ý, cần xác nhận).
+- Chưa có bước kiểm thử trên trình duyệt thật cho hộp thoại và bố cục sau khi đổi `min-h`.
