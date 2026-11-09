@@ -387,12 +387,12 @@ export const CityWorld3D: React.FC = () => {
         <PerformanceMonitor
           bounds={() => [45, 58]}
           flipflops={3}
-          onDecline={() => setDpr((d) => Math.max(1, d - 0.4))}
+          onDecline={() => setDpr((d) => Math.max(1.5, d - 0.4))}
           onIncline={() => setDpr((d) => Math.min(2, d + 0.2))}
-          onFallback={() => setDpr(1)}
+          onFallback={() => setDpr(1.5)}
         />
         <SkyDome top={sky.top} bottom={sky.bottom} />
-        <fog attach="fog" args={[sky.fog, isGhibli ? 30 : 38, isGhibli ? 85 : 95]} />
+        <fog attach="fog" args={[sky.fog, isGhibli ? 48 : 38, isGhibli ? 120 : 95]} />
         {isGhibli && <GhibliClouds night={night} />}
         <SceneLights meta={periodMeta} controlsRef={controlsRef} />
         <Environment resolution={64} frames={1} environmentIntensity={isGhibli ? (night ? 0.15 : 0.3) : night ? 0.3 : 0.6}>

@@ -9,7 +9,7 @@ export const ART_STYLE: ArtStyle = 'ghibli';
 export const isGhibli = true;
 
 /* ------------------------------------------------------------------ */
-/* Tô bóng kiểu anime mềm: mảng sáng/tối chuyển mượt + viền sáng Rim   */
+/* Tô bóng kiểu anime mềm: mảng sáng/tối chuyển mượt (không còn viền rim)   */
 /* ------------------------------------------------------------------ */
 
 let installed = false;
@@ -18,15 +18,13 @@ export function installGhibliShading() {
   installed = true;
   const chunk = THREE.ShaderChunk.lights_physical_pars_fragment;
   THREE.ShaderChunk.lights_physical_pars_fragment = chunk
-    // Ánh sáng mặt trời: 2 mảng (sáng / tối) với vùng chuyển mềm, bọc nhẹ ra mặt sau + Rim Fresnel ấm
+    // Ánh sáng mặt trời: 2 mảng (sáng / tối) với vùng chuyển mềm, bọc nhẹ ra mặt sau
     .replace(
       /float dotNL = saturate\( dot\( geometryNormal, directLight\.direction \) \);\s*vec3 irradiance = dotNL \* directLight\.color;/,
       [
         'float dotNLraw = dot( geometryNormal, directLight.direction );',
         'float dotNL = mix( 0.20, 1.0, smoothstep( -0.10, 0.30, dotNLraw ) );',
-        // Viền rim mỏng: số mũ cao chỉ sáng sát mép, hệ số thấp để không tạo quầng sáng
-        'float rim = pow( 1.0 - saturate( dot( geometryNormal, geometryViewDir ) ), 6.0 ) * smoothstep( -0.2, 0.4, dotNLraw );',
-        'vec3 irradiance = ( dotNL + rim * 0.07 ) * directLight.color;',
+        'vec3 irradiance = dotNL * directLight.color;',
       ].join('\n\t')
     )
     // Giảm mạnh phản xạ bóng loáng (tranh vẽ tay không có highlight kim loại gắt)
