@@ -528,7 +528,7 @@ export const ResultModal: React.FC = () => {
         <div className="relative my-4">
           {visibleStars > 0 && (
             <div
-              className="pointer-events-none absolute left-1/2 top-1/2 h-72 w-72 animate-ray-spin rounded-full opacity-80"
+              className="pointer-events-none absolute left-1/2 top-1/2 h-72 w-72 rounded-full opacity-80"
               style={{
                 background:
                   'repeating-conic-gradient(from 0deg, rgba(242,184,75,0.4) 0deg 9deg, transparent 9deg 24deg, rgba(127,191,106,0.32) 24deg 33deg, transparent 33deg 48deg)',
@@ -972,7 +972,7 @@ export const GlobalOverlays: React.FC = () => {
       {/* Stage Curtain Transition */}
       {curtain.visible && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-b from-ghibli-sky to-[#FFF1D6] p-6 text-center transition-opacity">
-          <div className="text-4xl animate-bounce">🎭</div>
+          <div className="text-4xl">🎭</div>
           <h2 className="mt-3 font-display text-2xl font-black text-ghibli-ink">
             {curtain.title}
           </h2>
@@ -980,7 +980,7 @@ export const GlobalOverlays: React.FC = () => {
             {curtain.tip}
           </p>
  <div className="mt-5 h-1.5 w-48 overflow-hidden rounded-full ghibli-panel">
-            <div className="h-full w-full animate-pulse bg-gradient-to-r from-ghibli-sun via-ghibli-coral to-ghibli-sage" />
+            <div className="h-full w-full bg-gradient-to-r from-ghibli-sun via-ghibli-coral to-ghibli-sage" />
           </div>
         </div>
       )}

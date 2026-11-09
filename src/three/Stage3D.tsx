@@ -329,8 +329,7 @@ export const Stage3D: React.FC<Stage3DProps> = (props) => {
           <Bloom
             luminanceThreshold={isGhibli ? 1 : 0.85}
             luminanceSmoothing={0.2}
-            intensity={isGhibli ? (props.npcSpeaking ? 0.5 : 0.3) : props.npcSpeaking ? 0.9 : 0.6}
-            mipmapBlur
+            intensity={isGhibli ? (props.npcSpeaking ? 0.3 : 0.15) : props.npcSpeaking ? 0.9 : 0.6}
           />
           <ToneMapping mode={ToneMappingMode.NEUTRAL} />
         </EffectComposer>

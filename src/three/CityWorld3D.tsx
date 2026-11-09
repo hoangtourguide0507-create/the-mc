@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Environment, Html, Lightformer, MapControls, PerformanceMonitor } from '@react-three/drei';
-import { Bloom, BrightnessContrast, EffectComposer, HueSaturation, Noise, ToneMapping, Vignette } from '@react-three/postprocessing';
-import { BlendFunction, ToneMappingMode } from 'postprocessing';
+import { Bloom, BrightnessContrast, EffectComposer, HueSaturation, ToneMapping, Vignette } from '@react-three/postprocessing';
+import { ToneMappingMode } from 'postprocessing';
 import { GHIBLI, GHIBLI_NIGHT_LIGHT, ghibliSky, isGhibli } from './artStyle';
 import { GhibliClouds, GrassTufts } from './city/GhibliDecor';
 import * as THREE from 'three';
@@ -450,7 +450,7 @@ export const CityWorld3D: React.FC = () => {
                   <span>{loc.icon}</span>
                   <span>{loc.name}</span>
                   {locked && <span>🔒</span>}
-                  {hot && <span className="ml-0.5 inline-flex h-4 w-4 animate-bounce items-center justify-center rounded-full bg-ghibli-coral text-xs font-black text-white">!</span>}
+                  {hot && <span className="ml-0.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-ghibli-coral text-xs font-black text-white">!</span>}
                 </span>
               </button>
             </Html>
@@ -474,19 +474,17 @@ export const CityWorld3D: React.FC = () => {
 
         {isGhibli ? (
           <EffectComposer multisampling={dpr >= 1.6 ? 4 : 2}>
-            <Bloom luminanceThreshold={2} luminanceSmoothing={0.3} intensity={night ? 0.6 : 0.15} mipmapBlur radius={0.7} />
+            <Bloom luminanceThreshold={2} luminanceSmoothing={0.3} intensity={night ? 0.3 : 0.1} radius={0.5} />
             <ToneMapping mode={ToneMappingMode.NEUTRAL} />
             <HueSaturation saturation={0.14} hue={0} />
             <BrightnessContrast brightness={0.01} contrast={0.02} />
-            {/* Hạt giấy vẽ rất nhẹ */}
-            <Noise premultiply blendFunction={BlendFunction.SOFT_LIGHT} opacity={0.06} />
-            <Vignette eskil={false} offset={0.35} darkness={night ? 0.45 : 0.18} />
+            <Vignette eskil={false} offset={0.4} darkness={night ? 0.25 : 0.08} />
           </EffectComposer>
         ) : (
           <EffectComposer multisampling={dpr >= 1.6 ? 4 : 2}>
-            <Bloom luminanceThreshold={1} luminanceSmoothing={0.2} intensity={night ? 1.0 : 0.4} mipmapBlur radius={0.7} />
+            <Bloom luminanceThreshold={1} luminanceSmoothing={0.2} intensity={night ? 0.5 : 0.2} radius={0.5} />
             <ToneMapping mode={ToneMappingMode.NEUTRAL} />
-            <Vignette eskil={false} offset={0.25} darkness={night ? 0.55 : 0.35} />
+            <Vignette eskil={false} offset={0.3} darkness={night ? 0.3 : 0.12} />
           </EffectComposer>
         )}
       </Canvas>
@@ -539,7 +537,7 @@ export const CityWorld3D: React.FC = () => {
       {/* Đáy màn hình: thẻ cửa địa điểm + show kế tiếp, xếp chồng không đè nhau */}
       <div
         className="pointer-events-none absolute inset-x-0 bottom-0 z-30 flex flex-col items-center gap-2 px-3 sm:items-end sm:px-6"
-        style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}
+        style={{ paddingBottom: 'calc(max(12px, env(safe-area-inset-bottom)) + 64px)' }}
       >
         {activeDoorLocId && WORLD_LOCS[activeDoorLocId] && (
           <DoorCard
@@ -913,7 +911,7 @@ const FloatingMinutes: React.FC<{ mcRef: React.MutableRefObject<McState>; minute
   return (
     <group ref={ref}>
       <Html center zIndexRange={[14, 0]}>
-        <div className="animate-bounce whitespace-nowrap rounded-full border-2 border-ghibli-clay bg-[#FBD27A] px-2.5 py-0.5 text-xs font-black text-ghibli-ink shadow-[0_2px_0_#6B4E3D]">+{minutes}′ 🕒</div>
+        <div className="whitespace-nowrap rounded-full border-2 border-ghibli-clay bg-[#FBD27A] px-2.5 py-0.5 text-xs font-black text-ghibli-ink shadow-[0_2px_0_#6B4E3D]">+{minutes}′ 🕒</div>
       </Html>
     </group>
   );

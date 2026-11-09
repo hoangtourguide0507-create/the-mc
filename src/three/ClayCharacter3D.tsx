@@ -602,12 +602,12 @@ const AnimeChibi: React.FC<ClayCharacter3DProps> = ({
 
           {mood === 'happy' && hi && (
             <Html position={[0, 0.6, 0]} center zIndexRange={[20, 0]}>
-              <div className="pointer-events-none select-none animate-bounce text-xl drop-shadow-[0_0_8px_rgba(251,191,36,0.9)]">✨🌟✨</div>
+              <div className="pointer-events-none select-none text-xl">✨</div>
             </Html>
           )}
           {mood === 'confused' && hi && (
             <Html position={[0.3, 0.52, 0]} center zIndexRange={[20, 0]}>
-              <div className="pointer-events-none select-none animate-pulse text-xl font-bold text-cyan-300 drop-shadow">💧❓</div>
+              <div className="pointer-events-none select-none text-xl font-bold text-ghibli-ink">❓</div>
             </Html>
           )}
           {nameTag && <NameTag y={0.66} text={nameTag} />}
@@ -633,7 +633,7 @@ const NameTag: React.FC<{ y: number; text: string }> = ({ y, text }) => (
       className={
         isGhibli
           ? 'pointer-events-none whitespace-nowrap rounded-full border-2 border-ghibli-clay bg-ghibli-cream px-2.5 py-0.5 text-xs font-bold text-ghibli-ink shadow-[0_2px_0_#6B4E3D]'
-          : 'pointer-events-none whitespace-nowrap rounded-full border border-white/25 bg-[#120A30]/85 px-2.5 py-0.5 text-[11px] font-bold text-white shadow-lg backdrop-blur-md'
+          : 'pointer-events-none whitespace-nowrap rounded-full border border-white/25 bg-[#120A30]/85 px-2.5 py-0.5 text-[11px] font-bold text-white shadow-lg'
       }
     >
       {text}

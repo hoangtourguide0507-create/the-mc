@@ -3,7 +3,7 @@ import { NPCS, SCENES } from '../data/content';
 import { clamp } from '../core/clock';
 import { evaluateTurnCandidates } from '../core/evaluator';
 import { useGameStore } from '../core/store';
-import { HUD_PAD } from './HUD';
+import { HUD_BOTTOM_PAD, HUD_PAD } from './HUD';
 import {
   EvalResult,
   NpcMood,
@@ -465,7 +465,7 @@ export const StageView: React.FC = () => {
   const progressPct = Math.round(((turnIdx + 1) / scene.turns.length) * 100);
 
   return (
-    <div className="mx-auto flex h-full max-w-6xl flex-col gap-3 overflow-y-auto px-3 pb-6 sm:px-6" style={{ paddingTop: HUD_PAD }}>
+    <div className="mx-auto flex h-full max-w-6xl flex-col gap-3 overflow-y-auto px-3 pb-6 sm:px-6" style={{ paddingTop: HUD_PAD, paddingBottom: HUD_BOTTOM_PAD }}>
       {/* Top Stage Header Bar */}
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl ghibli-panel px-3.5 py-2">
         <div className="flex items-center gap-2.5">
@@ -531,7 +531,7 @@ export const StageView: React.FC = () => {
                   : 'Emma (Cô dâu)'
                 : currentNpc.name}
             </span>
-            {npcSpeaking && <span className="animate-pulse text-[#23706A]">•••</span>}
+            {npcSpeaking && <span className="text-[#23706A]">•••</span>}
           </div>
         </div>
 
@@ -600,7 +600,7 @@ export const StageView: React.FC = () => {
                       <span
                         key={bar}
                         className={`w-1.5 rounded-full bg-gradient-to-t from-ghibli-sun to-ghibli-sage transition-all ${
-                          npcSpeaking ? 'h-6 animate-pulse' : 'h-3 opacity-60'
+                          npcSpeaking ? 'h-6' : 'h-3 opacity-60'
                         }`}
                       />
                     ))}
@@ -643,7 +643,7 @@ export const StageView: React.FC = () => {
                 <span
                   className={`rounded-full px-3 py-0.5 text-xs font-black ${
                     reflexLeft <= 5
-                      ? 'animate-pulse bg-[#B2421E] text-ghibli-ink'
+                      ? 'bg-[#B2421E] text-ghibli-ink'
                       : 'bg-ghibli-sun text-ghibli-ink'
                   }`}
                 >
@@ -913,7 +913,7 @@ export const StageView: React.FC = () => {
                     micPhase === 'locked'
                       ? 'cursor-not-allowed bg-[#F1E9DC] text-ghibli-ink-soft opacity-60'
                       : micPhase === 'rec'
-                      ? 'animate-pulse bg-gradient-to-r from-[#D1502C] to-[#B2421E] text-white'
+                      ? 'bg-gradient-to-r from-[#D1502C] to-[#B2421E] text-white'
                       : micPhase === 'arming'
                       ? 'bg-ghibli-sun text-ghibli-ink'
                       : 'bg-gradient-to-r from-ghibli-sage to-[#9FD68A] text-ghibli-ink'

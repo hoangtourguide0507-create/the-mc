@@ -3,7 +3,7 @@ import { GIG_ORDER, SCENES, SHOP, WORLD_LOCS } from '../data/content';
 import { dayKey, fmtTime, getPeriodMeta, sceneStatus, yesterdayKey } from '../core/clock';
 import { chaNeed, useGameStore } from '../core/store';
 import { fmtRep, levelTitle, MAX_LV } from '../core/career';
-import { HUD_PAD } from './HUD';
+import { HUD_BOTTOM_PAD, HUD_PAD } from './HUD';
 import { HubRoom3D } from '../three/HubRoom3D';
 import { currentQuest, questProgress } from '../core/quests';
 import { nextHint } from '../core/onboarding';
@@ -67,7 +67,7 @@ export const HubView: React.FC = () => {
   return (
     <div
       className="mx-auto flex h-full max-w-6xl flex-col gap-4 overflow-y-auto px-3 pb-8 sm:px-6 md:grid md:grid-cols-12 md:overflow-hidden"
-      style={{ paddingTop: HUD_PAD }}
+      style={{ paddingTop: HUD_PAD, paddingBottom: HUD_BOTTOM_PAD }}
     >
       {/* LEFT COLUMN (iPad: 5 cols): 3D Studio Room + Career Profile */}
       <div className="flex flex-col gap-3 md:col-span-5 md:h-full">
