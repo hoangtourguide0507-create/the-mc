@@ -148,6 +148,10 @@ export interface WeakWord {
   misses: number;
   scene: string;
   at: number;
+  /** Hộp ôn lặp lại (1–5); thiếu thì coi là 1. */
+  box?: number;
+  /** Ngày trong game khi từ đến hạn ôn; thiếu thì coi là đến hạn ngay. */
+  due?: number;
 }
 
 /** Mục tiêu của một nhiệm vụ (quest). */

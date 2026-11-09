@@ -11,7 +11,8 @@
     "test:quests": "node tests/quests.test.mjs",
     "test:evaluator": "node tests/evaluator.test.mjs",
     "test:difficulty": "node tests/difficulty.test.mjs",
-    "test:variants": "node tests/variants.test.mjs"
+    "test:variants": "node tests/variants.test.mjs",
+    "test:srs": "node tests/srs.test.mjs"
   },
   "dependencies": {
     "@huggingface/transformers": "^4.3.2",

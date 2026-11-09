@@ -1,3 +1,4 @@
+import { boxOf, dueCount, dueOf, isDue, SRS_MAX_BOX, sortForReview } from '../core/srs';
 import { useDialog } from './useDialog';
 import React, { useEffect, useMemo, useState } from 'react';
 import { PASSER_LOOKS, SCENES, SHOP, STARTER } from '../data/content';
@@ -194,7 +195,7 @@ export const PhrasebookSheet: React.FC = () => {
               {tab}
               {tab === 'Cần luyện' && state.weak.length > 0 && (
                 <span className="ml-1.5 rounded-full bg-rose-500 px-1.5 py-0.5 text-xs text-white">
-                  {state.weak.length}
+                  {dueCount(state.weak, state.day) || state.weak.length}
                 </span>
               )}
             </button>
@@ -215,7 +216,11 @@ export const PhrasebookSheet: React.FC = () => {
                 </p>
               </div>
             ) : (
-              state.weak.map((w) => (
+              <>
+              <div className="rounded-xl bg-[#FBEBD0] px-3.5 py-2 text-xs font-bold text-ghibli-ink">
+                Hôm nay cần ôn: {dueCount(state.weak, state.day)} từ · Tổng {state.weak.length} từ
+              </div>
+              {sortForReview(state.weak, state.day).map((w) => (
                 <div
                   key={w.key}
  className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border ghibli-panel p-3.5"
@@ -232,6 +237,9 @@ export const PhrasebookSheet: React.FC = () => {
                       </span>
  <span className="rounded-full ghibli-panel px-2 py-0.5 text-xs font-bold text-ghibli-ink-soft">
                         Sai {w.misses} lần · +{w.status === 'bad' ? 10 : 6} XP
+                      </span>
+                      <span className="rounded-full ghibli-panel px-2 py-0.5 text-xs font-bold text-ghibli-ink-soft">
+                        Hộp {boxOf(w)}/{SRS_MAX_BOX} · {isDue(w, state.day) ? 'ôn hôm nay' : `ôn sau ${dueOf(w, state.day) - state.day} ngày`}
                       </span>
                     </div>
                     <p className="mt-1 text-xs italic text-ghibli-ink-soft">
@@ -263,7 +271,8 @@ export const PhrasebookSheet: React.FC = () => {
                     </button>
                   </div>
                 </div>
-              ))
+              ))}
+              </>
             )
           ) : (
             filteredPhrases.map((p) => (

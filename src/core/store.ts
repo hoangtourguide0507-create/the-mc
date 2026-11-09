@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { SCENES, SCHEDULE, SHOP, TIPS } from '../data/content';
+import { scheduleAfter, SRS_MAX_BOX, boxOf } from './srs';
 import { PRON_RECENT_WINDOW } from '../data/pronunciation';
 import {
   EvaluatedToken,
@@ -821,6 +822,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
         ex.ctx = cueText;
         ex.scene = sceneId;
         ex.at = Date.now();
+        ex.box = 1;
+        ex.due = st.day;
         // Move to front
         st.weak.splice(existingIdx, 1);
         st.weak.unshift(ex);
@@ -833,6 +836,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
           misses: 1,
           scene: sceneId,
           at: Date.now(),
+          box: 1,
+          due: st.day,
         };
         st.weak.unshift(item);
         if (st.weak.length > 60) st.weak.length = 60;
@@ -857,18 +862,31 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (status === 'ok') {
       const baseXp = item.status === 'bad' ? 10 : 6;
       const earned = Math.round(baseXp * (1 + bonusXp));
-      st.weak.splice(idx, 1);
-      st.stats.mastered += 1;
-      set({ state: st });
-      get().gain({ xp: earned });
-      SFX.play('correct');
-      get().toast(`🎉 Đã làm chủ từ "${item.word}" (+${earned} XP)!`, 'success');
+      const reviewed = scheduleAfter(item, true, st.day);
+      if (boxOf(item) >= SRS_MAX_BOX) {
+        // Đúng ở hộp cao nhất: coi như đã làm chủ từ này
+        st.weak.splice(idx, 1);
+        st.stats.mastered += 1;
+        set({ state: st });
+        get().gain({ xp: earned });
+        SFX.play('correct');
+        get().toast(`🎉 Đã làm chủ từ "${item.word}" (+${earned} XP)!`, 'success');
+      } else {
+        st.weak[idx] = reviewed;
+        set({ state: st });
+        persistStateDebounced(st);
+        get().gain({ xp: earned });
+        SFX.play('correct');
+        const gap = (reviewed.due ?? st.day) - st.day;
+        get().toast(`Đúng! "${item.word}" sẽ ôn lại sau ${gap} ngày (+${earned} XP)`, 'success');
+      }
     } else {
-      item.status = 'near';
+      const again = scheduleAfter(item, false, st.day);
+      st.weak[idx] = again;
       set({ state: st });
       persistStateDebounced(st);
       SFX.play('ting');
-      get().toast(`Gần chuẩn rồi! Đã chuyển "${item.word}" sang mức Vàng.`, 'info');
+      get().toast(`Gần chuẩn rồi! "${item.word}" sẽ ôn lại ngày mai.`, 'info');
     }
   },
 

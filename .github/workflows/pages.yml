@@ -43,6 +43,9 @@ jobs:
       - name: Run scene variant tests
         run: npm run test:variants
 
+      - name: Run spaced repetition tests
+        run: npm run test:srs
+
       - name: Build (typecheck + Vite)
         run: npm run build
 
