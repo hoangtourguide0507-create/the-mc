@@ -24,8 +24,9 @@ export function installGhibliShading() {
       [
         'float dotNLraw = dot( geometryNormal, directLight.direction );',
         'float dotNL = mix( 0.20, 1.0, smoothstep( -0.10, 0.30, dotNLraw ) );',
-        'float rim = pow( 1.0 - saturate( dot( geometryNormal, geometryViewDir ) ), 3.2 ) * smoothstep( -0.2, 0.4, dotNLraw );',
-        'vec3 irradiance = ( dotNL + rim * 0.16 ) * directLight.color;',
+        // Viền rim mỏng: số mũ cao chỉ sáng sát mép, hệ số thấp để không tạo quầng sáng
+        'float rim = pow( 1.0 - saturate( dot( geometryNormal, geometryViewDir ) ), 6.0 ) * smoothstep( -0.2, 0.4, dotNLraw );',
+        'vec3 irradiance = ( dotNL + rim * 0.07 ) * directLight.color;',
       ].join('\n\t')
     )
     // Giảm mạnh phản xạ bóng loáng (tranh vẽ tay không có highlight kim loại gắt)
