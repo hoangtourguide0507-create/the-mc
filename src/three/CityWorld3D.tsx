@@ -6,6 +6,7 @@ import { ToneMappingMode } from 'postprocessing';
 import { GHIBLI, GHIBLI_NIGHT_LIGHT, ghibliSky, isGhibli } from './artStyle';
 import { GhibliClouds, GrassTufts } from './city/GhibliDecor';
 import * as THREE from 'three';
+import { isStreetTalkUnlocked } from '../core/difficulty';
 import { getPlayerLook, GIG_ORDER, PASSER_LOOKS, SCHEDULE, SCENES, STREET_TALK, WM_NAMES, WORLD_LOCS } from '../data/content';
 import {
   blockReason,
@@ -274,15 +275,19 @@ export const CityWorld3D: React.FC = () => {
       }
     }
     const used = useGameStore.getState().streetTalkDoneIds;
+    const playerLv = useGameStore.getState().state.charisma.lv;
+    // Chỉ lấy tình huống thuộc tầng đã mở theo cấp Charisma (A2 -> B1 -> B2)
+    const unlocked = STREET_TALK.filter((it) => isStreetTalkUnlocked(it.level, playerLv));
     // Chọn ngẫu nhiên trong các tình huống phù hợp (đúng địa điểm, đúng buổi, chưa làm hôm nay)
     const pickRandom = (list: typeof STREET_TALK) => list[Math.floor(Math.random() * list.length)];
-    const unused = STREET_TALK.filter((it) => !used[it.id]);
+    const unused = unlocked.filter((it) => !used[it.id]);
     const matchLoc = unused.filter((it) => it.loc === closestLoc && it.when.includes(curPeriod));
     const matchGen = unused.filter((it) => it.loc === null && it.when.includes(curPeriod));
     const chosen =
       (matchLoc.length ? pickRandom(matchLoc) : null) ||
       (matchGen.length ? pickRandom(matchGen) : null) ||
       (unused.length ? pickRandom(unused) : null) ||
+      (unlocked.length ? unlocked[0] : null) ||
       STREET_TALK[0];
     passer.talkedToday = true;
     openStreetTalk(passer.name, passer.lookIdx, chosen);

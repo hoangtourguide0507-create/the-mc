@@ -37,6 +37,9 @@ jobs:
       - name: Run evaluator tests
         run: npm run test:evaluator
 
+      - name: Run difficulty tests
+        run: npm run test:difficulty
+
       - name: Build (typecheck + Vite)
         run: npm run build
 

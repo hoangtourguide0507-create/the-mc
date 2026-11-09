@@ -9,7 +9,8 @@
     "preview": "vite preview --host",
     "test:logic": "python3 tests/test_core_logic.py",
     "test:quests": "node tests/quests.test.mjs",
-    "test:evaluator": "node tests/evaluator.test.mjs"
+    "test:evaluator": "node tests/evaluator.test.mjs",
+    "test:difficulty": "node tests/difficulty.test.mjs"
   },
   "dependencies": {
     "@huggingface/transformers": "^4.3.2",
