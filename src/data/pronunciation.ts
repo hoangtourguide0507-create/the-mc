@@ -440,7 +440,7 @@ export function pickPronDrill(
   progress: Record<string, PronProgress>,
   recent: string[],
   rng: () => number = Math.random,
-  pool: PronDrill[] = PRON_DRILLS
+  pool: PronDrill[] = availableDrills(progress)
 ): PronDrill {
   const fresh = pool.filter((d) => !recent.includes(d.id));
   const candidates = fresh.length > 0 ? fresh : pool;
@@ -456,4 +456,36 @@ export function pickPronDrill(
     if (roll < 0) return candidates[i];
   }
   return candidates[candidates.length - 1];
+}
+
+/**
+ * Lộ trình luyện phát âm: nhóm lỗi từ dễ đến khó với người Việt. Nhóm sau chỉ mở khi
+ * mọi bài của nhóm trước đã được thử và đạt tỉ lệ đúng từ 60% trở lên.
+ */
+export const PRON_LADDER: PronGroup[] = ['ending', 'silent', 'final', 'vowel', 'pair', 'cluster', 'stress', 'spelling'];
+export const PRON_MASTERY = 0.6;
+
+/** Một nhóm được coi là đạt khi mọi bài của nhóm đã có lượt thử và đều đạt ngưỡng. */
+export function groupMastered(progress: Record<string, PronProgress>, group: PronGroup): boolean {
+  const drills = PRON_DRILLS.filter((d) => d.group === group);
+  return drills.every((d) => {
+    const p = progress[d.id];
+    return !!p && p.tries > 0 && p.ok / p.tries >= PRON_MASTERY;
+  });
+}
+
+/** Các nhóm đang mở: luôn có nhóm đầu tiên, và mỗi nhóm đã đạt thì mở thêm nhóm kế tiếp. */
+export function unlockedGroups(progress: Record<string, PronProgress>): PronGroup[] {
+  const open: PronGroup[] = [PRON_LADDER[0]];
+  for (let i = 0; i < PRON_LADDER.length - 1; i++) {
+    if (!groupMastered(progress, PRON_LADDER[i])) break;
+    open.push(PRON_LADDER[i + 1]);
+  }
+  return open;
+}
+
+/** Bài đang mở khoá theo lộ trình. */
+export function availableDrills(progress: Record<string, PronProgress>): PronDrill[] {
+  const open = new Set(unlockedGroups(progress));
+  return PRON_DRILLS.filter((d) => open.has(d.group));
 }

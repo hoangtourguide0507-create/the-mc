@@ -3,6 +3,9 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { NPCS } from '../data/content';
 import {
   PRON_DRILLS,
+  PRON_LADDER,
+  groupMastered,
+  unlockedGroups,
   PRON_GROUP_META,
   PronDrill,
   coachFor,
@@ -202,6 +205,32 @@ export const PronunciationSheet: React.FC = () => {
         </div>
 
         <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4 text-sm text-ghibli-ink">
+          <div className="rounded-2xl border ghibli-panel p-3">
+            <div className="text-xs font-black uppercase tracking-wider text-ghibli-clay">Lộ trình phát âm</div>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {PRON_LADDER.map((g, i) => {
+                const open = unlockedGroups(pron.progress).includes(g);
+                const done = groupMastered(pron.progress, g);
+                return (
+                  <span
+                    key={g}
+                    className={`rounded-full px-2.5 py-1 text-xs font-bold ${
+                      done
+                        ? 'bg-emerald-500/20 text-emerald-800'
+                        : open
+                        ? 'bg-[#FDF0CF] text-[#8A5A00]'
+                        : 'bg-ghibli-track/40 text-ghibli-ink-soft'
+                    }`}
+                  >
+                    {i + 1}. {PRON_GROUP_META[g].label} {done ? '✅' : open ? '' : '🔒'}
+                  </span>
+                );
+              })}
+            </div>
+            <p className="mt-2 text-xs text-ghibli-ink-soft">
+              Đạt từ 60% đúng ở mọi bài của một nhóm để mở nhóm kế tiếp.
+            </p>
+          </div>
           <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
             <span className="rounded-full border border-ghibli-clay bg-[#FDF0CF] px-3 py-1 text-[#8A5A00]">
               {meta.label}

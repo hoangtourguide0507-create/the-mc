@@ -49,6 +49,9 @@ jobs:
       - name: Run progress tests
         run: npm run test:progress
 
+      - name: Run pronunciation ladder tests
+        run: npm run test:pronladder
+
       - name: Build (typecheck + Vite)
         run: npm run build
 
