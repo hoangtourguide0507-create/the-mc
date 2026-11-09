@@ -1,3 +1,4 @@
+import { useDialog } from './useDialog';
 import React, { useEffect, useMemo, useState } from 'react';
 import { PASSER_LOOKS, SCENES, SHOP, STARTER } from '../data/content';
 import { dayPlan, fmtTime } from '../core/clock';
@@ -114,6 +115,7 @@ export const PhrasebookSheet: React.FC = () => {
     return list;
   }, [state.learned]);
 
+  const dialog = useDialog(bookOpen, () => setBookOpen(false), 'Sổ tay từ vựng và mẫu câu');
   if (!bookOpen) return null;
 
   const tabs = [
@@ -154,8 +156,8 @@ export const PhrasebookSheet: React.FC = () => {
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ghibli-ink/20 sm:items-center sm:p-4">
- <div className="flex max-h-[88vh] w-full max-w-3xl flex-col overflow-hidden rounded-t-3xl border ghibli-panel shadow-2xl sm:rounded-3xl">
+    <div {...dialog.backdropProps} className="fixed inset-0 z-50 flex items-end justify-center bg-ghibli-ink/20 sm:items-center sm:p-4">
+ <div {...dialog.panelProps} className="flex max-h-[88vh] w-full max-w-3xl flex-col overflow-hidden rounded-t-3xl border ghibli-panel shadow-2xl sm:rounded-3xl">
         {/* Header */}
         <div className="flex items-center justify-between border-b-2 border-ghibli-track px-5 py-4">
           <div>
@@ -168,7 +170,7 @@ export const PhrasebookSheet: React.FC = () => {
           </div>
           <button
             onClick={() => setBookOpen(false)}
- className="rounded-full ghibli-panel px-3 py-1.5 text-xs font-black text-ghibli-ink hover:bg-[#FBEBD0]"
+ className="min-h-[44px] rounded-full ghibli-panel px-3 py-1.5 text-xs font-black text-ghibli-ink hover:bg-[#FBEBD0]"
           >
             Đóng ✕
           </button>
@@ -242,20 +244,20 @@ export const PhrasebookSheet: React.FC = () => {
                       onClick={() =>
                         Voice.speak(w.word, { preferredURI: state.voiceURI })
                       }
- className="rounded-xl border ghibli-panel px-3 py-1.5 text-xs font-extrabold text-ghibli-ink hover:bg-[#FBEBD0]"
+ className="min-h-[44px] rounded-xl border ghibli-panel px-3 py-1.5 text-xs font-extrabold text-ghibli-ink hover:bg-[#FBEBD0]"
                     >
                       🔊 Nghe
                     </button>
                     <button
                       onClick={() => handlePracticeWeakWord(w.key, w.word)}
-                      className="rounded-xl bg-gradient-to-r from-[#7FBF6A] to-[#9FD68A] px-3.5 py-1.5 text-xs font-black text-ghibli-ink shadow"
+                      className="min-h-[44px] rounded-xl bg-gradient-to-r from-[#7FBF6A] to-[#9FD68A] px-3.5 py-1.5 text-xs font-black text-ghibli-ink shadow"
                     >
                       {practicingKey === w.key ? '🎙️ Đang nghe...' : '🎙️ Đọc từ'}
                     </button>
                     <button
                       onClick={() => resolveWeakWord(w.key, 'ok')}
                       title="Giả lập đọc chuẩn từ này"
-                      className="rounded-xl border border-emerald-400/40 bg-emerald-500/20 px-2.5 py-1.5 text-xs font-black text-emerald-700 hover:bg-emerald-500/30"
+                      className="min-h-[44px] rounded-xl border border-emerald-400/40 bg-emerald-500/20 px-2.5 py-1.5 text-xs font-black text-emerald-700 hover:bg-emerald-500/30"
                     >
                       ✓ Chuẩn
                     </button>
@@ -297,7 +299,7 @@ export const PhrasebookSheet: React.FC = () => {
                             preferredURI: state.voiceURI,
                           })
                         }
- className="rounded-xl border ghibli-panel px-2.5 py-1 text-xs font-bold text-ghibli-ink hover:bg-[#FBEBD0]"
+ className="min-h-[44px] rounded-xl border ghibli-panel px-2.5 py-1 text-xs font-bold text-ghibli-ink hover:bg-[#FBEBD0]"
                       >
                         🔊 1×
                       </button>
@@ -308,7 +310,7 @@ export const PhrasebookSheet: React.FC = () => {
                             preferredURI: state.voiceURI,
                           })
                         }
- className="rounded-xl border ghibli-panel px-2.5 py-1 text-xs font-bold text-cyan-700 hover:bg-[#FBEBD0]"
+ className="min-h-[44px] rounded-xl border ghibli-panel px-2.5 py-1 text-xs font-bold text-cyan-700 hover:bg-[#FBEBD0]"
                       >
                         🐢 0.8×
                       </button>
@@ -332,14 +334,15 @@ export const ShopSheet: React.FC = () => {
   const buyShopItem = useGameStore((s) => s.buyShopItem);
   const resetAllData = useGameStore((s) => s.resetAllData);
 
+  const dialog = useDialog(shopOpen, () => setShopOpen(false), 'Cửa hàng MC');
   if (!shopOpen) return null;
 
   const consumables = SHOP.filter((i) => i.type === 'consumable');
   const upgrades = SHOP.filter((i) => i.type === 'upgrade');
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ghibli-ink/20 sm:items-center sm:p-4">
- <div className="flex max-h-[88vh] w-full max-w-3xl flex-col overflow-hidden rounded-t-3xl border ghibli-panel shadow-2xl sm:rounded-3xl">
+    <div {...dialog.backdropProps} className="fixed inset-0 z-50 flex items-end justify-center bg-ghibli-ink/20 sm:items-center sm:p-4">
+ <div {...dialog.panelProps} className="flex max-h-[88vh] w-full max-w-3xl flex-col overflow-hidden rounded-t-3xl border ghibli-panel shadow-2xl sm:rounded-3xl">
         <div className="flex items-center justify-between border-b-2 border-ghibli-track px-5 py-4">
           <div>
             <h2 className="font-display text-xl font-black text-ghibli-ink">
@@ -351,7 +354,7 @@ export const ShopSheet: React.FC = () => {
           </div>
           <button
             onClick={() => setShopOpen(false)}
- className="rounded-full ghibli-panel px-3 py-1.5 text-xs font-black text-ghibli-ink hover:bg-[#FBEBD0]"
+ className="min-h-[44px] rounded-full ghibli-panel px-3 py-1.5 text-xs font-black text-ghibli-ink hover:bg-[#FBEBD0]"
           >
             Đóng ✕
           </button>
@@ -427,7 +430,7 @@ export const ShopSheet: React.FC = () => {
                     <button
                       disabled={owned || !canAfford}
                       onClick={() => buyShopItem(item.id)}
-                      className={`mt-3 w-full rounded-xl py-2 text-xs font-black shadow transition ${
+                      className={`min-h-[44px] mt-3 w-full rounded-xl py-2 text-xs font-black shadow transition ${
                         owned
                           ? 'bg-amber-400/20 text-amber-700'
                           : 'bg-gradient-to-r from-ghibli-sun to-[#F7C35C] text-ghibli-ink hover:scale-[1.02] disabled:bg-none disabled:bg-[#F1E9DC] disabled:text-ghibli-ink-soft disabled:shadow-none disabled:opacity-60'
@@ -453,7 +456,7 @@ export const ShopSheet: React.FC = () => {
                   resetAllData();
                 }
               }}
-              className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-3.5 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-500/20"
+              className="min-h-[44px] rounded-xl border border-rose-500/40 bg-rose-500/10 px-3.5 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-500/20"
             >
               🗑️ Xoá dữ liệu chơi lại từ đầu
             </button>
@@ -501,6 +504,7 @@ export const ResultModal: React.FC = () => {
     return () => timers.forEach((t) => window.clearTimeout(t));
   }, [summary]);
 
+  const dialog = useDialog(!!summary, closeResultSummary, 'Kết quả buổi diễn');
   if (!summary) return null;
 
   const scene = SCENES[summary.sceneId] || SCENES.coffee;
@@ -518,8 +522,8 @@ export const ResultModal: React.FC = () => {
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ghibli-ink/20 p-4">
-      <div className="relative w-full max-w-md overflow-hidden rounded-3xl ghibli-panel p-6 text-center">
+    <div {...dialog.backdropProps} className="fixed inset-0 z-50 flex items-center justify-center bg-ghibli-ink/20 p-4">
+      <div {...dialog.panelProps} className="relative w-full max-w-md overflow-hidden rounded-3xl ghibli-panel p-6 text-center">
         <div className="text-sm font-black uppercase tracking-wider text-ghibli-clay">
           {scene.icon} {scene.title}
         </div>
@@ -690,6 +694,7 @@ export const StreetTalkModal: React.FC = () => {
     });
   }, [streetTalkActive]);
 
+  const dialog = useDialog(Boolean(streetTalkActive && item), () => { if (!recording) closeStreetTalk(); }, 'Trò chuyện cùng người qua đường', { backdropDismiss: false });
   if (!streetTalkActive || !item) return null;
 
   const { passerName } = streetTalkActive;
@@ -778,8 +783,8 @@ export const StreetTalkModal: React.FC = () => {
   const canContinue = isSpeak ? speakDone : answered;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ghibli-ink/20 p-4">
- <div className="w-full max-w-md rounded-3xl border ghibli-panel p-5 shadow-2xl">
+    <div {...dialog.backdropProps} className="fixed inset-0 z-50 flex items-center justify-center bg-ghibli-ink/20 p-4">
+ <div {...dialog.panelProps} className="w-full max-w-md rounded-3xl border ghibli-panel p-5 shadow-2xl">
         <div className="flex items-center justify-between border-b-2 border-ghibli-track pb-3">
           <div className="flex items-center gap-2.5">
             <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-500/20 text-xl">
@@ -836,14 +841,14 @@ export const StreetTalkModal: React.FC = () => {
               <button
                 onClick={handleSpeak}
                 disabled={recording || speakDone}
-                className="flex-1 rounded-2xl bg-gradient-to-r from-[#7FBF6A] to-[#9FD68A] py-2.5 text-xs font-black text-ghibli-ink border-2 border-ghibli-clay shadow-md disabled:opacity-50"
+                className="min-h-[44px] flex-1 rounded-2xl bg-gradient-to-r from-[#7FBF6A] to-[#9FD68A] py-2.5 text-xs font-black text-ghibli-ink border-2 border-ghibli-clay shadow-md disabled:opacity-50"
               >
                 {recording ? '🎙️ Đang nghe…' : speakDone ? '✅ Xong' : '🎤 Nói câu trả lời'}
               </button>
               {!speakDone && (
                 <button
                   onClick={() => setShowTyped((v) => !v)}
- className="rounded-2xl ghibli-panel px-3 text-xs font-bold text-ghibli-ink hover:brightness-95"
+ className="min-h-[44px] rounded-2xl ghibli-panel px-3 text-xs font-bold text-ghibli-ink hover:brightness-95"
                 >
                   ⌨️ Gõ
                 </button>
@@ -865,7 +870,7 @@ export const StreetTalkModal: React.FC = () => {
                 />
                 <button
                   onClick={submitTyped}
-                  className="rounded-xl bg-cyan-500/30 px-3 text-xs font-bold text-ghibli-ink"
+                  className="min-h-[44px] rounded-xl bg-cyan-500/30 px-3 text-xs font-bold text-ghibli-ink"
                 >
                   Gửi
                 </button>
@@ -921,7 +926,7 @@ export const StreetTalkModal: React.FC = () => {
                   key={idx}
                   disabled={answered}
                   onClick={() => handleChooseOption(idx)}
-                  className={`w-full rounded-2xl border p-3 text-left text-xs transition ${shakeIdx === idx ? 'animate-shake' : ''} ${
+                  className={`min-h-[44px] w-full rounded-2xl border p-3 text-left text-xs transition ${shakeIdx === idx ? 'animate-shake' : ''} ${
                     !answered
  ? ' ghibli-panel text-ghibli-ink hover:border-cyan-400 hover:brightness-95'
                       : opt.ok

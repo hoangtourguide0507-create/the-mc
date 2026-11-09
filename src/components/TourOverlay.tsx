@@ -69,13 +69,13 @@ export const TourOverlay: React.FC = () => {
         <div className="mt-3 flex items-center justify-between gap-2">
           <button
             onClick={skipTour}
-            className="rounded-lg px-2 py-1 text-xs font-bold text-ghibli-ink-soft hover:text-ghibli-ink"
+            className="min-h-[44px] rounded-lg px-2 py-1 text-xs font-bold text-ghibli-ink-soft hover:text-ghibli-ink"
           >
             Bỏ qua hướng dẫn
           </button>
           <button
             onClick={() => ackTour(step.id)}
-            className="rounded-xl bg-amber-400 px-4 py-2 text-xs font-black text-slate-950 transition hover:scale-105"
+            className="min-h-[44px] rounded-xl bg-amber-400 px-4 py-2 text-xs font-black text-slate-950 transition hover:scale-105"
           >
             Hiểu rồi
           </button>

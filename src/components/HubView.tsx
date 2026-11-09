@@ -88,7 +88,7 @@ export const HubView: React.FC = () => {
             <button
               onClick={() => setHelpOpen(true)}
               title="Hướng dẫn chơi"
- className="rounded-full border ghibli-panel px-2.5 py-1 text-xs font-black text-ghibli-ink transition hover:brightness-95"
+ className="min-h-[44px] rounded-full border ghibli-panel px-2.5 py-1 text-xs font-black text-ghibli-ink transition hover:brightness-95"
             >
               ❓
             </button>
@@ -120,7 +120,7 @@ export const HubView: React.FC = () => {
             <button
               onClick={toggleMute}
               title={state.muted ? 'Bật âm thanh' : 'Tắt âm thanh'}
- className="rounded-full border ghibli-panel p-2 text-xs text-ghibli-ink transition hover:bg-[#FBEBD0]"
+ className="min-h-[44px] min-w-[44px] rounded-full border ghibli-panel p-2 text-xs text-ghibli-ink transition hover:bg-[#FBEBD0]"
             >
               {state.muted ? '🔇' : '🔊'}
             </button>
@@ -150,7 +150,7 @@ export const HubView: React.FC = () => {
                   sleepDay({ forced: false });
                 }
               }}
-              className="pointer-events-auto flex items-center gap-1 rounded-full border border-amber-300/50 bg-ghibli-sun/30 px-3 py-1 text-xs font-black text-ghibli-ink shadow-lg transition hover:scale-105 disabled:pointer-events-none disabled:opacity-60"
+              className="min-h-[44px] pointer-events-auto flex items-center gap-1 rounded-full border border-amber-300/50 bg-ghibli-sun/30 px-3 py-1 text-xs font-black text-ghibli-ink shadow-lg transition hover:scale-105 disabled:pointer-events-none disabled:opacity-60"
             >
               <span>🛌</span>
               <span>Đi ngủ</span>
@@ -237,7 +237,7 @@ export const HubView: React.FC = () => {
         {/* Quest hiện tại: mở bảng nhiệm vụ đầy đủ */}
         <button
           onClick={() => setQuestOpen(true)}
-          className="flex items-center justify-between gap-3 rounded-2xl border border-emerald-400/35 bg-emerald-500/10 p-3.5 text-left transition hover:border-emerald-400 hover:bg-emerald-500/20"
+          className="min-h-[44px] flex items-center justify-between gap-3 rounded-2xl border border-emerald-400/35 bg-emerald-500/10 p-3.5 text-left transition hover:border-emerald-400 hover:bg-emerald-500/20"
         >
           <div className="flex min-w-0 items-center gap-3">
             <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-400/20 text-xl">
@@ -273,7 +273,7 @@ export const HubView: React.FC = () => {
                   key={dId}
                   data-tour={dId === 'coffee' ? 'coffee' : undefined}
                   onClick={() => handleSceneCardClick(dId)}
- className="flex flex-col justify-between rounded-2xl border ghibli-panel p-3.5 text-left transition hover:border-emerald-400/60 hover:bg-[#FBEBD0]"
+ className="min-h-[44px] flex flex-col justify-between rounded-2xl border ghibli-panel p-3.5 text-left transition hover:border-emerald-400/60 hover:bg-[#FBEBD0]"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2.5">
@@ -310,7 +310,7 @@ export const HubView: React.FC = () => {
         <div className="grid grid-cols-2 gap-2.5">
           <button
             onClick={() => setBookOpen(true)}
-            className="relative flex items-center gap-3 rounded-2xl border border-cyan-400/35 bg-cyan-500/10 p-3.5 text-left transition hover:border-cyan-400 hover:bg-cyan-500/20"
+            className="min-h-[44px] relative flex items-center gap-3 rounded-2xl border border-cyan-400/35 bg-cyan-500/10 p-3.5 text-left transition hover:border-cyan-400 hover:bg-cyan-500/20"
           >
             <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-400/20 text-xl">
               📖
@@ -334,7 +334,7 @@ export const HubView: React.FC = () => {
 
           <button
             onClick={() => setShopOpen(true)}
-            className="flex items-center gap-3 rounded-2xl border border-amber-400/35 bg-amber-500/10 p-3.5 text-left transition hover:border-amber-400 hover:bg-amber-500/20"
+            className="min-h-[44px] flex items-center gap-3 rounded-2xl border border-amber-400/35 bg-amber-500/10 p-3.5 text-left transition hover:border-amber-400 hover:bg-amber-500/20"
           >
             <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-400/20 text-xl">
               🛍️

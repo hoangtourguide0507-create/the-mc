@@ -16,30 +16,6 @@
     border: 2px solid #6B4E3D;
     box-shadow: 0 3px 0 rgba(107, 78, 61, 0.35), 0 6px 14px rgba(59, 42, 34, 0.18);
   }
-
-  /* Thẻ và nút kiểu "cozy" dùng ở Cẩm Nang (HelpSheet). Trước đây hai class này
-     không được định nghĩa nên sheet bị trong suốt và nút không có khung. */
-  .cozy-card {
-    background: #FFFDF7;
-    color: #3B2A22;
-    border: 2px solid #EADFCB;
-    box-shadow: 0 6px 18px rgba(59, 42, 34, 0.2);
-  }
-
-  .btn-tactile {
-    background: #FFF8EC;
-    color: #3B2A22;
-    border: 2px solid #6B4E3D;
-    box-shadow: 0 3px 0 rgba(107, 78, 61, 0.35);
-    transition: transform 0.1s ease, box-shadow 0.1s ease;
-  }
-  .btn-tactile:hover {
-    filter: brightness(0.97);
-  }
-  .btn-tactile:active {
-    transform: translateY(2px);
-    box-shadow: 0 1px 0 rgba(107, 78, 61, 0.35);
-  }
 }
 
 html,

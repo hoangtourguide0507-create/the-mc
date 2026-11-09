@@ -31,6 +31,12 @@ jobs:
       - name: Run core logic tests
         run: python3 tests/test_core_logic.py
 
+      - name: Run quest tests
+        run: npm run test:quests
+
+      - name: Run evaluator tests
+        run: npm run test:evaluator
+
       - name: Build (typecheck + Vite)
         run: npm run build
 

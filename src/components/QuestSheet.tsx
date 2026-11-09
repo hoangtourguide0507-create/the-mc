@@ -1,3 +1,4 @@
+import { useDialog } from './useDialog';
 import React from 'react';
 import { CHAPTERS, QUESTS, objectiveLabel, objectiveMet, questMet } from '../core/quests';
 import { useGameStore } from '../core/store';
@@ -8,11 +9,12 @@ export const QuestSheet: React.FC = () => {
   const setQuestOpen = useGameStore((s) => s.setQuestOpen);
   const state = useGameStore((s) => s.state);
 
+  const dialog = useDialog(questOpen, () => setQuestOpen(false), 'Nhiệm vụ');
   if (!questOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ghibli-ink/20 sm:items-center sm:p-4">
- <div className="flex max-h-[88vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl border ghibli-panel shadow-2xl sm:rounded-3xl">
+    <div {...dialog.backdropProps} className="fixed inset-0 z-50 flex items-end justify-center bg-ghibli-ink/20 sm:items-center sm:p-4">
+ <div {...dialog.panelProps} className="flex max-h-[88vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl border ghibli-panel shadow-2xl sm:rounded-3xl">
         <div className="flex items-center justify-between border-b border-ghibli-track px-5 py-4">
           <div>
             <h2 className="font-display text-xl font-black text-ghibli-ink">📜 Nhiệm vụ</h2>
@@ -22,7 +24,7 @@ export const QuestSheet: React.FC = () => {
           </div>
           <button
             onClick={() => setQuestOpen(false)}
- className="rounded-full ghibli-panel px-3 py-1.5 text-xs font-black text-ghibli-ink hover:brightness-95"
+ className="min-h-[44px] rounded-full ghibli-panel px-3 py-1.5 text-xs font-black text-ghibli-ink hover:brightness-95"
           >
             Đóng ✕
           </button>

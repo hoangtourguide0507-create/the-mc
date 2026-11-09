@@ -1,3 +1,4 @@
+import { useDialog } from './useDialog';
 import React from 'react';
 import { SCENES } from '../data/content';
 import { levelTitle } from '../core/career';
@@ -22,13 +23,14 @@ const MODES: { name: string; desc: string }[] = [
 export const HelpSheet: React.FC = () => {
   const helpOpen = useGameStore((s) => s.helpOpen);
   const setHelpOpen = useGameStore((s) => s.setHelpOpen);
+  const dialog = useDialog(helpOpen, () => setHelpOpen(false), 'Cẩm Nang MC Thiên Ân');
   if (!helpOpen) return null;
 
   const gigs = ['backstage', 'wedding', 'beach', 'gala', 'interview'];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ghibli-ink/20 sm:items-center sm:p-4">
-      <div className="cozy-card flex max-h-[86vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl sm:rounded-3xl">
+    <div {...dialog.backdropProps} className="fixed inset-0 z-50 flex items-end justify-center bg-ghibli-ink/20 sm:items-center sm:p-4">
+      <div {...dialog.panelProps} className="ghibli-panel flex max-h-[86vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl sm:rounded-3xl">
         <div className="flex items-center justify-between border-b border-[#EFE5D4] px-5 py-4">
           <div className="flex items-center gap-3">
             <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#FFF0D4] text-2xl">
@@ -43,7 +45,7 @@ export const HelpSheet: React.FC = () => {
           </div>
           <button
             onClick={() => setHelpOpen(false)}
-            className="btn-tactile rounded-full px-3.5 py-1.5 text-xs font-black text-ghibli-ink"
+            className="min-h-[44px] rounded-full ghibli-panel px-3.5 py-1.5 text-xs font-black text-ghibli-ink hover:bg-[#FBEBD0]"
           >
             Đóng ✕
           </button>
