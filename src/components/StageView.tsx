@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { NPCS, SCENES, turnsForDay } from '../data/content';
+import { SCENE_OBJECTIVES } from '../data/objectives';
+import { viSupport } from '../core/support';
 import { clamp } from '../core/clock';
 import { evaluateTurnCandidates } from '../core/evaluator';
 import { useGameStore } from '../core/store';
@@ -46,6 +48,7 @@ export const StageView: React.FC = () => {
   // Per-turn state
   const [revealed, setRevealed] = useState(false);
   const [translated, setTranslated] = useState(false);
+  const support = viSupport(SCENE_OBJECTIVES[activeSceneId || 'coffee']?.cefr);
   const [npcSpeaking, setNpcSpeaking] = useState(false);
   const [npcViseme, setNpcViseme] = useState<VisemeType>('rest');
   const [playerViseme, setPlayerViseme] = useState<VisemeType>('rest');
@@ -579,7 +582,7 @@ export const StageView: React.FC = () => {
                 >
                   👁️ Hiện chữ
                 </button>
-                {revealed && (
+                {revealed && support.npcToggle && (
                   <button
                     onClick={() => {
                       SFX.play('tap');
@@ -619,7 +622,7 @@ export const StageView: React.FC = () => {
                   <p className="font-display text-base font-bold leading-relaxed text-ghibli-ink">
                     “{turn.npc}”
                   </p>
-                  {translated && (
+                  {translated && support.npcToggle && (
                     <p className="text-sm font-semibold italic text-[#8A5A00]">
                       🇻🇳 {turn.npcVi}
                     </p>
@@ -747,7 +750,7 @@ export const StageView: React.FC = () => {
                             </span>
                           ))}
                     </div>
-                    {turn.cueVi && (
+                    {turn.cueVi && support.cueVi && (
                       <p className="mt-1.5 text-sm font-semibold text-ghibli-ink-soft">
                         🇻🇳 {turn.cueVi}
                       </p>
@@ -763,7 +766,7 @@ export const StageView: React.FC = () => {
                 <p className="font-display text-lg font-extrabold text-ghibli-ink">
                   {turn.frame}
                 </p>
-                {turn.cueVi && (
+                {turn.cueVi && support.cueVi && (
                   <p className="text-sm font-semibold text-ghibli-ink-soft">
                     🇻🇳 {turn.cueVi}
                   </p>
@@ -790,7 +793,7 @@ export const StageView: React.FC = () => {
                 <p className="font-display text-base font-extrabold text-ghibli-ink">
                   🎯 Nhiệm vụ: {turn.task}
                 </p>
-                <p className="text-sm font-semibold text-[#8A5A00]">{turn.taskVi}</p>
+                {support.taskVi && <p className="text-sm font-semibold text-[#8A5A00]">{turn.taskVi}</p>}
                 <div className="flex flex-wrap gap-1.5 pt-1">
                   {(turn.requiredKeywords || []).map((grp, i) => {
                     const hit = evalResult?.matchedKeywords?.includes(grp[0]);
@@ -856,9 +859,23 @@ export const StageView: React.FC = () => {
             )}
 
             {/* Coach Tip */}
-            <div className="mt-3 rounded-2xl border-2 border-ghibli-track bg-[#FFF1D6] px-3 py-2 text-sm font-semibold text-ghibli-ink-soft">
-              💡 {turn.tip}
-            </div>
+            {evalResult?.grammarIssues && evalResult.grammarIssues.length > 0 && (
+              <div className="mt-3 rounded-2xl border-2 border-[#C9A24A] bg-[#FFF8E1] px-3 py-2 text-sm font-semibold text-[#6B4E00]">
+                ✏️ Gợi ý sửa:
+                <ul className="mt-1 list-disc pl-5">
+                  {evalResult.grammarIssues.map((g) => (
+                    <li key={g.wrong}>
+                      "{g.wrong}" → <span className="font-black">"{g.fix}"</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {support.tip && (
+              <div className="mt-3 rounded-2xl border-2 border-ghibli-track bg-[#FFF1D6] px-3 py-2 text-sm font-semibold text-ghibli-ink-soft">
+                💡 {turn.tip}
+              </div>
+            )}
 
             {/* Evaluation Result Banner */}
             {(interimText || evalResult) && (

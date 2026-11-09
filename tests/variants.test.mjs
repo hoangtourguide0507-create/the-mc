@@ -51,6 +51,8 @@ function validateTurns(list, base, where) {
     if (t.mode === 'quiz') {
       assert.equal(t.options.length, 3, `${where} lượt ${i + 1}: quiz cần đúng 3 đáp án`);
       assert.equal(t.options.filter((o) => o.ok).length, 1, `${where} lượt ${i + 1}: quiz phải có đúng 1 đáp án đúng`);
+      const texts = t.options.map((o) => o.t);
+      assert.equal(new Set(texts).size, texts.length, `${where} lượt ${i + 1}: đáp án quiz bị trùng`);
     }
     if (t.mode === 'free') {
       const sample = t.sample || '';

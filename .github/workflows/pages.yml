@@ -52,6 +52,9 @@ jobs:
       - name: Run pronunciation ladder tests
         run: npm run test:pronladder
 
+      - name: Run grammar tests
+        run: npm run test:grammar
+
       - name: Build (typecheck + Vite)
         run: npm run build
 

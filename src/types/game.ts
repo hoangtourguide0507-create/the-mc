@@ -331,6 +331,8 @@ export interface EvalResult {
   forbiddenHit?: string[];
   blanksFilled?: number;
   blanksTotal?: number;
+  /** Lỗi ngữ pháp / khẩu ngữ tìm thấy trong câu nói tự do. */
+  grammarIssues?: { wrong: string; fix: string }[];
 }
 
 export type AudioBusState = 'idle' | 'speaking' | 'arming' | 'listening';

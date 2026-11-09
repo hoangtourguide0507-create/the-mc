@@ -261,19 +261,14 @@ const MARKET_NEEDS: Need[] = [
   },
 ];
 
-interface Promo { npc: Pair; ok: Pair }
+interface Promo { npc: Pair; ok: Pair; wrong: [string, string] }
 const MARKET_PROMOS: Promo[] = [
-  { npc: ['Would you like a paper bag or a plastic one? Also, fresh lemons are buy-one-get-one this week!', 'Bạn dùng túi giấy hay túi nhựa? À, chanh tươi tuần này mua 1 tặng 1 đấy!'], ok: ['I brought my own bag, and yes, I would love the lemon deal!', 'Mình có mang túi riêng, và cho mình lấy ưu đãi chanh nhé!'] },
-  { npc: ['Chamomile tea is buy-one-get-one today! Would you like a receipt, too?', 'Trà hoa cúc hôm nay mua 1 tặng 1! Bạn có cần hóa đơn không?'], ok: ['Yes, please! I will take the chamomile tea deal and a printed receipt.', 'Có chứ! Mình lấy ưu đãi trà hoa cúc và một hóa đơn in nhé.'] },
-  { npc: ['Our crackers are buy-one-get-one tonight! Would you like the receipt by email?', 'Bánh quy giòn tối nay mua 1 tặng 1! Bạn muốn nhận hóa đơn qua email không?'], ok: ['Please email the receipt, and I will also take the crackers deal!', 'Làm ơn gửi hóa đơn qua email, và mình cũng lấy ưu đãi bánh quy nhé!'] },
-  { npc: ['Would you like a paper bag or a plastic one? The yogurt is buy-one-get-one this week!', 'Bạn dùng túi giấy hay túi nhựa? Sữa chua tuần này mua 1 tặng 1 đấy!'], ok: ['I brought my own bag, and yes, I would love the yogurt deal!', 'Mình có mang túi riêng, và cho mình lấy ưu đãi sữa chua nhé!'] },
+  { npc: ['Would you like a paper bag or a plastic one? Also, fresh lemons are buy-one-get-one this week!', 'Bạn dùng túi giấy hay túi nhựa? À, chanh tươi tuần này mua 1 tặng 1 đấy!'], ok: ['I brought my own bag, and yes, I would love the lemon deal!', 'Mình có mang túi riêng, và cho mình lấy ưu đãi chanh nhé!'], wrong: ['I brought my own bag, and yes, I would love the lemon deal for three bags!', 'I brought my own bag, and yes, I would love the ginger tea deal!'] },
+  { npc: ['Chamomile tea is buy-one-get-one today! Would you like a receipt, too?', 'Trà hoa cúc hôm nay mua 1 tặng 1! Bạn có cần hóa đơn không?'], ok: ['Yes, please! I will take the chamomile tea deal and a printed receipt.', 'Có chứ! Mình lấy ưu đãi trà hoa cúc và một hóa đơn in nhé.'], wrong: ['Yes, please! I will take the chamomile tea deal, but I do not need a receipt.', 'Yes, please! I will take two chamomile teas and pay the full price for both.'] },
+  { npc: ['Our crackers are buy-one-get-one tonight! Would you like the receipt by email?', 'Bánh quy giòn tối nay mua 1 tặng 1! Bạn muốn nhận hóa đơn qua email không?'], ok: ['Please email the receipt, and I will also take the crackers deal!', 'Làm ơn gửi hóa đơn qua email, và mình cũng lấy ưu đãi bánh quy nhé!'], wrong: ['Please print the receipt, and I will also take the crackers deal!', 'Please email the receipt, but I will skip the crackers deal today.'] },
+  { npc: ['Would you like a paper bag or a plastic one? The yogurt is buy-one-get-one this week!', 'Bạn dùng túi giấy hay túi nhựa? Sữa chua tuần này mua 1 tặng 1 đấy!'], ok: ['I brought my own bag, and yes, I would love the yogurt deal!', 'Mình có mang túi riêng, và cho mình lấy ưu đãi sữa chua nhé!'], wrong: ['I brought my own bag, and yes, I would love the yogurt deal for half price only!', 'I need a paper bag, and yes, I would love the milk deal!'] },
 ];
-const MARKET_WRONG = [
-  'No thanks, I already paid for my bread at the bakery.',
-  'Could you show me where the fire exits are?',
-  'No thanks, I already have enough tea at home for a whole month.',
-  'Could you tell me where the nearest bus stop is?',
-];
+
 
 interface PayLine { npc: (t: string) => string; npcVi: (v: string) => string; cue: Pair; key: string }
 const MARKET_PAY: PayLine[] = [
@@ -328,10 +323,8 @@ function marketTurns(day: number): TurnData[] {
   const kid = pickOf(MARKET_KIDS, S, day, 'kid');
 
   // Ba đáp án: một đúng, hai sai lấy khác nhau; vị trí đúng cũng được chọn theo ngày.
-  const w1 = MARKET_WRONG[hash(`${S}|${day}|w1`) % MARKET_WRONG.length];
-  let w2 = MARKET_WRONG[hash(`${S}|${day}|w2`) % MARKET_WRONG.length];
-  if (w2 === w1) w2 = MARKET_WRONG[(MARKET_WRONG.indexOf(w1) + 1) % MARKET_WRONG.length];
-  const options = [{ t: promo.ok[0], ok: true }, { t: w1, ok: false }, { t: w2, ok: false }];
+  // Đáp án sai là lỗi gần đúng của chính khuyến mãi đó (sai số lượng, sai món, sai hóa đơn)
+  const options = [{ t: promo.ok[0], ok: true }, { t: promo.wrong[0], ok: false }, { t: promo.wrong[1], ok: false }];
   const rot = hash(`${S}|${day}|pos`) % 3;
   const ordered = [options[(0 - rot + 3) % 3], options[(1 - rot + 3) % 3], options[(2 - rot + 3) % 3]];
 

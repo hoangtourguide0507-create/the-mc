@@ -1,3 +1,4 @@
+import { findGrammarIssues } from './grammar';
 import { EvalResult, EvaluatedToken, TurnData } from '../types/game';
 import { clamp } from './clock';
 
@@ -592,6 +593,11 @@ export function containsTokenSequence(haystack: string[], needle: string[]): boo
 }
 
 export function evaluateFreeform(turn: TurnData, transcript: string): EvalResult {
+  const base = scoreFreeform(turn, transcript);
+  return { ...base, grammarIssues: findGrammarIssues(transcript) };
+}
+
+function scoreFreeform(turn: TurnData, transcript: string): EvalResult {
   const spokenTokens = normalizeText(transcript);
   if (spokenTokens.length === 0) {
     return {
