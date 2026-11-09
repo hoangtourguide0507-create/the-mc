@@ -16,6 +16,7 @@ import { useGameStore } from './core/store';
 import { CityWorld3D } from './three/CityWorld3D';
 import { QuestSheet } from './components/QuestSheet';
 import { HelpSheet } from './components/HelpSheet';
+import { PronunciationSheet } from './components/PronunciationSheet';
 import { TourOverlay } from './components/TourOverlay';
 
 export const App: React.FC = () => {
@@ -57,12 +58,12 @@ export const App: React.FC = () => {
   }, [saveNow, startDayFromWelcome]);
 
   return (
-    <div className="relative h-[100dvh] w-screen select-none overflow-hidden bg-gradient-to-b from-[#BFE6F2] via-[#F6EBD2] to-[#F5E6CC] font-sans text-ghibli-ink">
+    <div className="relative h-[100dvh] w-screen select-none overflow-hidden bg-gradient-to-b from-ghibli-sky via-[#FFF1D6] to-ghibli-cream font-sans text-ghibli-ink">
       {/* Top Always-On HUD */}
       <HUD />
 
-      {/* Active View Router with Ghibli View Transition */}
-      <main key={view} className="animate-ghibli-view h-full w-full">
+      {/* Active View Router */}
+      <main className="h-full w-full">
         {view === 'hub' && <HubView />}
         {view === 'world' && <CityWorld3D />}
         {view === 'stage' && <StageView />}
@@ -76,6 +77,7 @@ export const App: React.FC = () => {
       <StreetTalkModal />
       <QuestSheet />
       <HelpSheet />
+      <PronunciationSheet />
       <TourOverlay />
       <GlobalOverlays />
     </div>

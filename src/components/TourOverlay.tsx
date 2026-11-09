@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { currentTourStep, TOUR_STEPS } from '../core/onboarding';
 import { useGameStore } from '../core/store';
 
-/** Chỉ điểm từng nút trên Hub cho người chơi ngày đầu (Cozy Modern Tactile). */
+/** Chỉ điểm từng nút trên Hub cho người chơi ngày đầu. Không chặn thao tác trên phần tử được chỉ. */
 export const TourOverlay: React.FC = () => {
   const view = useGameStore((s) => s.view);
   const state = useGameStore((s) => s.state);
@@ -47,39 +47,37 @@ export const TourOverlay: React.FC = () => {
     <>
       <div
         aria-hidden
-        className="pointer-events-none fixed z-[60] rounded-3xl border-2 border-[#FFC652] transition-all duration-300"
+        className="pointer-events-none fixed z-[60] rounded-2xl border-2 border-amber-300 transition-all duration-300"
         style={{
           top: rect.top - 6,
           left: rect.left - 6,
           width: rect.width + 12,
           height: rect.height + 12,
-          boxShadow: '0 0 0 9999px rgba(42, 30, 22, 0.55)',
+          boxShadow: '0 0 0 9999px rgba(10,5,25,0.72)',
         }}
       />
       <div
         role="dialog"
         aria-label="Hướng dẫn chơi"
-        className="cozy-card fixed inset-x-3 z-[61] mx-auto max-w-md rounded-3xl p-4"
+ className="fixed inset-x-3 z-[61] mx-auto max-w-md rounded-2xl border border-amber-300/60 ghibli-panel p-4 shadow-2xl"
         style={tipPos}
       >
-        <div className="flex items-center justify-between">
-          <span className="rounded-full bg-[#FFF0D4] px-2.5 py-0.5 text-xs font-black uppercase tracking-wider text-[#9C5B00]">
-            ✨ Hướng dẫn · {n}/{TOUR_STEPS.length}
-          </span>
-        </div>
-        <p className="mt-2 text-sm font-bold leading-relaxed text-ghibli-ink">{step.text}</p>
-        <div className="mt-3.5 flex items-center justify-between gap-2">
+        <p className="text-xs font-black uppercase tracking-wider text-amber-700">
+          Hướng dẫn · {n}/{TOUR_STEPS.length}
+        </p>
+        <p className="mt-1 text-sm font-semibold leading-relaxed text-ghibli-ink">{step.text}</p>
+        <div className="mt-3 flex items-center justify-between gap-2">
           <button
             onClick={skipTour}
-            className="rounded-xl px-2.5 py-1.5 text-xs font-bold text-ghibli-ink-soft hover:text-ghibli-ink"
+            className="rounded-lg px-2 py-1 text-xs font-bold text-ghibli-ink-soft hover:text-ghibli-ink"
           >
             Bỏ qua hướng dẫn
           </button>
           <button
             onClick={() => ackTour(step.id)}
-            className="btn-tactile-amber rounded-2xl px-4 py-2 text-xs font-black"
+            className="rounded-xl bg-amber-400 px-4 py-2 text-xs font-black text-slate-950 transition hover:scale-105"
           >
-            Hiểu rồi ➔
+            Hiểu rồi
           </button>
         </div>
       </div>

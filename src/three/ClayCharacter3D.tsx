@@ -1,8 +1,8 @@
 /**
- * Nhân vật anime chibi Ghibli (thiết kế gốc dựng bằng code).
+ * Nhân vật anime chibi (thiết kế gốc).
  * - Mặt: decal vẽ tay (mắt / mày / miệng / má) dán lên đầu, đổi texture theo khẩu hình & cảm xúc.
- * - Tóc: các lọn cong vuốt nhọn gộp 1 lưới theo kiểu tóc + vệt bóng trên đỉnh + chuyển động phụ (secondary sway).
- * - Thân: lathe thon, tô màu mảng (cel / toon) + Rim Light ấm + viền nâu ấm (#6B4E3D).
+ * - Tóc: các lọn cong vuốt nhọn gộp 1 lưới theo kiểu tóc + vệt bóng trên đỉnh.
+ * - Thân: lathe thon, tô màu mảng (cel / toon) + viền đậm.
  * - lod="low" (bản đồ): bỏ viền & chi tiết nhỏ cho nhẹ máy.
  * - look.vrmUrl: dùng mô hình VRM thật (VRoid Studio) thay cho bản dựng bằng code.
  */
@@ -12,6 +12,7 @@ import { Html, RoundedBox } from '@react-three/drei';
 import * as THREE from 'three';
 import { LookConfig, NpcMood, VisemeType } from '../types/game';
 import { GlbCharacter3D } from './GlbCharacter3D';
+import { isGhibli } from './artStyle';
 // Thư viện VRM tách gói riêng: chỉ tải khi có nhân vật dùng mô hình VRM
 const VrmCharacter3D = React.lazy(() => import('./VrmCharacter3D').then((m) => ({ default: m.VrmCharacter3D })));
 import { hairGeometry, halo } from './anime/hair';
@@ -56,19 +57,20 @@ function ramp(levels: number[]) {
   return t;
 }
 /** Quần áo / đồ vật: 3 mảng sáng-trung-tối rõ ràng */
-const RAMP = ramp([145, 205, 255]);
-/** Da: bóng rất nhẹ ấm áp (mặt anime Ghibli mềm mại) */
-const SKIN_RAMP = ramp([220, 242, 255]);
+const RAMP = ramp([135, 200, 255]);
+/** Da: bóng rất nhẹ (mặt anime gần như phẳng màu) */
+const SKIN_RAMP = ramp([215, 240, 255]);
 /** Tóc: 2 mảng + vùng sáng */
-const HAIR_RAMP = ramp([155, 218, 255, 255]);
+const HAIR_RAMP = ramp([150, 215, 255, 255]);
 
-/** Viền nét vẽ Ghibli: vỏ lộn ngược (mặt sau) màu nâu đất ấm phồng ra theo pháp tuyến */
+/** Viền nét vẽ: vỏ lộn ngược (mặt sau) phồng ra theo pháp tuyến */
 const hullCache = new Map<number, THREE.MeshBasicMaterial>();
 function hullMat(thickness: number) {
   const k = Math.round(thickness * 10000);
   let m = hullCache.get(k);
   if (!m) {
-    m = new THREE.MeshBasicMaterial({ color: '#6B4E3D', side: THREE.BackSide });
+    // Ghibli: viền nét nâu ấm thay vì đen (STYLE_GHIBLI mục 7)
+    m = new THREE.MeshBasicMaterial({ color: isGhibli ? '#6B4E3D' : '#2B1C24', side: THREE.BackSide });
     m.onBeforeCompile = (sh) => {
       sh.vertexShader = sh.vertexShader.replace(
         '#include <begin_vertex>',
@@ -82,23 +84,8 @@ function hullMat(thickness: number) {
 }
 const noRaycast = () => null;
 
-/** Vật liệu Toon tích hợp Rim Light (viền sáng ngược ấm áp) giúp nhân vật nổi khối trên sân khấu */
-const toon = (color: string, extra: Partial<THREE.MeshToonMaterialParameters> = {}) => {
-  const m = new THREE.MeshToonMaterial({ color, gradientMap: RAMP, ...extra });
-  m.onBeforeCompile = (sh) => {
-    sh.fragmentShader = sh.fragmentShader.replace(
-      '#include <dithering_fragment>',
-      [
-        'float rimFactor = 1.0 - max(0.0, dot(normalize(vNormal), normalize(vViewPosition)));',
-        'rimFactor = pow(rimFactor, 3.0) * 0.18;',
-        'gl_FragColor.rgb += vec3(1.0, 0.94, 0.80) * rimFactor;',
-        '#include <dithering_fragment>',
-      ].join('\n')
-    );
-  };
-  m.customProgramCacheKey = () => 'ghibli-toon-rim';
-  return m;
-};
+const toon = (color: string, extra: Partial<THREE.MeshToonMaterialParameters> = {}) =>
+  new THREE.MeshToonMaterial({ color, gradientMap: RAMP, ...extra });
 
 /* ------------------------------------------------------------------ */
 /* Hình khối dùng chung                                                 */
@@ -130,25 +117,19 @@ const GEO = {
     [0.08, 0.235],
     [0.0, 0.24],
   ]),
-  skirt: lathe(
-    [
-      [0.15, 0.12],
-      [0.2, 0.0],
-      [0.3, -0.22],
-      [0.4, -0.5],
-      [0.0, -0.5],
-    ],
-    36
-  ),
-  shortSkirt: lathe(
-    [
-      [0.155, 0.02],
-      [0.22, -0.08],
-      [0.27, -0.2],
-      [0.0, -0.2],
-    ],
-    32
-  ),
+  skirt: lathe([
+    [0.15, 0.12],
+    [0.2, 0.0],
+    [0.3, -0.22],
+    [0.4, -0.5],
+    [0.0, -0.5],
+  ], 36),
+  shortSkirt: lathe([
+    [0.155, 0.02],
+    [0.22, -0.08],
+    [0.27, -0.2],
+    [0.0, -0.2],
+  ], 32),
   leg: new THREE.CapsuleGeometry(0.058, 0.17, 8, 14),
   arm: new THREE.CapsuleGeometry(0.048, 0.2, 8, 14),
   hand: new THREE.SphereGeometry(0.052, 16, 12),
@@ -230,19 +211,11 @@ export const ClayCharacter3D: React.FC<ClayCharacter3DProps> = (props) => {
   return <AnimeChibi {...props} />;
 };
 
-const RingMarker: React.FC = () => {
-  const ref = useRef<THREE.Mesh>(null);
-  useFrame(({ clock }) => {
-    if (!ref.current) return;
-    const s = 1 + Math.sin(clock.elapsedTime * 3.5) * 0.05;
-    ref.current.scale.set(s, s, 1);
-  });
-  return (
-    <mesh ref={ref} geometry={GEO.ring} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]}>
-      <meshBasicMaterial color="#F2B84B" transparent opacity={0.85} side={THREE.DoubleSide} depthWrite={false} />
-    </mesh>
-  );
-};
+const RingMarker: React.FC = () => (
+  <mesh geometry={GEO.ring} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]}>
+    <meshBasicMaterial color={isGhibli ? '#F2B84B' : '#22D3EE'} transparent opacity={0.85} side={THREE.DoubleSide} depthWrite={false} />
+  </mesh>
+);
 
 const AnimeChibi: React.FC<ClayCharacter3DProps> = ({
   look,
@@ -261,8 +234,6 @@ const AnimeChibi: React.FC<ClayCharacter3DProps> = ({
   const rootRef = useRef<THREE.Group>(null);
   const bodyRef = useRef<THREE.Group>(null);
   const headRef = useRef<THREE.Group>(null);
-  const hairGroupRef = useRef<THREE.Group>(null);
-  const skirtRef = useRef<THREE.Mesh>(null);
   const leftArmRef = useRef<THREE.Group>(null);
   const rightArmRef = useRef<THREE.Group>(null);
   const leftLegRef = useRef<THREE.Group>(null);
@@ -305,17 +276,17 @@ const AnimeChibi: React.FC<ClayCharacter3DProps> = ({
     return {
       skin: toon(skin, { gradientMap: SKIN_RAMP }),
       hair: toon(hair, { gradientMap: HAIR_RAMP }),
-      hairShine: new THREE.MeshBasicMaterial({ color: tone(hair, 0.3, -0.05), transparent: true, opacity: 0.85 }),
+      hairShine: new THREE.MeshBasicMaterial({ color: tone(hair, 0.28, -0.05), transparent: true, opacity: 0.85 }),
       cloth: toon(cloth),
       clothDark: toon(tone(cloth, -0.08)),
       lapel: toon(tone(cloth, 0.12, -0.05)),
       pants: toon(look.outfit === 'tux' || look.outfit === 'suit' ? tone(cloth, -0.06) : tone(cloth, -0.25)),
-      shoe: toon(look.outfit === 'hoodie' || look.outfit === 'crew' ? '#F8FAFC' : '#3B2A22'),
-      accent: toon(look.accent || '#3E9B94'),
-      white: toon('#FFFDF9'),
+      shoe: toon(look.outfit === 'hoodie' || look.outfit === 'crew' ? '#F8FAFC' : '#2A2236'),
+      accent: toon(look.accent || '#38BDF8'),
+      white: toon('#FBFBFF'),
       gold: new THREE.MeshStandardMaterial({ color: '#F6C453', roughness: 0.25, metalness: 0.85 }),
       silver: new THREE.MeshStandardMaterial({ color: '#E2E8F0', roughness: 0.25, metalness: 0.8 }),
-      hat: toon(look.hat || '#C8643B'),
+      hat: toon(look.hat || '#7C3AED'),
       eyeR: decalMat(eyeTexture(iris, lash, 'open', !!look.lashes, false)),
       eyeL: decalMat(eyeTexture(iris, lash, 'open', !!look.lashes, true)),
       browR: decalMat(browTexture(lash, 'neutral', false)),
@@ -356,8 +327,6 @@ const AnimeChibi: React.FC<ClayCharacter3DProps> = ({
     const ra = rightArmRef.current;
     const ll = leftLegRef.current;
     const rl = rightLegRef.current;
-    const hg = hairGroupRef.current;
-    const sk = skirtRef.current;
 
     if (isWalking) {
       const w = t * 12;
@@ -376,17 +345,8 @@ const AnimeChibi: React.FC<ClayCharacter3DProps> = ({
         ra.rotation.x = look.propArt ? -0.5 + Math.sin(w) * 0.12 : Math.sin(w) * 0.55;
         ra.rotation.z = damp(ra.rotation.z, -0.1, 10, dt);
       }
-      // Chuyển động phụ của tóc và váy khi bước đi
-      if (hg) {
-        hg.rotation.x = damp(hg.rotation.x, 0.06 + Math.abs(Math.cos(w)) * 0.04, 12, dt);
-        hg.rotation.z = damp(hg.rotation.z, -Math.sin(w) * 0.035, 12, dt);
-      }
-      if (sk) {
-        sk.rotation.z = damp(sk.rotation.z, -Math.sin(w) * 0.05, 12, dt);
-        sk.rotation.x = damp(sk.rotation.x, -0.03, 12, dt);
-      }
     } else {
-      let bodyY = Math.sin(t * 2.2) * 0.012;
+      let bodyY = Math.sin(t * 2.2) * 0.01;
       let headZ = Math.sin(t * 1.2) * 0.04;
       let headX = Math.cos(t * 1.7) * 0.025;
       let laZ = 0.14;
@@ -408,9 +368,8 @@ const AnimeChibi: React.FC<ClayCharacter3DProps> = ({
         laX = -1.4;
       }
       if (isSpeaking) {
-        headX += Math.sin(t * 11) * 0.032;
-        headZ += Math.cos(t * 8) * 0.028;
-        bodyY += Math.abs(Math.sin(t * 6)) * 0.018;
+        headX += Math.sin(t * 11) * 0.03;
+        headZ += Math.cos(t * 8) * 0.025;
       }
       body.position.y = damp(body.position.y, bodyY, 12, dt);
       body.rotation.z = damp(body.rotation.z, 0, 10, dt);
@@ -427,15 +386,6 @@ const AnimeChibi: React.FC<ClayCharacter3DProps> = ({
         const rX = look.propArt ? (isSpeaking ? -0.85 + Math.sin(t * 9) * 0.1 : -0.6) : isSpeaking ? -0.25 + Math.sin(t * 5) * 0.15 : 0;
         ra.rotation.x = damp(ra.rotation.x, rX, 9, dt);
         ra.rotation.z = damp(ra.rotation.z, -0.14, 9, dt);
-      }
-      // Chuyển động phụ đung đưa nhẹ theo nhịp thở và nghiêng đầu
-      if (hg) {
-        hg.rotation.x = damp(hg.rotation.x, Math.sin(t * 1.8) * 0.018 - headX * 0.35, 8, dt);
-        hg.rotation.z = damp(hg.rotation.z, Math.cos(t * 1.5) * 0.02 - headZ * 0.4, 8, dt);
-      }
-      if (sk) {
-        sk.rotation.z = damp(sk.rotation.z, Math.sin(t * 1.6) * 0.015, 8, dt);
-        sk.rotation.x = damp(sk.rotation.x, 0, 8, dt);
       }
     }
 
@@ -474,7 +424,7 @@ const AnimeChibi: React.FC<ClayCharacter3DProps> = ({
     <group ref={rootRef} position={position} scale={scale} onClick={onClick}>
       {highlightRing && <RingMarker />}
       <mesh geometry={GEO.shadow} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.012, 0]}>
-        <meshBasicMaterial color="#6B5A4E" transparent opacity={0.22} depthWrite={false} />
+        <meshBasicMaterial color={isGhibli ? '#6B5A4E' : '#090518'} transparent opacity={isGhibli ? 0.2 : 0.3} depthWrite={false} />
       </mesh>
 
       <group ref={bodyRef}>
@@ -494,12 +444,12 @@ const AnimeChibi: React.FC<ClayCharacter3DProps> = ({
             <Ol g={GEO.torso} t={0.012} />
           </mesh>
           {isLongDress && (
-            <mesh ref={skirtRef} geometry={GEO.skirt} material={M.cloth} position={[0, -0.1, 0]} castShadow>
+            <mesh geometry={GEO.skirt} material={M.cloth} position={[0, -0.1, 0]} castShadow>
               <Ol g={GEO.skirt} t={0.012} />
             </mesh>
           )}
           {isSkirt && (
-            <mesh ref={skirtRef} geometry={GEO.shortSkirt} material={M.clothDark} position={[0, -0.17, 0]}>
+            <mesh geometry={GEO.shortSkirt} material={M.clothDark} position={[0, -0.17, 0]}>
               <Ol g={GEO.shortSkirt} t={0.01} />
             </mesh>
           )}
@@ -568,7 +518,11 @@ const AnimeChibi: React.FC<ClayCharacter3DProps> = ({
           {has('earrings') && [-1, 1].map((s) => <mesh key={`er${s}`} geometry={GEO.earring} material={M.gold} position={[s * 0.355, -0.11, 0]} />)}
           {has('inear') && (
             <mesh geometry={GEO.earring} position={[0.36, -0.04, 0.03]} scale={1.6}>
-              <meshStandardMaterial color="#3E9B94" emissive="#3E9B94" emissiveIntensity={1.2} />
+              <meshStandardMaterial
+                color={isGhibli ? '#3E9B94' : '#22D3EE'}
+                emissive={isGhibli ? '#3E9B94' : '#22D3EE'}
+                emissiveIntensity={1.4}
+              />
             </mesh>
           )}
 
@@ -584,49 +538,47 @@ const AnimeChibi: React.FC<ClayCharacter3DProps> = ({
             <mesh geometry={GEO.nose} material={M.nose} renderOrder={2} />
           </group>
 
-          {/* TÓC (có Secondary Motion) */}
-          <group ref={hairGroupRef}>
-            {look.hairStyle === 'beanie' ? (
-              <group>
-                <mesh geometry={hairGeo} material={M.hair}>
-                  <Ol g={hairGeo} t={0.01} />
+          {/* TÓC */}
+          {look.hairStyle === 'beanie' ? (
+            <group>
+              <mesh geometry={hairGeo} material={M.hair}>
+                <Ol g={hairGeo} t={0.01} />
+              </mesh>
+              <mesh geometry={GEO.beanie} material={M.hat} position={[0, 0.1, -0.01]} castShadow>
+                <Ol g={GEO.beanie} t={0.012} />
+              </mesh>
+              <mesh geometry={GEO.beanieRim} material={M.hat} position={[0, 0.11, -0.01]} rotation={[Math.PI / 2, 0, 0]} />
+              <mesh geometry={GEO.pompom} material={M.white} position={[0, 0.52, -0.02]} />
+            </group>
+          ) : (
+            <group>
+              <mesh geometry={hairGeo} material={M.hair} castShadow>
+                <Ol g={hairGeo} t={0.01} />
+              </mesh>
+              {hi && <mesh geometry={halo} material={M.hairShine} position={[0, 0.17, -0.02]} rotation={[Math.PI / 2 - 0.25, 0, Math.PI * 0.95]} />}
+              {look.hairStyle === 'updo' && (
+                <mesh geometry={GEO.bun} material={M.hair} position={[0, 0.4, -0.16]}>
+                  <Ol g={GEO.bun} t={0.01} />
                 </mesh>
-                <mesh geometry={GEO.beanie} material={M.hat} position={[0, 0.1, -0.01]} castShadow>
-                  <Ol g={GEO.beanie} t={0.012} />
-                </mesh>
-                <mesh geometry={GEO.beanieRim} material={M.hat} position={[0, 0.11, -0.01]} rotation={[Math.PI / 2, 0, 0]} />
-                <mesh geometry={GEO.pompom} material={M.white} position={[0, 0.52, -0.02]} />
-              </group>
-            ) : (
-              <group>
-                <mesh geometry={hairGeo} material={M.hair} castShadow>
-                  <Ol g={hairGeo} t={0.01} />
-                </mesh>
-                {hi && <mesh geometry={halo} material={M.hairShine} position={[0, 0.17, -0.02]} rotation={[Math.PI / 2 - 0.25, 0, Math.PI * 0.95]} />}
-                {look.hairStyle === 'updo' && (
-                  <mesh geometry={GEO.bun} material={M.hair} position={[0, 0.4, -0.16]}>
-                    <Ol g={GEO.bun} t={0.01} />
+              )}
+              {look.hairStyle === 'curly' &&
+                Array.from({ length: 12 }, (_, i) => {
+                  const a = (i / 12) * Math.PI * 2;
+                  return <mesh key={i} geometry={GEO.curl} material={M.hair} position={[Math.cos(a) * 0.3, 0.2 + (i % 3) * 0.05, Math.sin(a) * 0.26 - 0.05]} />;
+                })}
+              {look.hairStyle === 'veil' && (
+                <group>
+                  <mesh position={[0, 0.36, 0.12]} rotation={[-0.25, 0, 0]} material={M.gold}>
+                    <torusGeometry args={[0.13, 0.02, 8, 22, Math.PI]} />
                   </mesh>
-                )}
-                {look.hairStyle === 'curly' &&
-                  Array.from({ length: 12 }, (_, i) => {
-                    const a = (i / 12) * Math.PI * 2;
-                    return <mesh key={i} geometry={GEO.curl} material={M.hair} position={[Math.cos(a) * 0.3, 0.2 + (i % 3) * 0.05, Math.sin(a) * 0.26 - 0.05]} />;
-                  })}
-                {look.hairStyle === 'veil' && (
-                  <group>
-                    <mesh position={[0, 0.36, 0.12]} rotation={[-0.25, 0, 0]} material={M.gold}>
-                      <torusGeometry args={[0.13, 0.02, 8, 22, Math.PI]} />
-                    </mesh>
-                    <mesh position={[0, -0.1, -0.3]} rotation={[0.12, 0, 0]}>
-                      <coneGeometry args={[0.42, 1.0, 24, 1, true]} />
-                      <meshStandardMaterial color="#FFFFFF" transparent opacity={0.45} roughness={0.3} side={THREE.DoubleSide} depthWrite={false} />
-                    </mesh>
-                  </group>
-                )}
-              </group>
-            )}
-          </group>
+                  <mesh position={[0, -0.1, -0.3]} rotation={[0.12, 0, 0]}>
+                    <coneGeometry args={[0.42, 1.0, 24, 1, true]} />
+                    <meshStandardMaterial color="#FFFFFF" transparent opacity={0.45} roughness={0.3} side={THREE.DoubleSide} depthWrite={false} />
+                  </mesh>
+                </group>
+              )}
+            </group>
+          )}
 
           {has('glasses') && hi && (
             <group position={[0, -0.04, 0.35]}>
@@ -650,17 +602,12 @@ const AnimeChibi: React.FC<ClayCharacter3DProps> = ({
 
           {mood === 'happy' && hi && (
             <Html position={[0, 0.6, 0]} center zIndexRange={[20, 0]}>
-              <div className="pointer-events-none select-none text-xl">🌸✨</div>
+              <div className="pointer-events-none select-none text-xl">✨</div>
             </Html>
           )}
           {mood === 'confused' && hi && (
             <Html position={[0.3, 0.52, 0]} center zIndexRange={[20, 0]}>
-              <div className="pointer-events-none select-none text-xl font-bold text-ghibli-ink">💧❓</div>
-            </Html>
-          )}
-          {isSpeaking && mood !== 'happy' && mood !== 'confused' && hi && (
-            <Html position={[-0.34, 0.5, 0]} center zIndexRange={[20, 0]}>
-              <div className="pointer-events-none select-none text-base">🎵</div>
+              <div className="pointer-events-none select-none text-xl font-bold text-ghibli-ink">❓</div>
             </Html>
           )}
           {nameTag && <NameTag y={0.66} text={nameTag} />}
@@ -682,7 +629,13 @@ function irisFromHair(hair: string) {
 
 const NameTag: React.FC<{ y: number; text: string }> = ({ y, text }) => (
   <Html position={[0, y, 0]} center zIndexRange={[20, 0]}>
-    <div className="pointer-events-none whitespace-nowrap rounded-full border border-[#D4B896] bg-[#FFFDF9]/95 px-2.5 py-0.5 text-xs font-extrabold text-ghibli-ink shadow-[0_2px_0_rgba(138,104,74,0.22),0_4px_10px_rgba(59,42,34,0.1)]">
+    <div
+      className={
+        isGhibli
+          ? 'pointer-events-none whitespace-nowrap rounded-full border-2 border-ghibli-clay bg-ghibli-cream px-2.5 py-0.5 text-xs font-bold text-ghibli-ink shadow-[0_2px_0_#6B4E3D]'
+          : 'pointer-events-none whitespace-nowrap rounded-full border border-white/25 bg-ghibli-cream/95 px-2.5 py-0.5 text-xs font-bold text-ghibli-ink shadow-lg'
+      }
+    >
       {text}
     </div>
   </Html>
@@ -719,17 +672,17 @@ const HandProp: React.FC<{ kind: NonNullable<LookConfig['propArt']>; M: Mats }> 
     )}
     {(kind === 'tablet' || kind === 'clipboard') && (
       <RoundedBox args={[0.17, 0.23, 0.02]} radius={0.01} smoothness={2} position={[0, 0.05, 0]} rotation={[-0.4, 0, 0]}>
-        <meshToonMaterial color={kind === 'tablet' ? '#3E9B94' : '#B45309'} gradientMap={RAMP} />
+        <meshToonMaterial color={kind === 'tablet' ? '#0EA5E9' : '#B45309'} gradientMap={RAMP} />
       </RoundedBox>
     )}
     {kind === 'bouquet' && (
       <group position={[0, 0.07, 0]}>
         {(
           [
-            [0, 0, 0, '#E0643E'],
-            [0.05, 0.035, 0.025, '#F4A2B8'],
-            [-0.045, 0.03, 0.035, '#FFF8EC'],
-            [0.02, 0.05, -0.035, '#F2B84B'],
+            [0, 0, 0, '#F43F5E'],
+            [0.05, 0.035, 0.025, '#FDA4AF'],
+            [-0.045, 0.03, 0.035, '#FFFFFF'],
+            [0.02, 0.05, -0.035, '#FB7185'],
           ] as const
         ).map(([x, y, z, c], i) => (
           <mesh key={i} position={[x, y, z]}>
@@ -739,7 +692,7 @@ const HandProp: React.FC<{ kind: NonNullable<LookConfig['propArt']>; M: Mats }> 
         ))}
         <mesh position={[0, -0.09, 0]}>
           <coneGeometry args={[0.05, 0.14, 10]} />
-          <meshToonMaterial color="#7FBF6A" gradientMap={RAMP} />
+          <meshToonMaterial color="#15803D" gradientMap={RAMP} />
         </mesh>
       </group>
     )}

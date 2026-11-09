@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { SCENES, SCHEDULE, SHOP, TIPS } from '../data/content';
+import { PRON_RECENT_WINDOW } from '../data/pronunciation';
 import {
   EvaluatedToken,
   GameState,
@@ -60,6 +61,7 @@ export const DEFAULT_STATE: GameState = {
   tour: { acked: {}, skipped: false },
   muted: false,
   voiceURI: null,
+  pron: { progress: {}, recent: [] },
 };
 
 export { chaNeed } from './career';
@@ -265,6 +267,9 @@ interface GameStore {
   setQuestOpen: (open: boolean) => void;
   helpOpen: boolean;
   setHelpOpen: (open: boolean) => void;
+  pronOpen: boolean;
+  setPronOpen: (open: boolean) => void;
+  recordPron: (drillId: string, ok: boolean) => void;
   ackTour: (stepId: string) => void;
   skipTour: () => void;
 }
@@ -294,6 +299,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   worldTarget: null,
   questOpen: false,
   helpOpen: false,
+  pronOpen: false,
 
   bonusOf: (key) => {
     const items = get().state.items;
@@ -1037,6 +1043,21 @@ export const useGameStore = create<GameStore>((set, get) => ({
   setHelpOpen: (open) => {
     SFX.play('page');
     set({ helpOpen: open });
+  },
+
+  setPronOpen: (open) => {
+    SFX.play('page');
+    set({ pronOpen: open });
+  },
+
+  recordPron: (drillId, ok) => {
+    const next = deepClone(get().state);
+    const prev = next.pron.progress[drillId] || { tries: 0, ok: 0 };
+    next.pron.progress[drillId] = { tries: prev.tries + 1, ok: prev.ok + (ok ? 1 : 0) };
+    next.pron.recent = [...next.pron.recent, drillId].slice(-PRON_RECENT_WINDOW);
+    set({ state: next });
+    persistStateDebounced(next);
+    if (ok) get().gain({ xp: 5 });
   },
 
   setQuestOpen: (open) => {

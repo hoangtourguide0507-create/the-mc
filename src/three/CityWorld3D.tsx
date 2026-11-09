@@ -3,8 +3,8 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Environment, Html, Lightformer, MapControls, PerformanceMonitor } from '@react-three/drei';
 import { Bloom, BrightnessContrast, EffectComposer, HueSaturation, ToneMapping, Vignette } from '@react-three/postprocessing';
 import { ToneMappingMode } from 'postprocessing';
-import { GHIBLI, GHIBLI_NIGHT_LIGHT, ghibliSky } from './artStyle';
-import { GhibliAtmosphere, GhibliBirds, GhibliClouds, GrassTufts } from './city/GhibliDecor';
+import { GHIBLI, GHIBLI_NIGHT_LIGHT, ghibliSky, isGhibli } from './artStyle';
+import { GhibliClouds, GrassTufts } from './city/GhibliDecor';
 import * as THREE from 'three';
 import { getPlayerLook, GIG_ORDER, PASSER_LOOKS, SCHEDULE, SCENES, STREET_TALK, WM_NAMES, WORLD_LOCS } from '../data/content';
 import {
@@ -38,15 +38,16 @@ const LABEL_Y: Record<string, number> = {
   beach: 2.6,
 };
 
-/* Lớp giao diện Cozy Modern Tactile cho overlay 2D trên bản đồ thành phố */
+/* Lớp giao diện Ghibli cho overlay 2D (STYLE_GHIBLI mục 4): khung kem, viền clay, không blur,
+   nút tối thiểu 48px. Chỉ đổi giao diện, không đổi handler. */
 const BTN_PRIMARY =
-  'btn-tactile-sage min-h-[44px] rounded-2xl px-3.5 text-xs font-black text-white disabled:cursor-not-allowed disabled:opacity-55';
+  'min-h-[48px] rounded-2xl border-2 border-ghibli-clay bg-gradient-to-b from-[#B9E29C] to-[#9FD68A] px-3 text-sm font-black text-ghibli-ink shadow-[0_3px_0_#6B4E3D] transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60';
 const BTN_SUN =
-  'btn-tactile-amber min-h-[44px] rounded-2xl px-3.5 text-xs font-black text-ghibli-ink disabled:cursor-not-allowed disabled:opacity-55';
+  'min-h-[48px] rounded-2xl border-2 border-ghibli-clay bg-gradient-to-b from-[#FBD27A] to-[#F7C35C] px-3 text-sm font-black text-ghibli-ink shadow-[0_3px_0_#6B4E3D] transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60';
 const BTN_CHIP =
-  'btn-tactile min-h-[40px] rounded-full px-3 text-xs font-extrabold text-ghibli-ink disabled:cursor-not-allowed disabled:opacity-55';
+  'min-h-[48px] rounded-2xl border-2 border-ghibli-clay bg-ghibli-cream px-3 text-sm font-extrabold text-ghibli-ink shadow-[0_3px_0_#6B4E3D] transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60';
 const TEXT_SOFT = 'text-ghibli-ink-soft';
-const ACCENT_TEXT = 'text-[#1F7A73]';
+const ACCENT_TEXT = 'text-[#9C3F22]';
 
 interface McState extends PasserAgentLike {
   stepsWalked: number;
@@ -125,7 +126,8 @@ export const CityWorld3D: React.FC = () => {
   const periodMeta = getPeriodMeta(state.clock);
   const night = periodMeta.isNight;
   const playerLook = useMemo(() => getPlayerLook(state.items), [state.items]);
-  const sky = ghibliSky(periodMeta.id);
+  // Bầu trời: Ghibli theo buổi (ngày xanh nhạt, hoàng hôn, đêm xanh tím); neon giữ màu cũ
+  const sky = ghibliSky(periodMeta.id) ?? { top: periodMeta.skyTop, bottom: periodMeta.skyBottom, fog: periodMeta.skyBottom };
   const initialDoor = WORLD_LOCS[state.loc]?.doorTile || WORLD_LOCS.home.doorTile;
 
   const mcRef = useRef<McState>({
@@ -272,9 +274,16 @@ export const CityWorld3D: React.FC = () => {
       }
     }
     const used = useGameStore.getState().streetTalkDoneIds;
-    const matchLoc = STREET_TALK.find((it) => !used[it.id] && it.loc === closestLoc && it.when.includes(curPeriod));
-    const matchGen = STREET_TALK.find((it) => !used[it.id] && it.loc === null && it.when.includes(curPeriod));
-    const chosen = matchLoc || matchGen || STREET_TALK.find((it) => !used[it.id]) || STREET_TALK[0];
+    // Chọn ngẫu nhiên trong các tình huống phù hợp (đúng địa điểm, đúng buổi, chưa làm hôm nay)
+    const pickRandom = (list: typeof STREET_TALK) => list[Math.floor(Math.random() * list.length)];
+    const unused = STREET_TALK.filter((it) => !used[it.id]);
+    const matchLoc = unused.filter((it) => it.loc === closestLoc && it.when.includes(curPeriod));
+    const matchGen = unused.filter((it) => it.loc === null && it.when.includes(curPeriod));
+    const chosen =
+      (matchLoc.length ? pickRandom(matchLoc) : null) ||
+      (matchGen.length ? pickRandom(matchGen) : null) ||
+      (unused.length ? pickRandom(unused) : null) ||
+      STREET_TALK[0];
     passer.talkedToday = true;
     openStreetTalk(passer.name, passer.lookIdx, chosen);
   };
@@ -340,11 +349,11 @@ export const CityWorld3D: React.FC = () => {
     WORLD_LOCS[locId].scenes.length > 0 &&
     WORLD_LOCS[locId].scenes.every((sId) => state.charisma.lv < SCENES[sId].reqLv || !repOk(sId, state));
 
-  const topOffset = 'calc(max(0.5rem, env(safe-area-inset-top)) + 52px)';
+  const topOffset = 'calc(max(0.5rem, env(safe-area-inset-top)) + 74px)';
 
   return (
     <div
-      className="relative h-full w-full overflow-hidden bg-[#BFE3F2]"
+      className={`relative h-full w-full overflow-hidden ${isGhibli ? 'bg-[#BFE3F2]' : 'bg-[#0E0725]'}`}
       onPointerDown={(e) => {
         dragStartRef.current = { x: e.clientX, y: e.clientY };
       }}
@@ -383,20 +392,18 @@ export const CityWorld3D: React.FC = () => {
           onFallback={() => setDpr(1)}
         />
         <SkyDome top={sky.top} bottom={sky.bottom} />
-        <fog attach="fog" args={[sky.fog, 30, 86]} />
-        <GhibliClouds night={night} />
-        <GhibliBirds night={night} />
-        <GhibliAtmosphere night={night} />
+        <fog attach="fog" args={[sky.fog, isGhibli ? 30 : 38, isGhibli ? 85 : 95]} />
+        {isGhibli && <GhibliClouds night={night} />}
         <SceneLights meta={periodMeta} controlsRef={controlsRef} />
-        <Environment resolution={64} frames={1} environmentIntensity={night ? 0.16 : 0.32}>
+        <Environment resolution={64} frames={1} environmentIntensity={isGhibli ? (night ? 0.15 : 0.3) : night ? 0.3 : 0.6}>
           <Lightformer form="rect" intensity={2} position={[0, 10, 0]} rotation-x={Math.PI / 2} scale={[20, 20, 1]} color="#FFFFFF" />
-          <Lightformer form="rect" intensity={1.4} position={[-10, 3, 0]} rotation-y={Math.PI / 2} scale={[10, 4, 1]} color="#FFE7B0" />
-          <Lightformer form="rect" intensity={1.4} position={[10, 3, 0]} rotation-y={-Math.PI / 2} scale={[10, 4, 1]} color="#CFEFFF" />
+          <Lightformer form="rect" intensity={1.4} position={[-10, 3, 0]} rotation-y={Math.PI / 2} scale={[10, 4, 1]} color={isGhibli ? '#FFE7B0' : '#FF4FD8'} />
+          <Lightformer form="rect" intensity={1.4} position={[10, 3, 0]} rotation-y={-Math.PI / 2} scale={[10, 4, 1]} color={isGhibli ? '#CFEFFF' : '#22D3EE'} />
           <Lightformer form="rect" intensity={1} position={[0, 3, 10]} scale={[10, 4, 1]} color="#FDE68A" />
         </Environment>
 
         <CityGround grid={grid} night={night} onTile={handleSelectTile} />
-        <GrassTufts grid={grid} />
+        {isGhibli && <GrassTufts grid={grid} />}
         {Object.values(WORLD_LOCS).map((loc) => (
           <Landmark key={loc.id} loc={loc} night={night} onSelect={handleSelectBuilding} />
         ))}
@@ -443,16 +450,14 @@ export const CityWorld3D: React.FC = () => {
                 className="flex min-h-[48px] min-w-[48px] items-center justify-center px-1 py-1 transition active:scale-95"
               >
                 <span
-                  className={`flex items-center gap-1 whitespace-nowrap rounded-full border px-2.5 py-1 text-xs font-extrabold shadow-[0_3px_0_rgba(138,104,74,0.22),0_6px_12px_rgba(59,42,34,0.12)] ${
-                    hot
-                      ? 'border-[#C97D10] bg-gradient-to-b from-[#FFE082] to-[#FFC652] text-ghibli-ink'
-                      : 'border-[#D4B896] bg-[#FFFDF9]/95 text-ghibli-ink'
+                  className={`flex items-center gap-1 whitespace-nowrap rounded-full border-2 px-2.5 py-1 text-xs font-extrabold shadow-[0_2px_0_#6B4E3D] ${
+                    hot ? 'border-ghibli-clay bg-[#FBD27A] text-ghibli-ink' : 'border-ghibli-clay bg-ghibli-cream text-ghibli-ink'
                   }`}
                 >
                   <span>{loc.icon}</span>
                   <span>{loc.name}</span>
-                  {locked && <span className="opacity-70">🔒</span>}
-                  {hot && <span className="ml-0.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-[#D94E2F] text-xs font-black text-white">!</span>}
+                  {locked && <span>🔒</span>}
+                  {hot && <span className="ml-0.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-ghibli-coral text-xs font-black text-white">!</span>}
                 </span>
               </button>
             </Html>
@@ -474,29 +479,39 @@ export const CityWorld3D: React.FC = () => {
           screenSpacePanning={false}
         />
 
-        <EffectComposer multisampling={dpr >= 1.6 ? 4 : 2}>
-          <Bloom luminanceThreshold={1.85} luminanceSmoothing={0.32} intensity={night ? 0.32 : 0.1} radius={0.5} />
-          <ToneMapping mode={ToneMappingMode.NEUTRAL} />
-          <HueSaturation saturation={0.14} hue={0} />
-          <BrightnessContrast brightness={0.01} contrast={0.025} />
-          <Vignette eskil={false} offset={0.38} darkness={night ? 0.26 : 0.11} />
-        </EffectComposer>
+        {isGhibli ? (
+          <EffectComposer multisampling={dpr >= 1.6 ? 4 : 2}>
+            <Bloom luminanceThreshold={2} luminanceSmoothing={0.3} intensity={night ? 0.3 : 0.1} radius={0.5} />
+            <ToneMapping mode={ToneMappingMode.NEUTRAL} />
+            <HueSaturation saturation={0.14} hue={0} />
+            <BrightnessContrast brightness={0.01} contrast={0.02} />
+            <Vignette eskil={false} offset={0.4} darkness={night ? 0.25 : 0.08} />
+          </EffectComposer>
+        ) : (
+          <EffectComposer multisampling={dpr >= 1.6 ? 4 : 2}>
+            <Bloom luminanceThreshold={1} luminanceSmoothing={0.2} intensity={night ? 0.5 : 0.2} radius={0.5} />
+            <ToneMapping mode={ToneMappingMode.NEUTRAL} />
+            <Vignette eskil={false} offset={0.3} darkness={night ? 0.3 : 0.12} />
+          </EffectComposer>
+        )}
       </Canvas>
 
       {/* Thanh trên: đồng hồ, khu phố, nút nhanh */}
-      <div className="pointer-events-none absolute inset-x-0 z-20 mx-auto flex max-w-6xl items-start justify-between gap-2 px-2.5 sm:px-5" style={{ top: topOffset }}>
-        <div className="cozy-pill pointer-events-auto flex min-w-0 items-center gap-2 rounded-full px-3.5 py-1.5">
-          <span className="text-base">{periodMeta.icon}</span>
+      <div className="pointer-events-none absolute inset-x-0 z-20 flex items-start justify-between gap-2 px-3 sm:px-6" style={{ top: topOffset }}>
+        <div className="ghibli-panel pointer-events-auto flex min-w-0 items-center gap-2.5 rounded-2xl px-3 py-1.5">
+          <span className="text-lg">{periodMeta.icon}</span>
           <div className="min-w-0">
-            <div className="flex items-center gap-1.5 font-display text-xs font-black leading-snug text-ghibli-ink">
-              <span>{fmtTime(state.clock)} · {periodMeta.label}</span>
-              <span className="hidden text-ghibli-ink-soft sm:inline">· Ngày {state.day}</span>
-              <span className="text-[#1F7A73]">· {district.icon} {district.name}</span>
+            <div className="font-display text-sm font-black leading-snug text-ghibli-ink">
+              {fmtTime(state.clock)} · {periodMeta.label}
+              <span className={TEXT_SOFT}> · Ngày {state.day}</span>
+            </div>
+            <div className={`truncate text-xs font-semibold ${ACCENT_TEXT}`}>
+              {district.icon} {district.name} · {locationBannerText}
             </div>
           </div>
         </div>
         <div className="pointer-events-auto flex shrink-0 flex-col items-end gap-1.5 sm:flex-row sm:items-center">
-          <div className="flex gap-1.5">
+          <div className="flex gap-1">
             <button onClick={() => handleSelectBuilding('home')} className={BTN_CHIP}>
               🏠<span className="ml-1 hidden sm:inline">Về Nhà</span>
             </button>
@@ -519,17 +534,17 @@ export const CityWorld3D: React.FC = () => {
         <button
           onClick={() => setFollow(true)}
           aria-label="Định tâm về MC"
-          className="btn-tactile pointer-events-auto absolute right-4 z-30 flex h-12 w-12 items-center justify-center rounded-full text-xl"
-          style={{ bottom: 'calc(max(12px, env(safe-area-inset-bottom)) + 68px)' }}
+          className="ghibli-panel pointer-events-auto absolute right-4 z-30 flex h-12 w-12 items-center justify-center rounded-full text-2xl transition active:scale-95"
+          style={{ bottom: 'calc(max(12px, env(safe-area-inset-bottom)) + 76px)' }}
         >
           🎯
         </button>
       )}
 
-      {/* Đáy màn hình: thẻ cửa địa điểm + show kế tiếp */}
+      {/* Đáy màn hình: thẻ cửa địa điểm + show kế tiếp, xếp chồng không đè nhau */}
       <div
-        className="pointer-events-none absolute inset-x-0 bottom-0 z-30 mx-auto flex max-w-6xl flex-col items-center gap-2 px-2.5 sm:items-end sm:px-5"
-        style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}
+        className="pointer-events-none absolute inset-x-0 bottom-0 z-30 flex flex-col items-center gap-2 px-3 sm:items-end sm:px-6"
+        style={{ paddingBottom: 'calc(max(12px, env(safe-area-inset-bottom)) + 64px)' }}
       >
         {activeDoorLocId && WORLD_LOCS[activeDoorLocId] && (
           <DoorCard
@@ -545,25 +560,19 @@ export const CityWorld3D: React.FC = () => {
         {nextShowInfo ? (
           <button
             onClick={() => handleSelectBuilding(nextShowInfo.locId)}
-            className="cozy-card pointer-events-auto flex min-h-[48px] w-full max-w-md items-center gap-3 rounded-3xl px-4 py-2.5 text-left text-xs font-extrabold text-ghibli-ink transition hover:bg-[#FFF6E6] active:scale-[0.98]"
+            className="ghibli-panel pointer-events-auto flex min-h-[48px] w-full max-w-md items-center gap-3 rounded-2xl px-4 py-2 text-left text-sm font-extrabold text-ghibli-ink transition active:scale-[0.98]"
           >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#FFF3D6] text-xl">
-              {nextShowInfo.scene.icon}
-            </span>
+            <span className="text-lg">{nextShowInfo.scene.icon}</span>
             <div className="min-w-0 flex-1">
-              <div className={`text-xs font-black uppercase tracking-wider ${ACCENT_TEXT}`}>
-                Show kế tiếp · {fmtTime(nextShowInfo.startMin)}
-              </div>
+              <div className={`text-xs uppercase tracking-wider ${ACCENT_TEXT}`}>Show kế tiếp · {fmtTime(nextShowInfo.startMin)}</div>
               <div className="truncate font-display text-sm font-black text-ghibli-ink">
                 {nextShowInfo.scene.title} · {nextShowInfo.status.label}
               </div>
             </div>
-            <span className="btn-tactile-amber rounded-full px-3 py-1.5 text-xs font-black">
-              Đi tới ➔
-            </span>
+            <span className="rounded-full border-2 border-ghibli-clay bg-[#FBD27A] px-2.5 py-1 text-xs font-black text-ghibli-ink">Đi tới ➔</span>
           </button>
         ) : (
-          <div className={`cozy-pill pointer-events-auto w-full max-w-md rounded-full px-4 py-2 text-center text-xs font-bold ${TEXT_SOFT}`}>
+          <div className={`ghibli-panel pointer-events-auto w-full max-w-md rounded-2xl px-4 py-2 text-center text-sm font-bold ${TEXT_SOFT}`}>
             🌙 Hết show phù hợp hôm nay — luyện cà phê/siêu thị, trò chuyện người đi đường hoặc về nhà nghỉ.
           </div>
         )}
@@ -587,19 +596,19 @@ const DoorCard: React.FC<{
 }> = ({ locId, state, onClose, onEnterHub, onSleep, onWait, onStart }) => {
   const loc = WORLD_LOCS[locId];
   return (
-    <div className="cozy-card pointer-events-auto w-full max-w-md rounded-3xl p-4">
-      <div className="mb-3 flex items-center justify-between">
+    <div className="ghibli-panel pointer-events-auto w-full max-w-md rounded-3xl p-3.5">
+      <div className="mb-2.5 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#FAF4E8] text-2xl">{loc.icon}</span>
+          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-ghibli-track text-2xl">{loc.icon}</span>
           <div>
             <h3 className="font-display text-base font-black text-ghibli-ink">{loc.name}</h3>
-            <p className={`text-xs font-semibold ${TEXT_SOFT}`}>Đang đứng trước sảnh</p>
+            <p className={`text-xs ${TEXT_SOFT}`}>Đang đứng trước cửa</p>
           </div>
         </div>
         <button
           onClick={onClose}
           aria-label="Đóng"
-          className="btn-tactile flex h-9 w-9 items-center justify-center rounded-full text-xs font-black"
+          className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-ghibli-clay bg-ghibli-cream text-base font-bold text-ghibli-ink transition active:scale-95"
         >
           ✕
         </button>
@@ -615,33 +624,33 @@ const DoorCard: React.FC<{
           </button>
         </div>
       ) : (
-        <div className="space-y-2.5">
+        <div className="space-y-2">
           {loc.scenes.map((sceneId) => {
             const sc = SCENES[sceneId];
             const st = sceneStatus(sceneId, state.clock, state.doneToday);
             const reason = blockReason(sceneId, state);
             const waitMin = getWaitTargetMinute(sceneId, state.clock);
             return (
-              <div key={sceneId} className="ticket-pass rounded-2xl p-3">
+              <div key={sceneId} className="rounded-2xl border-2 border-ghibli-clay/40 bg-ghibli-track/50 p-2.5">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5">
                       <span>{sc.icon}</span>
                       <span className="truncate font-display text-sm font-extrabold text-ghibli-ink">{sc.title}</span>
                     </div>
-                    <div className={`mt-0.5 text-xs font-bold ${ACCENT_TEXT}`}>🕒 {st.label}</div>
+                    <div className={`mt-0.5 text-xs font-semibold ${ACCENT_TEXT}`}>{st.label}</div>
                   </div>
-                  <span className="shrink-0 rounded-full bg-[#F3E8FB] px-2.5 py-0.5 text-xs font-black text-[#6535C4]">
+                  <span className="shrink-0 rounded-full border-2 border-ghibli-clay bg-ghibli-cream px-2 py-0.5 text-xs font-bold text-ghibli-ink">
                     Lv.{sc.reqLv}
                     {sc.minRep ? ` · ⭐${sc.minRep.toFixed(1)}` : ''}
                   </span>
                 </div>
-                <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-dashed border-[#E6D6C1] pt-2 text-xs">
-                  <div className="flex flex-wrap items-center gap-2 font-extrabold text-ghibli-ink">
-                    {sc.reward.cash ? <span className="text-[#9C5B00]">+${sc.reward.cash}</span> : null}
-                    {sc.reward.energy ? <span className="text-[#2C731D]">+{sc.reward.energy} ⚡</span> : null}
-                    <span className="text-[#6535C4]">+{sc.reward.charisma} Cha</span>
-                    {sc.energy > 0 && <span className="text-[#B2351A]">−{sc.energy} ⚡</span>}
+                <div className="mt-2 flex items-center justify-between gap-2 text-xs">
+                  <div className="flex flex-wrap items-center gap-2 font-bold text-ghibli-ink">
+                    {sc.reward.cash ? <span className="text-[#8A5A00]">+${sc.reward.cash}</span> : null}
+                    {sc.reward.energy ? <span className="text-[#3F7A2E]">+{sc.reward.energy} ⚡</span> : null}
+                    <span className="text-[#5B3F8C]">+{sc.reward.charisma} Cha</span>
+                    {sc.energy > 0 && <span className="text-[#A4472A]">−{sc.energy} ⚡</span>}
                   </div>
                   <div className="flex items-center gap-1.5">
                     {waitMin !== null && (st.state === 'early' || st.state === 'closed') && (
@@ -654,7 +663,7 @@ const DoorCard: React.FC<{
                     </button>
                   </div>
                 </div>
-                {reason && <p className="mt-1.5 text-xs font-bold text-[#B2351A]">⚠️ {reason}</p>}
+                {reason && <p className="mt-1.5 text-xs font-semibold text-[#A4472A]">⚠️ {reason}</p>}
               </div>
             );
           })}
@@ -668,17 +677,29 @@ const DoorCard: React.FC<{
 /* Bản đồ nhỏ                                                           */
 /* ------------------------------------------------------------------ */
 
-const MINI_COLORS: Record<string, string> = {
-  grass: '#A8D98A',
-  park: '#B3DD92',
-  walk: '#F3E7CF',
-  plaza: '#EBDAB8',
-  sand: '#F5E4B8',
-  water: '#8FD3E8',
-  'road-x': '#8E8576',
-  'road-y': '#8E8576',
-  cross: '#8E8576',
-};
+const MINI_COLORS: Record<string, string> = isGhibli
+  ? {
+      grass: '#A8D98A',
+      park: '#B3DD92',
+      walk: '#F3E7CF',
+      plaza: '#EBDAB8',
+      sand: '#F5E4B8',
+      water: '#8FD3E8',
+      'road-x': '#8E8576',
+      'road-y': '#8E8576',
+      cross: '#8E8576',
+    }
+  : {
+      grass: '#3E9B4C',
+      park: '#55B863',
+      walk: '#A8A29E',
+      plaza: '#D6C7AE',
+      sand: '#F2D48F',
+      water: '#1E88C8',
+      'road-x': '#2B2F3A',
+      'road-y': '#2B2F3A',
+      cross: '#2B2F3A',
+    };
 
 const MiniMap: React.FC<{ grid: GridData; mc: [number, number]; onPick: (id: string) => void; hotAt: (id: string) => boolean }> = ({
   grid,
@@ -691,7 +712,7 @@ const MiniMap: React.FC<{ grid: GridData; mc: [number, number]; onPick: (id: str
     for (let r = 0; r < GRID; r++)
       for (let c = 0; c < GRID; c++) {
         const b = grid.buildingAtTile.get(`${c},${r}`);
-        const fill = b ? (b === 'filler' ? '#C9B8A6' : WORLD_LOCS[b]?.color || '#888') : MINI_COLORS[grid.tiles[r][c]];
+        const fill = b ? (b === 'filler' ? (isGhibli ? '#C9B8A6' : '#6B5B95') : WORLD_LOCS[b]?.color || '#888') : MINI_COLORS[grid.tiles[r][c]];
         out.push(<rect key={`${c},${r}`} x={c} y={r} width={1.02} height={1.02} fill={fill} />);
       }
     return out;
@@ -715,7 +736,7 @@ const MiniMap: React.FC<{ grid: GridData; mc: [number, number]; onPick: (id: str
             </text>
           </g>
         ))}
-        <circle cx={mc[0] + 0.5} cy={mc[1] + 0.5} r={1.1} fill="#3E9B94" stroke="#fff" strokeWidth={0.35}>
+        <circle cx={mc[0] + 0.5} cy={mc[1] + 0.5} r={1.1} fill={isGhibli ? '#3E9B94' : '#22D3EE'} stroke="#fff" strokeWidth={0.35}>
           <animate attributeName="r" values="0.9;1.4;0.9" dur="1.4s" repeatCount="indefinite" />
         </circle>
       </svg>
@@ -778,20 +799,25 @@ const SceneLights: React.FC<{ meta: ReturnType<typeof getPeriodMeta>; controlsRe
   const night = meta.isNight;
   return (
     <>
-      <hemisphereLight
-        args={
-          night
-            ? [GHIBLI_NIGHT_LIGHT.hemiSky, GHIBLI_NIGHT_LIGHT.hemiGround, 0.38]
-            : meta.id === 'evening'
-            ? ['#B9A6D6', '#B8806A', 0.7]
-            : [GHIBLI.hemiSky, GHIBLI.hemiGround, 0.95]
-        }
-      />
-      <ambientLight intensity={meta.ambientIntensity * (night ? 0.2 : 0.26)} />
+      {isGhibli ? (
+        // Ghibli: nắng ấm vàng kem, bóng mát tông xanh nhạt; chiều tối ấm hơn; đêm xanh tím
+        <hemisphereLight
+          args={
+            night
+              ? [GHIBLI_NIGHT_LIGHT.hemiSky, GHIBLI_NIGHT_LIGHT.hemiGround, 0.38]
+              : meta.id === 'evening'
+              ? ['#B9A6D6', '#B8806A', 0.7]
+              : [GHIBLI.hemiSky, GHIBLI.hemiGround, 0.95]
+          }
+        />
+      ) : (
+        <hemisphereLight args={[night ? '#3B3F8F' : meta.skyTop, night ? '#120A30' : '#6B5040', night ? 0.38 : 0.55]} />
+      )}
+      <ambientLight intensity={meta.ambientIntensity * (night ? 0.2 : isGhibli ? 0.25 : 0.35)} />
       <directionalLight
         ref={sun}
-        intensity={meta.sunIntensity * (night ? 0.9 : 1.6)}
-        color={!night && meta.id !== 'evening' ? GHIBLI.sun : meta.sunColor}
+        intensity={meta.sunIntensity * (night ? 0.9 : isGhibli ? 1.6 : 1.45)}
+        color={isGhibli && !night && meta.id !== 'evening' ? GHIBLI.sun : meta.sunColor}
         castShadow
         shadow-mapSize={[2048, 2048]}
         shadow-bias={-0.0004}
@@ -872,11 +898,11 @@ const WaypointMarker: React.FC<{ tile: [number, number] }> = ({ tile }) => {
     <group ref={ref} position={[x, 0.09, z]}>
       <mesh rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[0.2, 0.34, 32]} />
-        <meshBasicMaterial color="#E0643E" transparent opacity={0.9} />
+        <meshBasicMaterial color={isGhibli ? '#E0643E' : '#FF4FD8'} transparent opacity={0.9} />
       </mesh>
       <mesh position={[0, 0.35, 0]} rotation={[Math.PI, 0, 0]}>
         <coneGeometry args={[0.09, 0.22, 12]} />
-        <meshStandardMaterial color="#E0643E" emissive="#E0643E" emissiveIntensity={0.5} />
+        <meshStandardMaterial color={isGhibli ? '#E0643E' : '#FF4FD8'} emissive={isGhibli ? '#E0643E' : '#FF4FD8'} emissiveIntensity={isGhibli ? 0.5 : 1.4} />
       </mesh>
     </group>
   );

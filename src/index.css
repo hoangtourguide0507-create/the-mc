@@ -4,133 +4,18 @@
 
 :root {
   color-scheme: light;
-  background-color: #F5E6CC;
+  background-color: #BFE6F2;
 }
 
-/* Hệ thống Cozy Modern Tactile UI (kiểu Animal Crossing / Duolingo):
-   Bo tròn mềm mại, phân tầng màu kem sữa ấm, nút bấm nổi khối 3D có độ nảy,
-   loại bỏ viền nâu đậm lặp lại gây nặng nề. */
+/* Khung kiểu giấy kem Ghibli: nền đặc, không blur, viền nâu ấm.
+   Đặt trong @layer components để class text- và border- của Tailwind vẫn ghi đè được. */
 @layer components {
   .ghibli-panel {
-    background: #FFFDF8;
+    background: #FFF8EC;
     color: #3B2A22;
-    border: 1.5px solid rgba(168, 134, 102, 0.35);
-    box-shadow:
-      0 4px 0 rgba(138, 104, 74, 0.16),
-      0 10px 24px rgba(59, 42, 34, 0.1);
+    border: 2px solid #6B4E3D;
+    box-shadow: 0 3px 0 rgba(107, 78, 61, 0.35), 0 6px 14px rgba(59, 42, 34, 0.18);
   }
-
-  .cozy-card {
-    background: #FFFDF9;
-    color: #3B2A22;
-    border: 1.5px solid rgba(168, 134, 102, 0.28);
-    box-shadow:
-      0 4px 0 rgba(138, 104, 74, 0.14),
-      0 12px 28px rgba(59, 42, 34, 0.1);
-  }
-
-  .cozy-pill {
-    background: #FFFDF9;
-    color: #3B2A22;
-    border: 1.5px solid rgba(168, 134, 102, 0.32);
-    box-shadow:
-      0 3px 0 rgba(138, 104, 74, 0.16),
-      0 6px 14px rgba(59, 42, 34, 0.08);
-  }
-
-  .btn-tactile {
-    background: #FFFDF9;
-    color: #3B2A22;
-    border: 1.5px solid rgba(145, 112, 82, 0.38);
-    box-shadow: 0 3px 0 rgba(122, 90, 62, 0.22);
-    transition: transform 0.12s ease, box-shadow 0.12s ease, background-color 0.15s ease;
-  }
-  .btn-tactile:hover:not(:disabled) {
-    background: #FFF6E6;
-  }
-  .btn-tactile:active:not(:disabled) {
-    transform: translateY(2px);
-    box-shadow: 0 1px 0 rgba(122, 90, 62, 0.22);
-  }
-
-  .btn-tactile-sage {
-    background: linear-gradient(180deg, #74C65E 0%, #58AD42 100%);
-    color: #FFFFFF;
-    border: 1.5px solid #3F8D2B;
-    box-shadow: 0 4px 0 #3A8027, 0 8px 16px rgba(63, 141, 43, 0.24);
-    transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.15s ease;
-  }
-  .btn-tactile-sage:hover:not(:disabled) {
-    filter: brightness(1.04);
-  }
-  .btn-tactile-sage:active:not(:disabled) {
-    transform: translateY(2px);
-    box-shadow: 0 2px 0 #3A8027;
-  }
-
-  .btn-tactile-amber {
-    background: linear-gradient(180deg, #FFC652 0%, #F0A32A 100%);
-    color: #3B2A22;
-    border: 1.5px solid #C97D10;
-    box-shadow: 0 4px 0 #B8700B, 0 8px 16px rgba(240, 163, 42, 0.24);
-    transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.15s ease;
-  }
-  .btn-tactile-amber:hover:not(:disabled) {
-    filter: brightness(1.04);
-  }
-  .btn-tactile-amber:active:not(:disabled) {
-    transform: translateY(2px);
-    box-shadow: 0 2px 0 #B8700B;
-  }
-
-  .btn-tactile-teal {
-    background: linear-gradient(180deg, #43B0A8 0%, #2D8F87 100%);
-    color: #FFFFFF;
-    border: 1.5px solid #1F6E68;
-    box-shadow: 0 4px 0 #1B615C, 0 8px 16px rgba(45, 143, 135, 0.24);
-    transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.15s ease;
-  }
-  .btn-tactile-teal:active:not(:disabled) {
-    transform: translateY(2px);
-    box-shadow: 0 2px 0 #1B615C;
-  }
-
-  .btn-tactile-coral {
-    background: linear-gradient(180deg, #F06D4E 0%, #D94E2F 100%);
-    color: #FFFFFF;
-    border: 1.5px solid #AE361B;
-    box-shadow: 0 4px 0 #9E2F16, 0 8px 16px rgba(217, 78, 47, 0.26);
-    transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.15s ease;
-  }
-  .btn-tactile-coral:active:not(:disabled) {
-    transform: translateY(2px);
-    box-shadow: 0 2px 0 #9E2F16;
-  }
-
-  /* Thẻ Vé Show (Ticket Pass) có rãnh khuyết 2 bên */
-  .ticket-pass {
-    position: relative;
-    background: #FFFDF9;
-    border: 1.5px solid rgba(168, 134, 102, 0.32);
-    box-shadow:
-      0 4px 0 rgba(138, 104, 74, 0.15),
-      0 8px 20px rgba(59, 42, 34, 0.08);
-  }
-}
-
-@keyframes ghibli-view-fade {
-  0% {
-    opacity: 0;
-    transform: translateY(4px) scale(0.995);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.animate-ghibli-view {
-  animation: ghibli-view-fade 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 html,
@@ -141,23 +26,23 @@ body,
   width: 100%;
   height: 100%;
   height: 100dvh; /* iOS Safari: tránh bị cắt đáy khi thanh địa chỉ ẩn/hiện */
-  background-color: #F5E6CC;
+  background-color: #BFE6F2;
   overflow: hidden;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
 }
 
-/* Custom subtle scrollbars (Ghibli Warm Clay) */
+/* Custom subtle scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(234, 223, 203, 0.6);
+  background: rgba(234, 223, 203, 0.7);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(107, 78, 61, 0.45);
+  background: rgba(107, 78, 61, 0.35);
   border-radius: 9999px;
 }

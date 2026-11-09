@@ -2,10 +2,11 @@ import React, { useEffect, useRef, useState } from 'react';
 import { chaNeed, useGameStore } from '../core/store';
 import { fmtRep, levelTitle, MAX_LV } from '../core/career';
 
-/** Khoảng đệm trên: chỉ còn 1 dải Pill nổi gọn gàng ở đỉnh màn hình */
-export const HUD_PAD = 'calc(max(0.5rem, env(safe-area-inset-top)) + 54px)';
-/** Khoảng đệm dưới: đã bỏ thanh năng lượng khổng lồ ở đáy, chỉ chừa safe-area */
-export const HUD_BOTTOM_PAD = 'calc(max(0.5rem, env(safe-area-inset-bottom)) + 8px)';
+/** Khoảng đệm phía trên cho nội dung nằm dưới HUD (tính cả tai thỏ iPhone) */
+/** Khoảng đệm trên: chỉ còn một hàng thẻ cấp độ và tiền (tính cả tai thỏ iPhone) */
+export const HUD_PAD = 'calc(max(0.5rem, env(safe-area-inset-top)) + 84px)';
+/** Khoảng đệm dưới: dành chỗ cho thanh năng lượng nằm ở đáy màn hình */
+export const HUD_BOTTOM_PAD = 'calc(env(safe-area-inset-bottom) + 64px)';
 
 function useAnimatedNumber(target: number, duration = 800): number {
   const [display, setDisplay] = useState(target);
@@ -22,6 +23,7 @@ function useAnimatedNumber(target: number, duration = 800): number {
       if (startTimeRef.current === null) startTimeRef.current = ts;
       const elapsed = ts - startTimeRef.current;
       const t = Math.min(1, elapsed / duration);
+      // Cubic ease-out: 1 - (1 - t)^3
       const eased = 1 - Math.pow(1 - t, 3);
       const val = Math.round(
         startValRef.current + (target - startValRef.current) * eased
@@ -42,7 +44,6 @@ function useAnimatedNumber(target: number, duration = 800): number {
 export const HUD: React.FC = () => {
   const state = useGameStore((s) => s.state);
   const floatingGains = useGameStore((s) => s.floatingGains);
-  const setShopOpen = useGameStore((s) => s.setShopOpen);
 
   const animEnergy = useAnimatedNumber(state.energy);
   const animChaPts = useAnimatedNumber(state.charisma.pts);
@@ -50,16 +51,17 @@ export const HUD: React.FC = () => {
   const animCash = useAnimatedNumber(state.cash);
 
   const energyPct = Math.round((state.energy / state.maxEnergy) * 100);
-  const energyFillColor =
+  const energyBarColor =
     energyPct <= 25
-      ? 'bg-gradient-to-r from-[#F06D4E] to-[#D94E2F]'
+      ? 'from-rose-500 to-red-600'
       : energyPct <= 50
-      ? 'bg-gradient-to-r from-[#FFC652] to-[#F0A32A]'
-      : 'bg-gradient-to-r from-[#74C65E] to-[#4F9E3A]';
+      ? 'from-amber-400 to-yellow-500'
+      : 'from-emerald-400 to-lime-400';
 
   const isMax = state.charisma.lv >= MAX_LV;
   const needCha = chaNeed(state.charisma.lv);
   const chaPct = isMax ? 100 : Math.min(100, Math.round((state.charisma.pts / needCha) * 100));
+  const xpModPct = state.xp % 100;
 
   const renderFloats = (stat: 'energy' | 'charisma' | 'xp' | 'cash') =>
     floatingGains
@@ -67,10 +69,10 @@ export const HUD: React.FC = () => {
       .map((f) => (
         <span
           key={f.id}
-          className={`pointer-events-none absolute -bottom-6 right-1 z-50 whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-black shadow-md ${
+          className={`pointer-events-none absolute -bottom-5 right-2 z-50 rounded-full px-1.5 py-0.5 text-xs font-black shadow-lg ${
             f.delta > 0
-              ? 'border border-[#3F8D2B] bg-[#E8F8E2] text-[#286618]'
-              : 'border border-[#AE361B] bg-[#FDECE7] text-[#B2351A]'
+              ? 'bg-emerald-400 text-slate-950'
+              : 'bg-rose-500 text-white'
           }`}
         >
           {f.delta > 0 ? `+${f.delta}` : f.delta}
@@ -78,90 +80,83 @@ export const HUD: React.FC = () => {
       ));
 
   return (
-    <header
-      className="pointer-events-none fixed inset-x-0 top-0 z-40 px-2.5 sm:px-5"
-      style={{ paddingTop: 'max(0.5rem, env(safe-area-inset-top))' }}
-    >
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-1.5 sm:gap-2.5">
-        {/* 1. LEVEL & XP PILL (Left) */}
-        <div className="cozy-pill pointer-events-auto relative flex min-w-0 items-center gap-2 rounded-full py-1 pl-1.5 pr-3">
-          {/* Circular Level Badge */}
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-b from-[#9B6BFF] to-[#7342D6] font-display text-xs font-black text-white shadow-inner">
-            Lv.{state.charisma.lv}
-          </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5">
-              <span className="hidden truncate text-xs font-extrabold text-ghibli-ink sm:inline">
-                {levelTitle(state.charisma.lv)}
+    <>
+      {/* Hàng trên: cấp độ (trái) và tiền (phải) */}
+      <header
+        className="pointer-events-none fixed inset-x-0 top-0 z-40 px-2.5 sm:px-6"
+        style={{ paddingTop: 'max(0.5rem, env(safe-area-inset-top))' }}
+      >
+        <div className="mx-auto grid max-w-6xl grid-cols-2 gap-2 sm:gap-3">
+          {/* LEVEL CARD */}
+          <div className="pointer-events-auto relative overflow-visible rounded-2xl ghibli-panel px-3 py-1.5">
+            <div className="flex items-center justify-between gap-2 text-sm font-extrabold">
+              <span className="flex min-w-0 items-center gap-1 text-purple-700">
+                <span>✨</span>
+                <span className="truncate">Lv.{state.charisma.lv} · {levelTitle(state.charisma.lv)}</span>
               </span>
-              <span className="text-xs font-black text-[#6535C4]">
+              <span className="shrink-0 font-display text-xs text-ghibli-ink">
                 {isMax ? 'MAX' : `${animChaPts}/${needCha}`}
               </span>
-              <span className="text-xs font-bold text-[#1F7A73]">
-                · 🗣️ {animXp}
-              </span>
             </div>
-            {/* Mini Charisma Progress Bar */}
-            <div className="mt-0.5 h-1.5 w-24 overflow-hidden rounded-full bg-[#EFE6D5] sm:w-36">
+            <div className="mt-1 h-2.5 w-full overflow-hidden rounded-full bg-ghibli-track">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-[#9B6BFF] to-[#43B0A8] transition-all duration-300"
+                className="h-full rounded-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-300"
                 style={{ width: `${chaPct}%` }}
               />
             </div>
-          </div>
-          {renderFloats('charisma')}
-          {renderFloats('xp')}
-        </div>
-
-        {/* 2. ENERGY, CASH & REP PILLS (Right) */}
-        <div className="pointer-events-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
-          {/* Compact Tactile Energy Pill (Click opens Shop to refill) */}
-          <button
-            onClick={() => setShopOpen(true)}
-            title="Năng lượng (Chạm để nạp thêm)"
-            className="cozy-pill relative flex items-center gap-1.5 rounded-full px-2.5 py-1.5 transition hover:bg-[#FFF6E6] active:translate-y-0.5"
-          >
-            <span className="text-xs">⚡</span>
-            <div className="flex flex-col items-start">
-              <div className="flex items-baseline gap-0.5 font-display text-xs font-black leading-none text-ghibli-ink">
-                <span>{animEnergy}</span>
-                <span className="hidden text-xs font-semibold text-ghibli-ink-soft sm:inline">
-                  /{state.maxEnergy}
-                </span>
-              </div>
-              <div className="mt-0.5 h-1.5 w-11 overflow-hidden rounded-full bg-[#EFE6D5] sm:w-14">
-                <div
-                  className={`h-full rounded-full transition-all duration-300 ${energyFillColor}`}
-                  style={{ width: `${energyPct}%` }}
-                />
-              </div>
+            <div className="mt-0.5 flex items-center justify-between text-xs font-bold text-cyan-800">
+              <span>🗣️ {animXp} XP</span>
             </div>
-            {renderFloats('energy')}
-          </button>
+            {renderFloats('charisma')}
+            {renderFloats('xp')}
+          </div>
 
-          {/* Cash & Reputation Pill */}
-          <button
-            onClick={() => setShopOpen(true)}
-            title={`Cát-xê & Danh tiếng (${state.stats.shows} show đã dẫn)`}
-            className="cozy-pill relative flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-extrabold transition hover:bg-[#FFF6E6] active:translate-y-0.5"
-          >
-            <span className="flex items-center gap-1 font-display font-black text-[#B8700B]">
-              <span>💵</span>
-              <span>${animCash}</span>
-            </span>
-            <span className="h-3 w-[1px] bg-[#E2D4BE]" />
-            <span className="flex items-center gap-0.5 font-bold text-[#B8700B]" title="Danh tiếng trung bình">
-              <span>⭐</span>
-              <span>{fmtRep(state.rep)}</span>
-            </span>
-            <span className="hidden items-center gap-0.5 font-bold text-[#D95B26] md:flex" title="Chuỗi ngày luyện tập">
-              <span>· 🔥</span>
-              <span>{state.streak.count}d</span>
-            </span>
+          {/* CASH CARD */}
+          <div className="pointer-events-auto relative overflow-visible rounded-2xl ghibli-panel px-3 py-1.5">
+            <div className="flex items-center justify-between gap-2 text-sm font-extrabold">
+              <span className="flex items-center gap-1 text-amber-700">
+                <span>💵</span>
+                <span className="hidden sm:inline">Cát-xê</span>
+              </span>
+              <span className="font-display text-amber-700">${animCash}</span>
+            </div>
+            <div className="mt-1 flex items-center justify-between text-xs font-bold text-ghibli-ink-soft">
+              <span title="Danh tiếng: trung bình sao các show gần đây">
+                ⭐ <span className="text-amber-700">{fmtRep(state.rep)}</span>
+              </span>
+              <span className="hidden sm:inline">🎤 {state.stats.shows} show</span>
+              <span>🔥 {state.streak.count}d</span>
+            </div>
             {renderFloats('cash')}
-          </button>
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+
+      {/* Hàng dưới: năng lượng, luôn nhìn thấy ở đáy màn hình */}
+      <footer
+        className="pointer-events-none fixed inset-x-0 bottom-0 z-40 px-2.5 sm:px-6"
+        style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}
+      >
+        <div className="pointer-events-auto relative mx-auto max-w-6xl overflow-visible rounded-2xl ghibli-panel px-3 py-2">
+          <div className="flex items-center justify-between gap-3 text-sm font-extrabold">
+            <span className="flex items-center gap-1.5 text-emerald-700">
+              <span>⚡</span>
+              <span>Năng lượng</span>
+            </span>
+            <span className="font-display text-base text-ghibli-ink">
+              {animEnergy}
+              <span className="text-xs text-ghibli-ink-soft">/{state.maxEnergy}</span>
+            </span>
+          </div>
+          <div className="mt-1.5 h-3 w-full overflow-hidden rounded-full bg-ghibli-track">
+            <div
+              className={`h-full rounded-full bg-gradient-to-r transition-all duration-300 ${energyBarColor}`}
+              style={{ width: `${energyPct}%` }}
+            />
+          </div>
+          {renderFloats('energy')}
+        </div>
+      </footer>
+    </>
   );
 };

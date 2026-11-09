@@ -221,6 +221,11 @@ export interface GameState {
   tour: { acked: Record<string, boolean>; skipped: boolean };
   muted: boolean;
   voiceURI: string | null;
+  /** Bắt lỗi phát âm: số lần thử/đạt từng bài và các bài vừa luyện (để không lặp lại ngay) */
+  pron: {
+    progress: Record<string, { tries: number; ok: number }>;
+    recent: string[];
+  };
 }
 
 export interface ShopItem {
