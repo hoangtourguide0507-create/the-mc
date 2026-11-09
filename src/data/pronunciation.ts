@@ -55,7 +55,7 @@ export const PRON_DRILLS: PronDrill[] = [
     id: 'pr-value',
     word: 'value',
     ipa: '/ˈvæl.juː/',
-    ipaAlt: '/ˈvæl.jʊ/',
+    ipaAlt: '/ˈvæl.ju/',
     group: 'vowel',
     syllables: [
       { text: 'VAL', stressed: true },
@@ -72,8 +72,8 @@ export const PRON_DRILLS: PronDrill[] = [
         note: 'Nguyên âm /æ/ nằm giữa “a” và “e” của tiếng Việt: miệng mở rộng hơn, lưỡi hạ thấp, không đọc thành “ va ” hay “ vẹt ”. Âm /l/ đứng cuối âm tiết là “l tối”: đầu lưỡi chạm vòm miệng và phần sau lưỡi hạ xuống. Tiếng Việt không có /l/ làm phụ âm cuối, nên người học hay bỏ hẳn /l/ hoặc đổi thành “u”.',
       },
       {
-        part: 'yoo /juː/ (hoặc /jʊ/)',
-        note: 'Bắt đầu bằng /j/ giống “y” trong “yes”, rồi đến nguyên âm /uː/ dài và căng. Phiên bản /jʊ/ ngắn và lỏng hơn, phổ biến trong một số giọng và từ điển. Cả hai đều được chấp nhận; quan trọng là có /j/ và không tách thành hai âm tiết.',
+        part: 'yoo /juː/ (hoặc /ju/)',
+        note: 'Bắt đầu bằng /j/ giống “y” trong “yes”, rồi đến nguyên âm /uː/ dài và căng. Một số từ điển Anh-Mỹ ghi /ju/ ngắn và lỏng hơn. Cả hai đều được chấp nhận; quan trọng là có /j/ và không tách thành hai âm tiết.',
       },
       {
         part: 'Trọng âm',
