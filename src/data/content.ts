@@ -99,7 +99,7 @@ export const SHOP: ShopItem[] = [
  * Để trống = dùng nhân vật anime chibi dựng bằng code.
  */
 export const VRM_MODELS: Record<string, string> = {
-  mc: 'vrm/mc.vrm',
+  // mc: 'vrm/mc.vrm', // Tạm tắt: file 16MB tải chậm và hiển thị chưa đạt; MC dùng chibi dựng bằng code
   // leo: 'vrm/leo.vrm',
   // alex: 'vrm/alex.vrm',
   // emma: 'vrm/emma.vrm',
@@ -115,13 +115,13 @@ export function getPlayerLook(items: Record<string, boolean>): LookConfig {
   return {
     vrmUrl: VRM_MODELS.mc || undefined,
     skin: '#FAD2B8',
-    hair: '#231829',
+    hair: '#6B3E26',
     eye: '#2A1E3F',
-    cloth: items.gown ? '#9E1946' : '#1E2952',
-    accent: items.gown ? '#FBBF24' : '#38BDF8',
+    cloth: items.gown ? '#9E1946' : '#F2B8CC',
+    accent: items.gown ? '#FBBF24' : '#F9E0A0',
     lip: '#E15B7E',
-    hairStyle: 'swoop',
-    outfit: items.gown ? 'velvet' : 'tux',
+    hairStyle: 'side',
+    outfit: items.gown ? 'velvet' : 'gown',
     acc: items.inear ? ['inear', 'earrings'] : ['earrings'],
     lashes: true,
     propArt: items.goldmic ? 'goldmic' : 'mic',
@@ -274,7 +274,7 @@ export const NPCS: Record<string, NpcData> = {
       eye: '#0D9488',
       cloth: '#0EA5E9',
       accent: '#FDE047',
-      hairStyle: 'long',
+      hairStyle: 'side',
       outfit: 'blouse',
       lashes: true,
       acc: ['headset', 'flower'],
@@ -357,7 +357,7 @@ export const NPCS: Record<string, NpcData> = {
       eye: '#0F172A',
       cloth: '#F472B6',
       accent: '#FDE047',
-      hairStyle: 'long',
+      hairStyle: 'side',
       outfit: 'gown',
       acc: ['flower'],
       lashes: true,
