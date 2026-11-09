@@ -53,7 +53,7 @@ export const TourOverlay: React.FC = () => {
           left: rect.left - 6,
           width: rect.width + 12,
           height: rect.height + 12,
-          boxShadow: '0 0 0 9999px rgba(10,5,25,0.72)',
+          boxShadow: '0 0 0 9999px rgba(59,42,34,0.28)',
         }}
       />
       <div

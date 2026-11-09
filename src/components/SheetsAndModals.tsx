@@ -23,7 +23,7 @@ export const WelcomeOverlay: React.FC = () => {
       : '🌅 Bắt đầu Ngày mới (07:00)';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ghibli-ink/40 p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ghibli-ink/20 p-4">
       <div className="relative w-full max-w-md overflow-hidden rounded-3xl border-2 border-ghibli-clay bg-gradient-to-b from-ghibli-sky to-[#FFF1D6] p-6 text-center shadow-[0_3px_0_rgba(107,78,61,0.35),0_12px_30px_rgba(59,42,34,0.25)]">
         <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-3xl border-2 border-ghibli-clay bg-ghibli-cream text-4xl shadow-inner">
           🎙️
@@ -154,7 +154,7 @@ export const PhrasebookSheet: React.FC = () => {
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ghibli-ink/40 sm:items-center sm:p-4">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ghibli-ink/20 sm:items-center sm:p-4">
  <div className="flex max-h-[88vh] w-full max-w-3xl flex-col overflow-hidden rounded-t-3xl border ghibli-panel shadow-2xl sm:rounded-3xl">
         {/* Header */}
         <div className="flex items-center justify-between border-b-2 border-ghibli-track px-5 py-4">
@@ -338,7 +338,7 @@ export const ShopSheet: React.FC = () => {
   const upgrades = SHOP.filter((i) => i.type === 'upgrade');
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ghibli-ink/40 sm:items-center sm:p-4">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ghibli-ink/20 sm:items-center sm:p-4">
  <div className="flex max-h-[88vh] w-full max-w-3xl flex-col overflow-hidden rounded-t-3xl border ghibli-panel shadow-2xl sm:rounded-3xl">
         <div className="flex items-center justify-between border-b-2 border-ghibli-track px-5 py-4">
           <div>
@@ -518,7 +518,7 @@ export const ResultModal: React.FC = () => {
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ghibli-ink/40 p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ghibli-ink/20 p-4">
       <div className="relative w-full max-w-md overflow-hidden rounded-3xl ghibli-panel p-6 text-center">
         <div className="text-sm font-black uppercase tracking-wider text-ghibli-clay">
           {scene.icon} {scene.title}
@@ -778,7 +778,7 @@ export const StreetTalkModal: React.FC = () => {
   const canContinue = isSpeak ? speakDone : answered;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ghibli-ink/40 p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ghibli-ink/20 p-4">
  <div className="w-full max-w-md rounded-3xl border ghibli-panel p-5 shadow-2xl">
         <div className="flex items-center justify-between border-b-2 border-ghibli-track pb-3">
           <div className="flex items-center gap-2.5">

@@ -1,8 +1,6 @@
 import React, { useMemo, useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { ContactShadows, Float, Html, RoundedBox } from '@react-three/drei';
-import { Bloom, EffectComposer, ToneMapping, Vignette } from '@react-three/postprocessing';
-import { ToneMappingMode } from 'postprocessing';
 import * as THREE from 'three';
 import { getPlayerLook, NPCS } from '../data/content';
 import { NpcMood, SceneData, StageMicPhase, VisemeType } from '../types/game';
@@ -875,7 +873,7 @@ const StageSceneContent: React.FC<Stage3DProps> = ({
         />
       </group>
 
-      <ContactShadows position={[0, 0.12, 0]} opacity={0.5} scale={8} blur={2.1} far={3} color="#4A3525" />
+      <ContactShadows position={[0, 0.12, 0]} opacity={0.5} scale={8} blur={0.4} far={3} color="#4A3525" />
     </group>
   );
 };
@@ -890,15 +888,6 @@ export const Stage3D: React.FC<Stage3DProps> = (props) => {
         camera={{ position: [0, 1.45, 4.15], fov: 36 }}
       >
         <StageSceneContent {...props} />
-        <EffectComposer multisampling={4}>
-          <Bloom
-            luminanceThreshold={1.05}
-            luminanceSmoothing={0.25}
-            intensity={props.npcSpeaking || props.micPhase === 'rec' ? 0.28 : 0.14}
-          />
-          <ToneMapping mode={ToneMappingMode.NEUTRAL} />
-          <Vignette eskil={false} offset={0.42} darkness={0.1} />
-        </EffectComposer>
       </Canvas>
     </div>
   );

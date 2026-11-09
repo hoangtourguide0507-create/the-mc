@@ -515,7 +515,7 @@ const StudioRoomScene: React.FC = () => {
         </div>
       </Html>
 
-      <ContactShadows position={[0, 0.11, 0]} opacity={0.48} scale={7} blur={2.2} far={3} color="#4A3525" />
+      <ContactShadows position={[0, 0.11, 0]} opacity={0.48} scale={7} blur={0.4} far={3} color="#4A3525" />
     </group>
   );
 };

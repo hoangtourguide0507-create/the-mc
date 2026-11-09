@@ -481,11 +481,9 @@ export const CityWorld3D: React.FC = () => {
 
         {isGhibli ? (
           <EffectComposer multisampling={dpr >= 1.6 ? 4 : 2}>
-            <Bloom luminanceThreshold={2} luminanceSmoothing={0.3} intensity={night ? 0.3 : 0.1} radius={0.5} />
             <ToneMapping mode={ToneMappingMode.NEUTRAL} />
             <HueSaturation saturation={0.14} hue={0} />
             <BrightnessContrast brightness={0.01} contrast={0.02} />
-            <Vignette eskil={false} offset={0.4} darkness={night ? 0.25 : 0.08} />
           </EffectComposer>
         ) : (
           <EffectComposer multisampling={dpr >= 1.6 ? 4 : 2}>

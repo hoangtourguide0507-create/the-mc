@@ -187,7 +187,7 @@ export const PronunciationSheet: React.FC = () => {
       : 'Lần đầu sẽ tải mô hình phát âm (vài trăm MB, chỉ một lần).';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ghibli-ink/40 sm:items-center sm:p-4">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ghibli-ink/20 sm:items-center sm:p-4">
       <div className="flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl border ghibli-panel shadow-2xl sm:rounded-3xl">
         <div className="flex items-center justify-between border-b border-ghibli-track px-5 py-4">
           <h2 className="font-display text-xl font-black text-ghibli-ink">🗣️ Bắt lỗi phát âm</h2>

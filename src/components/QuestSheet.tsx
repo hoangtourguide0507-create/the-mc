@@ -11,7 +11,7 @@ export const QuestSheet: React.FC = () => {
   if (!questOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ghibli-ink/40 sm:items-center sm:p-4">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ghibli-ink/20 sm:items-center sm:p-4">
  <div className="flex max-h-[88vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl border ghibli-panel shadow-2xl sm:rounded-3xl">
         <div className="flex items-center justify-between border-b border-ghibli-track px-5 py-4">
           <div>
