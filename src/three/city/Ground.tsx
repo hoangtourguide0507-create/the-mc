@@ -3,7 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { TileKind } from '../../types/game';
 import { GRID, GridData, gridToWorld, ROAD_COLS, ROAD_ROWS } from './cityMap';
-import { GHIBLI, GHIBLI_NIGHT_LIGHT, isGhibli } from '../artStyle';
+import { GHIBLI, GHIBLI_NIGHT_LIGHT } from '../artStyle';
 
 /* Texture mặt đất vẽ bằng canvas (1 ô = 1 texture) */
 const groundTex = new Map<string, THREE.CanvasTexture>();
@@ -28,12 +28,12 @@ function tileTexture(kind: string): THREE.CanvasTexture {
   g.fillStyle = '#FFFFFF';
   g.fillRect(0, 0, S, S);
   if (kind === 'road') {
-    noise(900, 0.06, 2);
+    noise(900, 0.05, 2);
   } else if (kind === 'walk') {
-    // Gạch lát 2×2 viên
+    // Gạch lát 2×2 viên ấm
     g.fillStyle = '#FFFFFF';
     g.fillRect(0, 0, S, S);
-    g.strokeStyle = 'rgba(0,0,0,0.16)';
+    g.strokeStyle = 'rgba(70, 50, 35, 0.14)';
     g.lineWidth = 3;
     for (let i = 0; i <= 2; i++) {
       g.beginPath();
@@ -43,10 +43,10 @@ function tileTexture(kind: string): THREE.CanvasTexture {
       g.lineTo(S, i * (S / 2));
       g.stroke();
     }
-    noise(250, 0.04);
+    noise(250, 0.035);
   } else if (kind === 'plaza') {
-    // Đá lát so le
-    g.strokeStyle = 'rgba(0,0,0,0.13)';
+    // Đá lát so le kiểu thị trấn cổ
+    g.strokeStyle = 'rgba(70, 50, 35, 0.12)';
     g.lineWidth = 2.5;
     for (let row = 0; row < 4; row++) {
       const y = row * (S / 4);
@@ -62,17 +62,17 @@ function tileTexture(kind: string): THREE.CanvasTexture {
         g.stroke();
       }
     }
-    noise(200, 0.04);
+    noise(200, 0.035);
   } else if (kind === 'grass') {
-    for (let i = 0; i < 520; i++) {
-      g.fillStyle = rnd() < 0.5 ? 'rgba(0,40,0,0.10)' : 'rgba(255,255,200,0.12)';
+    for (let i = 0; i < 560; i++) {
+      g.fillStyle = rnd() < 0.5 ? 'rgba(20, 60, 15, 0.09)' : 'rgba(255, 250, 210, 0.13)';
       const x = rnd() * S;
       const y = rnd() * S;
       g.fillRect(x, y, 2, 4 + rnd() * 3);
     }
   } else if (kind === 'sand') {
-    noise(700, 0.07, 2);
-    g.strokeStyle = 'rgba(160,110,40,0.10)';
+    noise(700, 0.06, 2);
+    g.strokeStyle = 'rgba(160, 110, 40, 0.10)';
     g.lineWidth = 2;
     for (let i = 0; i < 4; i++) {
       g.beginPath();
@@ -117,25 +117,42 @@ function waterNormal(): THREE.CanvasTexture {
   return t;
 }
 
+/** Vân nước caustics vẽ tay kiểu Ghibli */
+function waterCaustics(): THREE.CanvasTexture {
+  const hit = groundTex.get('waterCaustics');
+  if (hit) return hit;
+  const S = 256;
+  const cv = document.createElement('canvas');
+  cv.width = cv.height = S;
+  const g = cv.getContext('2d')!;
+  g.fillStyle = '#FFFFFF';
+  g.fillRect(0, 0, S, S);
+  g.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+  g.lineWidth = 3;
+  for (let i = 0; i < 18; i++) {
+    const y = (i * 15) % S;
+    const x = (i * 47) % S;
+    g.beginPath();
+    g.moveTo(x, y);
+    g.quadraticCurveTo(x + 24, y - 8, x + 48, y);
+    g.stroke();
+  }
+  const t = new THREE.CanvasTexture(cv);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(5, 4);
+  groundTex.set('waterCaustics', t);
+  return t;
+}
+
 interface TileSpec {
-  top: number; // cao độ mặt trên
+  top: number;
   tex: string;
   colors: string[];
   rough: number;
 }
 
-const SPEC_NEON: Record<Exclude<TileKind, 'water'>, TileSpec> = {
-  grass: { top: 0.06, tex: 'grass', colors: ['#3FA94E', '#39A048', '#45B054'], rough: 0.95 },
-  park: { top: 0.06, tex: 'grass', colors: ['#4DBA5C', '#47B256'], rough: 0.95 },
-  walk: { top: 0.07, tex: 'walk', colors: ['#C9C1B5', '#C3BBAF'], rough: 0.85 },
-  plaza: { top: 0.07, tex: 'plaza', colors: ['#DCC9AA', '#D6C2A2'], rough: 0.85 },
-  sand: { top: 0.03, tex: 'sand', colors: ['#F3DDA4', '#F0D89C', '#F5E1AC'], rough: 1 },
-  'road-x': { top: 0.0, tex: 'road', colors: ['#353A46'], rough: 0.9 },
-  'road-y': { top: 0.0, tex: 'road', colors: ['#353A46'], rough: 0.9 },
-  cross: { top: 0.0, tex: 'road', colors: ['#363B46'], rough: 0.9 },
-};
-
-const SPEC_GHIBLI: Record<Exclude<TileKind, 'water'>, TileSpec> = {
+const SPEC: Record<Exclude<TileKind, 'water'>, TileSpec> = {
   grass: { top: 0.06, tex: 'grass', colors: GHIBLI.grass, rough: 1 },
   park: { top: 0.06, tex: 'grass', colors: GHIBLI.park, rough: 1 },
   walk: { top: 0.07, tex: 'plaza', colors: GHIBLI.walk, rough: 1 },
@@ -145,8 +162,6 @@ const SPEC_GHIBLI: Record<Exclude<TileKind, 'water'>, TileSpec> = {
   'road-y': { top: 0.0, tex: 'walk', colors: [GHIBLI.road], rough: 1 },
   cross: { top: 0.0, tex: 'walk', colors: ['#726B63'], rough: 1 },
 };
-
-const SPEC = isGhibli ? SPEC_GHIBLI : SPEC_NEON;
 
 const BASE_Y = -0.3;
 
@@ -172,7 +187,10 @@ const TileLayer: React.FC<{ kind: Exclude<TileKind, 'water'>; cells: [number, nu
       const [x, z] = gridToWorld(c, r);
       o.position.set(x, BASE_Y + h / 2, z);
       o.scale.set(1, h, 1);
-      o.rotation.y = kind === 'road-y' ? Math.PI / 2 : ((c * 7 + r * 3) % 4) * (Math.PI / 2) * (spec.tex === 'grass' || spec.tex === 'sand' ? 1 : 0);
+      o.rotation.y =
+        kind === 'road-y'
+          ? Math.PI / 2
+          : ((c * 7 + r * 3) % 4) * (Math.PI / 2) * (spec.tex === 'grass' || spec.tex === 'sand' ? 1 : 0);
       o.updateMatrix();
       inst.setMatrixAt(i, o.matrix);
       col.set(spec.colors[(c * 13 + r * 7) % spec.colors.length]);
@@ -243,11 +261,11 @@ const RoadMarkings: React.FC<{ grid: GridData }> = ({ grid }) => {
     <>
       <instancedMesh ref={dashRef} args={[undefined, undefined, dashes.length]} receiveShadow>
         <boxGeometry args={[0.42, 0.01, 0.05]} />
-        <meshStandardMaterial color={isGhibli ? '#EFE6D2' : '#F8E7A1'} roughness={0.8} />
+        <meshStandardMaterial color="#EFE6D2" roughness={0.8} />
       </instancedMesh>
       <instancedMesh ref={zebraRef} args={[undefined, undefined, zebras.length]} receiveShadow>
         <boxGeometry args={[0.7, 0.01, 0.09]} />
-        <meshStandardMaterial color="#F1F5F9" roughness={0.6} />
+        <meshStandardMaterial color="#F7F2E7" roughness={0.65} />
       </instancedMesh>
     </>
   );
@@ -256,30 +274,34 @@ const RoadMarkings: React.FC<{ grid: GridData }> = ({ grid }) => {
 const Water: React.FC<{ night: boolean }> = ({ night }) => {
   const matRef = useRef<THREE.MeshStandardMaterial>(null);
   const normal = useMemo(() => waterNormal(), []);
+  const caustics = useMemo(() => waterCaustics(), []);
   useFrame((_, dt) => {
     normal.offset.x += dt * 0.012;
     normal.offset.y += dt * 0.007;
+    caustics.offset.x -= dt * 0.008;
+    caustics.offset.y += dt * 0.005;
   });
   const half = GRID / 2;
   return (
     <group>
-      {/* Mặt nước phủ phần biển của sa bàn */}
+      {/* Mặt nước biển màu ngọc bích Ghibli có gợn sóng và caustics */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.1, half / 2 + 2]} receiveShadow>
         <planeGeometry args={[GRID, half + 4]} />
         <meshStandardMaterial
           ref={matRef}
-          color={night ? (isGhibli ? GHIBLI_NIGHT_LIGHT.water : '#0B3A6B') : isGhibli ? GHIBLI.water : '#1FA2D8'}
-          roughness={0.12}
-          metalness={0.25}
+          color={night ? GHIBLI_NIGHT_LIGHT.water : GHIBLI.water}
+          map={caustics}
+          roughness={0.16}
+          metalness={0.18}
           normalMap={normal}
-          normalScale={new THREE.Vector2(0.45, 0.45)}
-          envMapIntensity={1.4}
+          normalScale={new THREE.Vector2(0.42, 0.42)}
+          envMapIntensity={1.2}
         />
       </mesh>
       {/* Đáy biển nhìn qua mép sa bàn */}
       <mesh position={[0, -0.22, half / 2 + 2]}>
         <boxGeometry args={[GRID, 0.2, half + 4]} />
-        <meshStandardMaterial color="#0C4A6E" roughness={1} />
+        <meshStandardMaterial color={night ? '#1E3454' : '#3E8CA8'} roughness={0.95} />
       </mesh>
     </group>
   );
@@ -304,7 +326,7 @@ const Foam: React.FC<{ grid: GridData }> = ({ grid }) => {
     if (!inst) return;
     const o = new THREE.Object3D();
     cells.forEach(([x, z, ry], i) => {
-      const s = 1 + Math.sin(clock.elapsedTime * 1.6 + x * 0.7 + z * 0.5) * 0.25;
+      const s = 1 + Math.sin(clock.elapsedTime * 1.6 + x * 0.7 + z * 0.5) * 0.28;
       o.position.set(x, -0.085, z);
       o.rotation.set(0, ry, 0);
       o.scale.set(1, 1, s);
@@ -315,8 +337,8 @@ const Foam: React.FC<{ grid: GridData }> = ({ grid }) => {
   });
   return (
     <instancedMesh ref={ref} args={[undefined, undefined, cells.length]}>
-      <boxGeometry args={[1, 0.02, 0.14]} />
-      <meshStandardMaterial color="#F0FBFF" roughness={0.5} transparent opacity={0.85} />
+      <boxGeometry args={[1, 0.02, 0.16]} />
+      <meshStandardMaterial color="#FFFDF9" roughness={0.5} transparent opacity={0.88} />
     </instancedMesh>
   );
 };
@@ -340,18 +362,19 @@ export const CityGround: React.FC<{ grid: GridData; night: boolean; onTile: (c: 
 
   return (
     <group>
-      {/* Bệ sa bàn */}
+      {/* Bệ sa bàn gỗ óc chó nhiều tầng kiểu mô hình thu nhỏ Ghibli */}
       <mesh position={[0, BASE_Y - 0.35, 0]} receiveShadow>
-        <boxGeometry args={[GRID + 0.6, 0.7, GRID + 0.6]} />
-        <meshStandardMaterial color={isGhibli ? '#6B4F3A' : '#2A1B5E'} roughness={0.9} />
+        <boxGeometry args={[GRID + 0.65, 0.7, GRID + 0.65]} />
+        <meshStandardMaterial color="#6B4F3A" roughness={0.85} />
       </mesh>
+      <mesh position={[0, BASE_Y - 0.68, 0]}>
+        <boxGeometry args={[GRID + 1.05, 0.14, GRID + 1.05]} />
+        <meshStandardMaterial color="#523A28" roughness={0.8} />
+      </mesh>
+      {/* Viền chỉ đồng/gỗ sáng quanh mép trên sa bàn */}
       <mesh position={[0, BASE_Y - 0.02, 0]}>
-        <boxGeometry args={[GRID + 0.7, 0.06, GRID + 0.7]} />
-        {isGhibli ? (
-          <meshStandardMaterial color="#8A6A4E" roughness={0.9} />
-        ) : (
-          <meshStandardMaterial color="#FF4FD8" emissive="#FF4FD8" emissiveIntensity={night ? 1.4 : 0.35} />
-        )}
+        <boxGeometry args={[GRID + 0.78, 0.07, GRID + 0.78]} />
+        <meshStandardMaterial color="#9C7654" roughness={0.75} />
       </mesh>
       {layers.map(([kind, cells]) => (
         <TileLayer key={kind} kind={kind} cells={cells} />

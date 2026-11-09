@@ -3,8 +3,8 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Environment, Html, Lightformer, MapControls, PerformanceMonitor } from '@react-three/drei';
 import { Bloom, BrightnessContrast, EffectComposer, HueSaturation, ToneMapping, Vignette } from '@react-three/postprocessing';
 import { ToneMappingMode } from 'postprocessing';
-import { GHIBLI, GHIBLI_NIGHT_LIGHT, ghibliSky, isGhibli } from './artStyle';
-import { GhibliClouds, GrassTufts } from './city/GhibliDecor';
+import { GHIBLI, GHIBLI_NIGHT_LIGHT, ghibliSky } from './artStyle';
+import { GhibliAtmosphere, GhibliBirds, GhibliClouds, GrassTufts } from './city/GhibliDecor';
 import * as THREE from 'three';
 import { getPlayerLook, GIG_ORDER, PASSER_LOOKS, SCHEDULE, SCENES, STREET_TALK, WM_NAMES, WORLD_LOCS } from '../data/content';
 import {
@@ -126,8 +126,7 @@ export const CityWorld3D: React.FC = () => {
   const periodMeta = getPeriodMeta(state.clock);
   const night = periodMeta.isNight;
   const playerLook = useMemo(() => getPlayerLook(state.items), [state.items]);
-  // Bầu trời: Ghibli theo buổi (ngày xanh nhạt, hoàng hôn, đêm xanh tím); neon giữ màu cũ
-  const sky = ghibliSky(periodMeta.id) ?? { top: periodMeta.skyTop, bottom: periodMeta.skyBottom, fog: periodMeta.skyBottom };
+  const sky = ghibliSky(periodMeta.id);
   const initialDoor = WORLD_LOCS[state.loc]?.doorTile || WORLD_LOCS.home.doorTile;
 
   const mcRef = useRef<McState>({
@@ -346,7 +345,7 @@ export const CityWorld3D: React.FC = () => {
 
   return (
     <div
-      className={`relative h-full w-full overflow-hidden ${isGhibli ? 'bg-[#BFE3F2]' : 'bg-[#0E0725]'}`}
+      className="relative h-full w-full overflow-hidden bg-[#BFE3F2]"
       onPointerDown={(e) => {
         dragStartRef.current = { x: e.clientX, y: e.clientY };
       }}
@@ -385,18 +384,20 @@ export const CityWorld3D: React.FC = () => {
           onFallback={() => setDpr(1)}
         />
         <SkyDome top={sky.top} bottom={sky.bottom} />
-        <fog attach="fog" args={[sky.fog, isGhibli ? 30 : 38, isGhibli ? 85 : 95]} />
-        {isGhibli && <GhibliClouds night={night} />}
+        <fog attach="fog" args={[sky.fog, 30, 86]} />
+        <GhibliClouds night={night} />
+        <GhibliBirds night={night} />
+        <GhibliAtmosphere night={night} />
         <SceneLights meta={periodMeta} controlsRef={controlsRef} />
-        <Environment resolution={64} frames={1} environmentIntensity={isGhibli ? (night ? 0.15 : 0.3) : night ? 0.3 : 0.6}>
+        <Environment resolution={64} frames={1} environmentIntensity={night ? 0.16 : 0.32}>
           <Lightformer form="rect" intensity={2} position={[0, 10, 0]} rotation-x={Math.PI / 2} scale={[20, 20, 1]} color="#FFFFFF" />
-          <Lightformer form="rect" intensity={1.4} position={[-10, 3, 0]} rotation-y={Math.PI / 2} scale={[10, 4, 1]} color={isGhibli ? '#FFE7B0' : '#FF4FD8'} />
-          <Lightformer form="rect" intensity={1.4} position={[10, 3, 0]} rotation-y={-Math.PI / 2} scale={[10, 4, 1]} color={isGhibli ? '#CFEFFF' : '#22D3EE'} />
+          <Lightformer form="rect" intensity={1.4} position={[-10, 3, 0]} rotation-y={Math.PI / 2} scale={[10, 4, 1]} color="#FFE7B0" />
+          <Lightformer form="rect" intensity={1.4} position={[10, 3, 0]} rotation-y={-Math.PI / 2} scale={[10, 4, 1]} color="#CFEFFF" />
           <Lightformer form="rect" intensity={1} position={[0, 3, 10]} scale={[10, 4, 1]} color="#FDE68A" />
         </Environment>
 
         <CityGround grid={grid} night={night} onTile={handleSelectTile} />
-        {isGhibli && <GrassTufts grid={grid} />}
+        <GrassTufts grid={grid} />
         {Object.values(WORLD_LOCS).map((loc) => (
           <Landmark key={loc.id} loc={loc} night={night} onSelect={handleSelectBuilding} />
         ))}
@@ -472,21 +473,13 @@ export const CityWorld3D: React.FC = () => {
           screenSpacePanning={false}
         />
 
-        {isGhibli ? (
-          <EffectComposer multisampling={dpr >= 1.6 ? 4 : 2}>
-            <Bloom luminanceThreshold={2} luminanceSmoothing={0.3} intensity={night ? 0.3 : 0.1} radius={0.5} />
-            <ToneMapping mode={ToneMappingMode.NEUTRAL} />
-            <HueSaturation saturation={0.14} hue={0} />
-            <BrightnessContrast brightness={0.01} contrast={0.02} />
-            <Vignette eskil={false} offset={0.4} darkness={night ? 0.25 : 0.08} />
-          </EffectComposer>
-        ) : (
-          <EffectComposer multisampling={dpr >= 1.6 ? 4 : 2}>
-            <Bloom luminanceThreshold={1} luminanceSmoothing={0.2} intensity={night ? 0.5 : 0.2} radius={0.5} />
-            <ToneMapping mode={ToneMappingMode.NEUTRAL} />
-            <Vignette eskil={false} offset={0.3} darkness={night ? 0.3 : 0.12} />
-          </EffectComposer>
-        )}
+        <EffectComposer multisampling={dpr >= 1.6 ? 4 : 2}>
+          <Bloom luminanceThreshold={1.85} luminanceSmoothing={0.32} intensity={night ? 0.32 : 0.1} radius={0.5} />
+          <ToneMapping mode={ToneMappingMode.NEUTRAL} />
+          <HueSaturation saturation={0.14} hue={0} />
+          <BrightnessContrast brightness={0.01} contrast={0.025} />
+          <Vignette eskil={false} offset={0.38} darkness={night ? 0.26 : 0.11} />
+        </EffectComposer>
       </Canvas>
 
       {/* Thanh trên: đồng hồ, khu phố, nút nhanh */}
@@ -670,29 +663,17 @@ const DoorCard: React.FC<{
 /* Bản đồ nhỏ                                                           */
 /* ------------------------------------------------------------------ */
 
-const MINI_COLORS: Record<string, string> = isGhibli
-  ? {
-      grass: '#A8D98A',
-      park: '#B3DD92',
-      walk: '#F3E7CF',
-      plaza: '#EBDAB8',
-      sand: '#F5E4B8',
-      water: '#8FD3E8',
-      'road-x': '#8E8576',
-      'road-y': '#8E8576',
-      cross: '#8E8576',
-    }
-  : {
-      grass: '#3E9B4C',
-      park: '#55B863',
-      walk: '#A8A29E',
-      plaza: '#D6C7AE',
-      sand: '#F2D48F',
-      water: '#1E88C8',
-      'road-x': '#2B2F3A',
-      'road-y': '#2B2F3A',
-      cross: '#2B2F3A',
-    };
+const MINI_COLORS: Record<string, string> = {
+  grass: '#A8D98A',
+  park: '#B3DD92',
+  walk: '#F3E7CF',
+  plaza: '#EBDAB8',
+  sand: '#F5E4B8',
+  water: '#8FD3E8',
+  'road-x': '#8E8576',
+  'road-y': '#8E8576',
+  cross: '#8E8576',
+};
 
 const MiniMap: React.FC<{ grid: GridData; mc: [number, number]; onPick: (id: string) => void; hotAt: (id: string) => boolean }> = ({
   grid,
@@ -705,7 +686,7 @@ const MiniMap: React.FC<{ grid: GridData; mc: [number, number]; onPick: (id: str
     for (let r = 0; r < GRID; r++)
       for (let c = 0; c < GRID; c++) {
         const b = grid.buildingAtTile.get(`${c},${r}`);
-        const fill = b ? (b === 'filler' ? (isGhibli ? '#C9B8A6' : '#6B5B95') : WORLD_LOCS[b]?.color || '#888') : MINI_COLORS[grid.tiles[r][c]];
+        const fill = b ? (b === 'filler' ? '#C9B8A6' : WORLD_LOCS[b]?.color || '#888') : MINI_COLORS[grid.tiles[r][c]];
         out.push(<rect key={`${c},${r}`} x={c} y={r} width={1.02} height={1.02} fill={fill} />);
       }
     return out;
@@ -729,7 +710,7 @@ const MiniMap: React.FC<{ grid: GridData; mc: [number, number]; onPick: (id: str
             </text>
           </g>
         ))}
-        <circle cx={mc[0] + 0.5} cy={mc[1] + 0.5} r={1.1} fill={isGhibli ? '#3E9B94' : '#22D3EE'} stroke="#fff" strokeWidth={0.35}>
+        <circle cx={mc[0] + 0.5} cy={mc[1] + 0.5} r={1.1} fill="#3E9B94" stroke="#fff" strokeWidth={0.35}>
           <animate attributeName="r" values="0.9;1.4;0.9" dur="1.4s" repeatCount="indefinite" />
         </circle>
       </svg>
@@ -792,25 +773,20 @@ const SceneLights: React.FC<{ meta: ReturnType<typeof getPeriodMeta>; controlsRe
   const night = meta.isNight;
   return (
     <>
-      {isGhibli ? (
-        // Ghibli: nắng ấm vàng kem, bóng mát tông xanh nhạt; chiều tối ấm hơn; đêm xanh tím
-        <hemisphereLight
-          args={
-            night
-              ? [GHIBLI_NIGHT_LIGHT.hemiSky, GHIBLI_NIGHT_LIGHT.hemiGround, 0.38]
-              : meta.id === 'evening'
-              ? ['#B9A6D6', '#B8806A', 0.7]
-              : [GHIBLI.hemiSky, GHIBLI.hemiGround, 0.95]
-          }
-        />
-      ) : (
-        <hemisphereLight args={[night ? '#3B3F8F' : meta.skyTop, night ? '#120A30' : '#6B5040', night ? 0.38 : 0.55]} />
-      )}
-      <ambientLight intensity={meta.ambientIntensity * (night ? 0.2 : isGhibli ? 0.25 : 0.35)} />
+      <hemisphereLight
+        args={
+          night
+            ? [GHIBLI_NIGHT_LIGHT.hemiSky, GHIBLI_NIGHT_LIGHT.hemiGround, 0.38]
+            : meta.id === 'evening'
+            ? ['#B9A6D6', '#B8806A', 0.7]
+            : [GHIBLI.hemiSky, GHIBLI.hemiGround, 0.95]
+        }
+      />
+      <ambientLight intensity={meta.ambientIntensity * (night ? 0.2 : 0.26)} />
       <directionalLight
         ref={sun}
-        intensity={meta.sunIntensity * (night ? 0.9 : isGhibli ? 1.6 : 1.45)}
-        color={isGhibli && !night && meta.id !== 'evening' ? GHIBLI.sun : meta.sunColor}
+        intensity={meta.sunIntensity * (night ? 0.9 : 1.6)}
+        color={!night && meta.id !== 'evening' ? GHIBLI.sun : meta.sunColor}
         castShadow
         shadow-mapSize={[2048, 2048]}
         shadow-bias={-0.0004}
@@ -891,11 +867,11 @@ const WaypointMarker: React.FC<{ tile: [number, number] }> = ({ tile }) => {
     <group ref={ref} position={[x, 0.09, z]}>
       <mesh rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[0.2, 0.34, 32]} />
-        <meshBasicMaterial color={isGhibli ? '#E0643E' : '#FF4FD8'} transparent opacity={0.9} />
+        <meshBasicMaterial color="#E0643E" transparent opacity={0.9} />
       </mesh>
       <mesh position={[0, 0.35, 0]} rotation={[Math.PI, 0, 0]}>
         <coneGeometry args={[0.09, 0.22, 12]} />
-        <meshStandardMaterial color={isGhibli ? '#E0643E' : '#FF4FD8'} emissive={isGhibli ? '#E0643E' : '#FF4FD8'} emissiveIntensity={isGhibli ? 0.5 : 1.4} />
+        <meshStandardMaterial color="#E0643E" emissive="#E0643E" emissiveIntensity={0.5} />
       </mesh>
     </group>
   );

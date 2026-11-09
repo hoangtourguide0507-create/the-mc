@@ -95,10 +95,10 @@ export const HubView: React.FC = () => {
             {/* Streak Pill */}
             <div
               title={`Kỷ lục: ${state.streak.best} ngày`}
-              className={`flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-black ${
+              className={`flex items-center gap-1 rounded-full border-2 px-2.5 py-1 text-xs font-black ${
                 touchedToday
-                  ? 'border-orange-400/50 bg-orange-500/20 text-orange-300'
- : ' ghibli-panel text-ghibli-ink-soft grayscale'
+                  ? 'border-ghibli-clay bg-[#FDF0CF] text-[#8A5A00]'
+                  : 'ghibli-panel text-ghibli-ink-soft grayscale'
               }`}
             >
               <span>🔥</span>
@@ -109,7 +109,7 @@ export const HubView: React.FC = () => {
             <button
               onClick={toggleMute}
               title={state.muted ? 'Bật âm thanh' : 'Tắt âm thanh'}
- className="rounded-full border ghibli-panel p-2 text-xs text-ghibli-ink transition hover:bg-[#FBEBD0]"
+              className="rounded-full border ghibli-panel p-2 text-xs text-ghibli-ink transition hover:bg-[#FBEBD0]"
             >
               {state.muted ? '🔇' : '🔊'}
             </button>
@@ -122,7 +122,7 @@ export const HubView: React.FC = () => {
 
           {/* Clock Strip & Sleep Button Overlay inside 3D Room Frame */}
           <div className="pointer-events-none absolute inset-x-3 bottom-3 z-30 flex items-center justify-between">
- <div className="pointer-events-auto flex items-center gap-2 rounded-full border ghibli-panel px-3 py-1 text-xs font-extrabold text-ghibli-ink shadow-lg">
+            <div className="pointer-events-auto flex items-center gap-2 rounded-full border ghibli-panel px-3 py-1 text-xs font-extrabold text-ghibli-ink shadow-lg">
               <span>{periodMeta.icon}</span>
               <span>{fmtTime(state.clock)}</span>
               <span className="text-ghibli-ink-soft">· {periodMeta.label}</span>
@@ -139,7 +139,7 @@ export const HubView: React.FC = () => {
                   sleepDay({ forced: false });
                 }
               }}
-              className="pointer-events-auto flex items-center gap-1 rounded-full border border-amber-300/50 bg-ghibli-sun/30 px-3 py-1 text-xs font-black text-ghibli-ink shadow-lg transition hover:scale-105 disabled:pointer-events-none disabled:opacity-60"
+              className="pointer-events-auto flex items-center gap-1 rounded-full border-2 border-ghibli-clay bg-[#FDF0CF] px-3 py-1 text-xs font-black text-[#8A5A00] shadow-lg transition hover:scale-105 disabled:pointer-events-none disabled:opacity-60"
             >
               <span>🛌</span>
               <span>Đi ngủ</span>
@@ -152,7 +152,7 @@ export const HubView: React.FC = () => {
               {ownedUpgrades.map((up) => (
                 <span
                   key={up.id}
- className="rounded-full border border-amber-400/50 ghibli-panel px-2.5 py-0.5 text-[11px] font-bold text-amber-700 shadow"
+                  className="rounded-full border ghibli-panel px-2.5 py-0.5 text-xs font-bold text-[#8A5A00] shadow"
                 >
                   {up.icon} {up.name}
                 </span>
@@ -164,16 +164,16 @@ export const HubView: React.FC = () => {
         {/* Career Profile Card (visible on iPad or bottom of room) */}
         <div data-tour="career" className="grid grid-cols-3 gap-2 rounded-2xl border ghibli-panel p-3 text-center">
           <div>
-            <div className="font-display text-base font-black text-cyan-700">
+            <div className="font-display text-base font-black text-[#23706A]">
               {state.learned.length + 5}
             </div>
-            <div className="text-[11px] font-semibold text-ghibli-ink-soft">Cụm từ đã mở</div>
+            <div className="text-xs font-semibold text-ghibli-ink-soft">Cụm từ đã mở</div>
           </div>
           <div>
             <div className="font-display text-base font-black text-pink-700">
               {state.stats.shows}
             </div>
-            <div className="text-[11px] font-semibold text-ghibli-ink-soft">Show đã dẫn</div>
+            <div className="text-xs font-semibold text-ghibli-ink-soft">Show đã dẫn</div>
           </div>
           <div>
             <div className="font-display text-base font-black text-purple-700">
@@ -181,7 +181,7 @@ export const HubView: React.FC = () => {
                 ? '⭐ ' + fmtRep(state.rep)
                 : `${Math.max(0, chaNeed(state.charisma.lv) - state.charisma.pts)} điểm`}
             </div>
-            <div className="text-[11px] font-semibold text-ghibli-ink-soft">
+            <div className="text-xs font-semibold text-ghibli-ink-soft">
               {state.charisma.lv >= MAX_LV
                 ? 'Ngôi sao MC · Danh tiếng'
                 : `Tới Lv.${state.charisma.lv + 1} · ${levelTitle(state.charisma.lv + 1)}`}
@@ -199,7 +199,7 @@ export const HubView: React.FC = () => {
           className="group relative flex w-full items-center justify-between overflow-hidden rounded-3xl border-2 border-ghibli-clay bg-gradient-to-r from-ghibli-sky via-[#CDEBDD] to-[#FFE3B3] p-4 text-left shadow-[0_3px_0_rgba(107,78,61,0.35),0_6px_14px_rgba(59,42,34,0.18)] transition hover:scale-[1.01]"
         >
           <div className="flex items-center gap-3.5">
- <span className="flex h-12 w-12 items-center justify-center rounded-2xl ghibli-panel text-2xl shadow-inner">
+            <span className="flex h-12 w-12 items-center justify-center rounded-2xl ghibli-panel text-2xl shadow-inner">
               🗺️
             </span>
             <div>
@@ -211,14 +211,14 @@ export const HubView: React.FC = () => {
               </div>
             </div>
           </div>
- <span className="rounded-full ghibli-panel px-3.5 py-1.5 text-xs font-black text-ghibli-ink transition group-hover:translate-x-1">
+          <span className="rounded-full ghibli-panel px-3.5 py-1.5 text-xs font-black text-ghibli-ink transition group-hover:translate-x-1">
             Khám phá ➔
           </span>
         </button>
 
         {/* Gợi ý bước tiếp theo cho người mới */}
         {hint && (
-          <div className="rounded-2xl border border-amber-400/40 bg-amber-500/10 p-3.5 text-xs font-semibold leading-relaxed text-amber-100">
+          <div className="rounded-2xl border-2 border-ghibli-clay bg-[#FDF0CF] p-3.5 text-xs font-bold leading-relaxed text-[#8A5A00] shadow-sm">
             💡 {hint}
           </div>
         )}
@@ -226,14 +226,14 @@ export const HubView: React.FC = () => {
         {/* Quest hiện tại: mở bảng nhiệm vụ đầy đủ */}
         <button
           onClick={() => setQuestOpen(true)}
-          className="flex items-center justify-between gap-3 rounded-2xl border border-emerald-400/35 bg-emerald-500/10 p-3.5 text-left transition hover:border-emerald-400 hover:bg-emerald-500/20"
+          className="flex items-center justify-between gap-3 rounded-2xl border-2 border-ghibli-clay bg-[#E4F2DC] p-3.5 text-left shadow-sm transition hover:bg-[#D5EBC8]"
         >
           <div className="flex min-w-0 items-center gap-3">
-            <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-400/20 text-xl">
+            <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-ghibli-clay/40 bg-ghibli-cream text-xl">
               📜
             </span>
             <div className="min-w-0">
-              <div className="text-[11px] font-black uppercase tracking-wider text-emerald-700">
+              <div className="text-xs font-black uppercase tracking-wider text-[#3F7A32]">
                 Nhiệm vụ hiện tại
               </div>
               <div className="truncate font-display text-sm font-black text-ghibli-ink">
@@ -241,7 +241,7 @@ export const HubView: React.FC = () => {
               </div>
             </div>
           </div>
- <span className="flex-shrink-0 rounded-full ghibli-panel px-2.5 py-1 text-xs font-black text-ghibli-ink">
+          <span className="flex-shrink-0 rounded-full ghibli-panel px-2.5 py-1 text-xs font-black text-ghibli-ink">
             {questProg ? `${questProg.met}/${questProg.total}` : '✓'}
           </span>
         </button>
@@ -249,7 +249,7 @@ export const HubView: React.FC = () => {
         {/* Two Free Daily Activities (Morning Coffee & Supermarket) */}
         <div>
           <div className="mb-2 flex items-center justify-between">
-            <h2 className="font-display text-sm font-black uppercase tracking-wider text-emerald-700">
+            <h2 className="font-display text-sm font-black uppercase tracking-wider text-[#3F7A32]">
               ⚡ Hoạt Động Hằng Ngày (Miễn Phí · Hồi Năng Lượng)
             </h2>
           </div>
@@ -262,27 +262,27 @@ export const HubView: React.FC = () => {
                   key={dId}
                   data-tour={dId === 'coffee' ? 'coffee' : undefined}
                   onClick={() => handleSceneCardClick(dId)}
- className="flex flex-col justify-between rounded-2xl border ghibli-panel p-3.5 text-left transition hover:border-emerald-400/60 hover:bg-[#FBEBD0]"
+                  className="flex flex-col justify-between rounded-2xl border ghibli-panel p-3.5 text-left transition hover:bg-[#FBEBD0]"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2.5">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/20 text-xl">
+                      <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-ghibli-clay/40 bg-[#E4F2DC] text-xl">
                         {sc.icon}
                       </span>
                       <div>
                         <div className="font-display text-sm font-black text-ghibli-ink">
                           {sc.title}
                         </div>
-                        <div className="text-[11px] font-bold text-emerald-700">
+                        <div className="text-xs font-bold text-[#3F7A32]">
                           +{sc.reward.energy} ⚡ · +{sc.reward.charisma} Charisma
                         </div>
                       </div>
                     </div>
                   </div>
-                  <div className="mt-2.5 flex items-center justify-between border-t border-ghibli-track pt-2 text-[11px]">
+                  <div className="mt-2.5 flex items-center justify-between border-t border-ghibli-track pt-2 text-xs">
                     <span
                       className={`font-bold ${
-                        st.state === 'open' ? 'text-cyan-700' : 'text-ghibli-ink-soft'
+                        st.state === 'open' ? 'text-[#23706A]' : 'text-ghibli-ink-soft'
                       }`}
                     >
                       🕒 {st.label}
@@ -299,23 +299,23 @@ export const HubView: React.FC = () => {
         <div className="grid grid-cols-2 gap-2.5">
           <button
             onClick={() => setBookOpen(true)}
-            className="relative flex items-center gap-3 rounded-2xl border border-cyan-400/35 bg-cyan-500/10 p-3.5 text-left transition hover:border-cyan-400 hover:bg-cyan-500/20"
+            className="relative flex items-center gap-3 rounded-2xl border-2 border-ghibli-clay bg-[#D9EFF5] p-3.5 text-left shadow-sm transition hover:bg-[#C6E6EF]"
           >
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-400/20 text-xl">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-ghibli-clay/40 bg-ghibli-cream text-xl">
               📖
             </span>
             <div>
               <div className="font-display text-sm font-black text-ghibli-ink">
                 Sổ Tay Từ Vựng
               </div>
-              <div className="text-[11px] font-semibold text-cyan-700">
+              <div className="text-xs font-semibold text-[#23706A]">
                 {state.weak.length > 0
                   ? `${state.weak.length} từ cần luyện lại`
                   : `${state.learned.length + 5} mẫu câu MC`}
               </div>
             </div>
             {state.weak.length > 0 && (
-              <span className="absolute right-3 top-3 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 text-[11px] font-black text-white shadow">
+              <span className="absolute right-3 top-3 flex h-5 min-w-5 items-center justify-center rounded-full border border-ghibli-clay bg-ghibli-coral px-1.5 text-xs font-black text-white shadow">
                 {state.weak.length}
               </span>
             )}
@@ -323,16 +323,16 @@ export const HubView: React.FC = () => {
 
           <button
             onClick={() => setShopOpen(true)}
-            className="flex items-center gap-3 rounded-2xl border border-amber-400/35 bg-amber-500/10 p-3.5 text-left transition hover:border-amber-400 hover:bg-amber-500/20"
+            className="flex items-center gap-3 rounded-2xl border-2 border-ghibli-clay bg-[#FDF0CF] p-3.5 text-left shadow-sm transition hover:bg-[#FBE4B0]"
           >
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-400/20 text-xl">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-ghibli-clay/40 bg-ghibli-cream text-xl">
               🛍️
             </span>
             <div>
               <div className="font-display text-sm font-black text-ghibli-ink">
                 Cửa Hàng MC
               </div>
-              <div className="text-[11px] font-semibold text-amber-700">
+              <div className="text-xs font-semibold text-[#8A5A00]">
                 Nạp ⚡ & Trang bị 3D (${state.cash})
               </div>
             </div>
@@ -345,7 +345,7 @@ export const HubView: React.FC = () => {
             <h2 className="font-display text-sm font-black uppercase tracking-wider text-pink-700">
               🎬 Lịch Nhận Show Hôm Nay (Vuốt Ngang)
             </h2>
-            <span className="text-[11px] font-semibold text-ghibli-ink-soft">
+            <span className="text-xs font-semibold text-ghibli-ink-soft">
               Mở cửa trước 60 phút
             </span>
           </div>
@@ -368,16 +368,16 @@ export const HubView: React.FC = () => {
                   onClick={() => handleSceneCardClick(sceneId)}
                   className={`group relative flex w-64 flex-shrink-0 cursor-pointer flex-col justify-between overflow-hidden rounded-3xl border p-4 transition hover:-translate-y-0.5 ${
                     isDoneOrMissed
- ? ' ghibli-panel opacity-60'
+                      ? 'ghibli-panel opacity-60'
                       : lockedLv || lockedRep
- ? ' ghibli-panel opacity-75'
-                      : 'border-ghibli-clay/40 bg-ghibli-cream hover:border-ghibli-teal'
+                      ? 'ghibli-panel opacity-75'
+                      : 'ghibli-panel hover:bg-[#FBEBD0]'
                   }`}
                 >
                   <div>
                     <div className="flex items-center justify-between gap-2">
                       <span
-                        className={`rounded-full border px-2.5 py-0.5 text-[11px] font-extrabold ${sc.tagCls}`}
+                        className={`rounded-full border px-2.5 py-0.5 text-xs font-extrabold ${sc.tagCls}`}
                       >
                         {sc.tag}
                       </span>
@@ -396,14 +396,14 @@ export const HubView: React.FC = () => {
                     </div>
 
                     <div className="mt-3 flex items-center gap-2.5">
- <span className="flex h-11 w-11 items-center justify-center rounded-2xl ghibli-panel text-2xl shadow-inner">
+                      <span className="flex h-11 w-11 items-center justify-center rounded-2xl ghibli-panel text-2xl shadow-inner">
                         {sc.icon}
                       </span>
                       <div>
                         <h3 className="font-display text-base font-black leading-snug text-ghibli-ink">
                           {sc.title}
                         </h3>
-                        <span className="text-[11px] font-bold text-ghibli-ink-soft">
+                        <span className="text-xs font-bold text-ghibli-ink-soft">
                           {sc.level} · Cần Lv.{sc.reqLv}
                           {sc.minRep ? ` · ⭐${sc.minRep.toFixed(1)}` : ''}
                         </span>
@@ -417,20 +417,20 @@ export const HubView: React.FC = () => {
 
                   <div className="mt-4 space-y-2 border-t border-ghibli-track pt-2.5">
                     <div className="flex items-center justify-between text-xs font-extrabold">
-                      <span className="text-amber-700">+${sc.reward.cash}</span>
+                      <span className="text-[#8A5A00]">+${sc.reward.cash}</span>
                       <span className="text-purple-700">
                         +{sc.reward.charisma} Cha
                       </span>
-                      <span className="text-rose-700">−{sc.energy} ⚡</span>
+                      <span className="text-[#B2421E]">−{sc.energy} ⚡</span>
                     </div>
 
- <div className="flex items-center justify-between rounded-xl ghibli-panel px-2.5 py-1.5 text-[11px] font-bold">
+                    <div className="flex items-center justify-between rounded-xl ghibli-panel px-2.5 py-1.5 text-xs font-bold">
                       <span
                         className={
                           st.state === 'open'
-                            ? 'text-emerald-700'
+                            ? 'text-[#3F7A32]'
                             : st.state === 'late'
-                            ? 'text-amber-700'
+                            ? 'text-[#8A5A00]'
                             : 'text-ghibli-ink-soft'
                         }
                       >
@@ -442,15 +442,15 @@ export const HubView: React.FC = () => {
                   {/* Lock or Done Stamp Overlay */}
                   {(lockedLv || lockedRep) && (
                     <div className="absolute inset-0 flex items-center justify-center bg-ghibli-cream/75">
- <div className="rounded-2xl border border-purple-400/50 ghibli-panel px-3.5 py-2 text-center shadow-xl">
+                      <div className="rounded-2xl border ghibli-panel px-3.5 py-2 text-center shadow-xl">
                         <div className="text-lg">🔒</div>
-                        <div className="text-xs font-black text-purple-700">
+                        <div className="text-xs font-black text-purple-800">
                           {lockedLv
                             ? `Cần Lv.${sc.reqLv} · ${levelTitle(sc.reqLv)}`
                             : `Cần Danh tiếng ⭐ ${(sc.minRep || 0).toFixed(1)}`}
                         </div>
                         {lockedRep && (
-                          <div className="mt-0.5 text-[11px] font-bold text-ghibli-ink-soft">
+                          <div className="mt-0.5 text-xs font-bold text-ghibli-ink-soft">
                             Hiện tại: ⭐ {fmtRep(state.rep)}
                           </div>
                         )}

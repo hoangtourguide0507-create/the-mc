@@ -1,66 +1,46 @@
 /**
- * Phong cách đồ hoạ: 'ghibli' (mặc định, anime mềm mại kiểu tranh màu nước) hoặc 'neon' (bản cũ để so sánh).
- *
- * So sánh: thêm ?style=neon vào link (được nhớ trong localStorage). Quay lại: ?style=ghibli.
+ * Phong cách đồ hoạ Ghibli Studio chuẩn hoá (màu nước ấm, ánh sáng dịu, viền nâu đất).
+ * Đã loại bỏ hoàn toàn nhánh neon cũ để tối ưu hoá 100% cho thẩm mỹ Ghibli.
  */
 import * as THREE from 'three';
 
-export type ArtStyle = 'neon' | 'ghibli';
-const DEFAULT_STYLE: ArtStyle = 'ghibli';
-const KEY = 'mclife.style';
-
-export const ART_STYLE: ArtStyle = (() => {
-  if (typeof window === 'undefined') return DEFAULT_STYLE;
-  const q = new URLSearchParams(window.location.search).get('style');
-  if (q === 'ghibli' || q === 'neon') {
-    try {
-      window.localStorage.setItem(KEY, q);
-    } catch {
-      /* chế độ riêng tư: bỏ qua */
-    }
-    return q;
-  }
-  try {
-    const saved = window.localStorage.getItem(KEY);
-    if (saved === 'ghibli' || saved === 'neon') return saved;
-  } catch {
-    /* bỏ qua */
-  }
-  return DEFAULT_STYLE;
-})();
-
-export const isGhibli = ART_STYLE === 'ghibli';
+export type ArtStyle = 'ghibli';
+export const ART_STYLE: ArtStyle = 'ghibli';
+export const isGhibli = true;
 
 /* ------------------------------------------------------------------ */
-/* Tô bóng kiểu anime mềm: mảng sáng/tối chuyển mượt, gần như không bóng loáng */
+/* Tô bóng kiểu anime mềm: mảng sáng/tối chuyển mượt + viền sáng Rim   */
 /* ------------------------------------------------------------------ */
 
 let installed = false;
 export function installGhibliShading() {
-  if (installed || !isGhibli) return;
+  if (installed) return;
   installed = true;
   const chunk = THREE.ShaderChunk.lights_physical_pars_fragment;
   THREE.ShaderChunk.lights_physical_pars_fragment = chunk
-    // Ánh sáng mặt trời: 2 mảng (sáng / tối) với vùng chuyển mềm, bọc nhẹ ra mặt sau.
-    // Khớp theo khoảng trắng bất kỳ: bản build three.js không có dòng trống giữa hai lệnh.
+    // Ánh sáng mặt trời: 2 mảng (sáng / tối) với vùng chuyển mềm, bọc nhẹ ra mặt sau + Rim Fresnel ấm
     .replace(
       /float dotNL = saturate\( dot\( geometryNormal, directLight\.direction \) \);\s*vec3 irradiance = dotNL \* directLight\.color;/,
-      'float dotNLraw = dot( geometryNormal, directLight.direction );\n\tfloat dotNL = mix( 0.16, 1.0, smoothstep( -0.08, 0.32, dotNLraw ) );\n\tvec3 irradiance = dotNL * directLight.color;'
+      [
+        'float dotNLraw = dot( geometryNormal, directLight.direction );',
+        'float dotNL = mix( 0.20, 1.0, smoothstep( -0.10, 0.30, dotNLraw ) );',
+        'float rim = pow( 1.0 - saturate( dot( geometryNormal, geometryViewDir ) ), 3.2 ) * smoothstep( -0.2, 0.4, dotNLraw );',
+        'vec3 irradiance = ( dotNL + rim * 0.16 ) * directLight.color;',
+      ].join('\n\t')
     )
-    // Giảm mạnh phản xạ bóng loáng (tranh vẽ tay không có highlight kim loại)
-    // (kiểm tra bên dưới cảnh báo nếu bản three.js đổi chuỗi gốc)
+    // Giảm mạnh phản xạ bóng loáng (tranh vẽ tay không có highlight kim loại gắt)
     .replace(
       'reflectedLight.directSpecular += irradiance * BRDF_GGX( directLight.direction, geometryViewDir, geometryNormal, material );',
-      'reflectedLight.directSpecular += 0.18 * irradiance * BRDF_GGX( directLight.direction, geometryViewDir, geometryNormal, material );'
+      'reflectedLight.directSpecular += 0.16 * irradiance * BRDF_GGX( directLight.direction, geometryViewDir, geometryNormal, material );'
     );
   const patched = THREE.ShaderChunk.lights_physical_pars_fragment;
-  if (!patched.includes('dotNLraw') || !patched.includes('0.18 * irradiance')) {
+  if (!patched.includes('dotNLraw') || !patched.includes('0.16 * irradiance')) {
     console.warn('[artStyle] Không vá được shader Ghibli — kiểm tra phiên bản three.js');
   }
 }
 
 /* ------------------------------------------------------------------ */
-/* Bảng màu Ghibli: ấm, dịu, bớt neon                                   */
+/* Bảng màu Ghibli: ấm, dịu, chất liệu giấy kem & màu nước             */
 /* ------------------------------------------------------------------ */
 
 const CREAM = new THREE.Color('#F4E9D4');
@@ -68,7 +48,6 @@ const tintCache = new Map<string, string>();
 
 /** Làm dịu màu: giảm bão hoà, kéo nhẹ về tông kem ấm */
 export function softTint(hex: string, amount = 0.28): string {
-  if (!isGhibli) return hex;
   const k = `${hex}|${amount}`;
   const hit = tintCache.get(k);
   if (hit) return hit;
@@ -99,17 +78,19 @@ export const GHIBLI = {
   water: '#8FD3E8',
   roofs: ['#C8643B', '#3D8A8A', '#56709A', '#B5523A', '#7A5C99'],
   leaves: ['#8CC770', '#9BD27F', '#7DB86A', '#A8D98A'],
-  /** Đèn đường, cửa sổ đêm: vàng ấm, không neon */
+  /** Đèn đường, cửa sổ đêm: vàng ấm */
   lamp: '#FFD58A',
   /** Sàn gỗ và tường studio (phòng hub) */
   wood: '#C89A6B',
+  woodDark: '#A0744B',
   wallCream: '#F5E6CC',
+  clay: '#6B4E3D',
 };
 
 /** Trời theo buổi cho bản đồ thành phố và cửa sổ phòng hub (STYLE_GHIBLI.md mục 3) */
 export const GHIBLI_SKY: Record<string, { top: string; bottom: string; fog: string }> = {
-  morning: { top: GHIBLI.skyTop, bottom: GHIBLI.skyBottom, fog: GHIBLI.fog },
-  afternoon: { top: GHIBLI.skyTop, bottom: GHIBLI.skyBottom, fog: GHIBLI.fog },
+  morning: { top: '#9FD8EE', bottom: '#FFF1D6', fog: '#F6EBD2' },
+  afternoon: { top: '#88CCE8', bottom: '#FFECC8', fog: '#F4E5C8' },
   evening: { top: '#8E9BD6', bottom: '#F7C6A0', fog: '#E9BFA6' },
   night: { top: '#2E3F6B', bottom: '#5A5C8F', fog: '#3A4A74' },
 };
@@ -121,8 +102,7 @@ export const GHIBLI_NIGHT_LIGHT = {
   water: '#3A5680',
 };
 
-/** Trời theo buổi trong chế độ Ghibli; trả về undefined ở chế độ neon */
+/** Trời theo buổi trong chế độ Ghibli */
 export function ghibliSky(periodId: string) {
-  if (!isGhibli) return undefined;
   return GHIBLI_SKY[periodId] ?? GHIBLI_SKY.morning;
 }

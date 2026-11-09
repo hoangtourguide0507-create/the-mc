@@ -3,7 +3,7 @@
  * Mọi thứ tạo một lần rồi tái sử dụng để giữ số draw call / bộ nhớ thấp trên iPhone.
  */
 import * as THREE from 'three';
-import { isGhibli, softTint } from '../artStyle';
+import { softTint } from '../artStyle';
 
 export type FacadeKind = 'apt' | 'glass' | 'house' | 'office' | 'shop';
 
@@ -28,8 +28,8 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
 }
 
 /**
- * Texture 4×4 ô (4 gian × 4 tầng). Tường vẽ trắng để nhân với màu vật liệu,
- * kính vẽ xám xanh; texture phát sáng chỉ có các ô cửa đang bật đèn.
+ * Texture 4×4 ô (4 gian × 4 tầng). Tường vẽ trắng kem để nhân với màu vật liệu,
+ * kính vẽ xanh dịu; texture phát sáng chỉ có các ô cửa đang bật đèn vàng ấm Ghibli.
  */
 export function facadeTextures(kind: FacadeKind, variant = 0) {
   const k = `${kind}:${variant}`;
@@ -54,27 +54,24 @@ export function facadeTextures(kind: FacadeKind, variant = 0) {
     for (let col = 0; col < 4; col++) {
       const x0 = col * cell;
       const y0 = row * cell;
-      const lit = rnd() < (kind === 'glass' || kind === 'office' ? 0.62 : 0.5);
-      // Ghibli: đèn cửa sổ luôn vàng ấm (không xanh lạnh); neon chỉ còn ở chế độ cũ
-      const warmPick = rnd() < 0.75;
-      const warm = isGhibli || warmPick ? '#FFD58A' : '#BDE6FF';
+      const lit = rnd() < (kind === 'glass' || kind === 'office' ? 0.62 : 0.52);
+      const warm = rnd() < 0.7 ? '#FFD58A' : '#FFE4B5';
 
       if (kind === 'glass' || kind === 'office') {
-        // Tường kính: dải kính gần kín ô, đố mảnh
         const pad = kind === 'glass' ? 6 : 14;
         const gx = x0 + pad;
         const gy = y0 + (kind === 'glass' ? 10 : 22);
         const gw = cell - pad * 2;
         const gh = cell - (kind === 'glass' ? 20 : 40);
         const grd = a.createLinearGradient(gx, gy, gx + gw, gy + gh);
-        grd.addColorStop(0, '#9FB8D9');
-        grd.addColorStop(0.55, '#5F7BA6');
-        grd.addColorStop(1, '#3E5580');
+        grd.addColorStop(0, '#A8C4DE');
+        grd.addColorStop(0.55, '#6C8BB2');
+        grd.addColorStop(1, '#4C658C');
         a.fillStyle = grd;
         a.fillRect(gx, gy, gw, gh);
-        a.fillStyle = 'rgba(255,255,255,0.35)';
+        a.fillStyle = 'rgba(255,252,240,0.38)';
         a.fillRect(gx + gw * 0.12, gy + 4, gw * 0.08, gh - 8);
-        a.fillStyle = '#E8EEF7';
+        a.fillStyle = '#F2ECE1';
         a.fillRect(gx + gw / 2 - 2, gy, 4, gh);
         if (lit) {
           e.fillStyle = warm;
@@ -83,35 +80,35 @@ export function facadeTextures(kind: FacadeKind, variant = 0) {
           e.fillRect(gx + gw / 2 - 2, gy, 4, gh);
         }
       } else {
-        // Cửa sổ có khung, bậu và rèm
+        // Cửa sổ có khung gỗ/đá ấm, bậu cửa và rèm vải kem
         const ww = kind === 'house' ? cell * 0.5 : cell * 0.56;
         const wh = kind === 'house' ? cell * 0.52 : cell * 0.58;
         const wx = x0 + (cell - ww) / 2;
         const wy = y0 + cell * 0.18;
-        a.fillStyle = '#D9DEE8';
+        a.fillStyle = '#E4DDD3';
         roundRect(a, wx - 7, wy - 7, ww + 14, wh + 14, 8);
         a.fill();
         const grd = a.createLinearGradient(wx, wy, wx, wy + wh);
-        grd.addColorStop(0, '#A9C4E4');
-        grd.addColorStop(1, '#46618C');
+        grd.addColorStop(0, '#B2CCE6');
+        grd.addColorStop(1, '#55719A');
         a.fillStyle = grd;
         roundRect(a, wx, wy, ww, wh, 5);
         a.fill();
-        // Rèm cửa
-        if (rnd() < 0.5) {
-          a.fillStyle = 'rgba(255,240,245,0.75)';
+        // Rèm cửa kem ấm
+        if (rnd() < 0.55) {
+          a.fillStyle = 'rgba(255,246,232,0.78)';
           a.fillRect(wx, wy, ww * 0.28, wh);
           a.fillRect(wx + ww * 0.72, wy, ww * 0.28, wh);
         }
         // Đố chữ thập
-        a.fillStyle = '#EEF2F7';
+        a.fillStyle = '#F4EFE6';
         a.fillRect(wx + ww / 2 - 3, wy, 6, wh);
         a.fillRect(wx, wy + wh * 0.45, ww, 5);
         // Bậu cửa
-        a.fillStyle = '#B8BFCC';
+        a.fillStyle = '#C4B7A6';
         a.fillRect(wx - 10, wy + wh + 6, ww + 20, 9);
         if (kind === 'shop' && row === 3) {
-          a.fillStyle = 'rgba(0,0,0,0.08)';
+          a.fillStyle = 'rgba(60,40,20,0.08)';
           a.fillRect(x0, y0, cell, cell);
         }
         if (lit) {
@@ -123,7 +120,7 @@ export function facadeTextures(kind: FacadeKind, variant = 0) {
         }
       }
       // Gờ sàn giữa các tầng
-      a.fillStyle = 'rgba(0,0,0,0.10)';
+      a.fillStyle = 'rgba(60,40,20,0.10)';
       a.fillRect(x0, y0 + cell - 6, cell, 6);
     }
   }
@@ -164,7 +161,7 @@ export function mat(
       color: softTint(color, 0.2),
       roughness: opts.rough ?? 0.6,
       metalness: opts.metal ?? 0,
-      emissive: opts.emissive ? new THREE.Color(isGhibli ? softTint(opts.emissive, 0.3) : opts.emissive) : new THREE.Color('#000000'),
+      emissive: opts.emissive ? new THREE.Color(softTint(opts.emissive, 0.3)) : new THREE.Color('#000000'),
       emissiveIntensity: opts.ei ?? 0,
       transparent: (opts.opacity ?? 1) < 1,
       opacity: opts.opacity ?? 1,
@@ -177,8 +174,8 @@ export function mat(
 /** Vật liệu phát sáng có cường độ đổi theo ngày/đêm — mỗi building giữ bản riêng */
 export function glowMat(color: string, emissive: string) {
   return new THREE.MeshStandardMaterial({
-    color: isGhibli ? softTint(color, 0.15) : color,
-    emissive: new THREE.Color(isGhibli ? softTint(emissive, 0.3) : emissive),
+    color: softTint(color, 0.15),
+    emissive: new THREE.Color(softTint(emissive, 0.3)),
     emissiveIntensity: 0.4,
     roughness: 0.35,
   });

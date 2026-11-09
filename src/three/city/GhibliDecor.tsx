@@ -19,7 +19,7 @@ export const GhibliClouds: React.FC<{ night: boolean }> = ({ night }) => {
     []
   );
   material.color.set(night ? '#4A4E7A' : '#FFFFFF');
-  material.emissiveIntensity = night ? 0.05 : 0.35;
+  material.emissiveIntensity = night ? 0.06 : 0.36;
 
   const clouds = useMemo(() => {
     let seed = 99;
@@ -38,7 +38,10 @@ export const GhibliClouds: React.FC<{ night: boolean }> = ({ night }) => {
       const n = 6 + Math.floor(rnd() * 5);
       for (let k = 0; k < n; k++) {
         const t = k / (n - 1) - 0.5;
-        puffs.push({ p: [t * 7 + (rnd() - 0.5), Math.sin((t + 0.5) * Math.PI) * 1.6 + rnd() * 0.6, (rnd() - 0.5) * 2], s: 1.4 + Math.sin((t + 0.5) * Math.PI) * 1.4 + rnd() * 0.5 });
+        puffs.push({
+          p: [t * 7 + (rnd() - 0.5), Math.sin((t + 0.5) * Math.PI) * 1.6 + rnd() * 0.6, (rnd() - 0.5) * 2],
+          s: 1.4 + Math.sin((t + 0.5) * Math.PI) * 1.4 + rnd() * 0.5,
+        });
       }
       out.push({ pos: [Math.cos(a) * r, low ? -2.5 - rnd() * 5 : 3 + rnd() * 4, Math.sin(a) * r], puffs, speed: 0.15 + rnd() * 0.2 });
     }
@@ -46,7 +49,7 @@ export const GhibliClouds: React.FC<{ night: boolean }> = ({ night }) => {
   }, []);
 
   useFrame((_, dt) => {
-    if (group.current) group.current.rotation.y += dt * 0.004;
+    if (group.current) group.current.rotation.y += dt * 0.0045;
   });
 
   return (
@@ -62,9 +65,11 @@ export const GhibliClouds: React.FC<{ night: boolean }> = ({ night }) => {
   );
 };
 
-/** Bụi cỏ mọc trên ô cỏ / công viên (1 draw call), lay nhẹ theo gió */
+/** Bụi cỏ mọc trên ô cỏ / công viên (1 draw call), rì rào theo làn gió bằng Vertex Shader (0 tốn CPU) */
 export const GrassTufts: React.FC<{ grid: GridData }> = ({ grid }) => {
   const ref = useRef<THREE.InstancedMesh>(null);
+  const timeUniform = useMemo(() => ({ value: 0 }), []);
+
   const geo = useMemo(() => {
     // Một bụi = 5 lá cỏ hình nón mảnh xoè ra
     const parts: THREE.BufferGeometry[] = [];
@@ -86,7 +91,31 @@ export const GrassTufts: React.FC<{ grid: GridData }> = ({ grid }) => {
     merged.setAttribute('normal', new THREE.Float32BufferAttribute(nrm, 3));
     return merged;
   }, []);
-  const material = useMemo(() => new THREE.MeshStandardMaterial({ color: '#FFFFFF', roughness: 1 }), []);
+
+  const material = useMemo(() => {
+    const m = new THREE.MeshStandardMaterial({ color: '#FFFFFF', roughness: 0.95 });
+    m.onBeforeCompile = (shader) => {
+      shader.uniforms.uTime = timeUniform;
+      shader.vertexShader = `uniform float uTime;\n` + shader.vertexShader;
+      shader.vertexShader = shader.vertexShader.replace(
+        '#include <begin_vertex>',
+        [
+          '#include <begin_vertex>',
+          'float heightMask = clamp(position.y * 5.0, 0.0, 1.0);',
+          'vec4 instPos = instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0);',
+          'float wave = sin(uTime * 2.2 + instPos.x * 0.65 + instPos.z * 0.45) * 0.055;',
+          'transformed.x += wave * heightMask;',
+          'transformed.z += cos(uTime * 1.8 + instPos.z * 0.55) * 0.035 * heightMask;',
+        ].join('\n')
+      );
+    };
+    m.customProgramCacheKey = () => 'ghibli-grass-wind';
+    return m;
+  }, [timeUniform]);
+
+  useFrame(({ clock }) => {
+    timeUniform.value = clock.elapsedTime;
+  });
 
   const items = useMemo(() => {
     let seed = 1234;
@@ -100,7 +129,7 @@ export const GrassTufts: React.FC<{ grid: GridData }> = ({ grid }) => {
         const t = grid.tiles[r][c];
         if (t !== 'grass' && t !== 'park') continue;
         const [x, z] = gridToWorld(c, r);
-        const n = t === 'park' ? 4 : 3;
+        const n = t === 'park' ? 5 : 3;
         for (let k = 0; k < n; k++)
           out.push({
             x: x + (rnd() - 0.5) * 0.85,
@@ -131,6 +160,126 @@ export const GrassTufts: React.FC<{ grid: GridData }> = ({ grid }) => {
   }, [items]);
 
   return <instancedMesh ref={ref} args={[geo, material, items.length]} receiveShadow />;
+};
+
+/**
+ * Hạt môi trường Ghibli theo buổi (1 Draw Call):
+ * - Ngày / Hoàng hôn: Cánh hoa anh đào hồng phấn & lá xanh bay lơ lửng theo chiều gió.
+ * - Ban đêm: Đom đóm vàng ấm lập loè quanh công viên và khu vườn.
+ */
+export const GhibliAtmosphere: React.FC<{ night: boolean }> = ({ night }) => {
+  const ref = useRef<THREE.InstancedMesh>(null);
+  const count = 48;
+  const dummy = useMemo(() => new THREE.Object3D(), []);
+
+  const particles = useMemo(() => {
+    let seed = 4321;
+    const rnd = () => {
+      seed = (seed * 16807) % 2147483647;
+      return seed / 2147483647;
+    };
+    return Array.from({ length: count }, (_, i) => ({
+      x: (rnd() - 0.5) * 24,
+      y: 0.4 + rnd() * 3.8,
+      z: (rnd() - 0.5) * 24,
+      speed: 0.45 + rnd() * 0.55,
+      phase: rnd() * Math.PI * 2,
+      dayColor: ['#F7B7C8', '#FFD8E4', '#A8D98A', '#FFF3C4'][i % 4],
+      nightColor: i % 3 === 0 ? '#FFE7B0' : '#FFD58A',
+    }));
+  }, []);
+
+  const mat = useMemo(
+    () =>
+      new THREE.MeshBasicMaterial({
+        color: '#FFFFFF',
+        transparent: true,
+        opacity: 0.85,
+        depthWrite: false,
+      }),
+    []
+  );
+
+  useLayoutEffect(() => {
+    const inst = ref.current;
+    if (!inst) return;
+    const col = new THREE.Color();
+    particles.forEach((p, i) => {
+      inst.setColorAt(i, col.set(night ? p.nightColor : p.dayColor));
+    });
+    if (inst.instanceColor) inst.instanceColor.needsUpdate = true;
+  }, [night, particles]);
+
+  useFrame(({ clock }) => {
+    const inst = ref.current;
+    if (!inst) return;
+    const t = clock.elapsedTime;
+    particles.forEach((p, i) => {
+      if (night) {
+        // Đom đóm bay lượn chậm và nhấp nháy nhẹ
+        const x = p.x + Math.sin(t * p.speed + p.phase) * 0.7;
+        const y = 0.35 + Math.abs(Math.sin(t * p.speed * 0.7 + p.phase)) * 1.9;
+        const z = p.z + Math.cos(t * p.speed * 0.8 + p.phase) * 0.7;
+        const pulse = 0.45 + 0.55 * (0.5 + 0.5 * Math.sin(t * 3.2 + p.phase));
+        dummy.position.set(x, y, z);
+        dummy.rotation.set(0, 0, 0);
+        dummy.scale.setScalar(pulse * 0.9);
+      } else {
+        // Cánh hoa & lá trôi theo gió mùa hè
+        const driftX = ((p.x + 13 + t * p.speed * 0.85) % 26) - 13;
+        const driftY = 3.8 - ((p.y + t * p.speed * 0.38) % 3.5);
+        const driftZ = p.z + Math.sin(t * 1.2 + p.phase) * 0.65;
+        dummy.position.set(driftX, driftY, driftZ);
+        dummy.rotation.set(t * 1.4 + p.phase, t * 1.1, Math.sin(t + p.phase) * 0.6);
+        dummy.scale.set(1.1, 0.35, 0.85);
+      }
+      dummy.updateMatrix();
+      inst.setMatrixAt(i, dummy.matrix);
+    });
+    inst.instanceMatrix.needsUpdate = true;
+  });
+
+  return (
+    <instancedMesh ref={ref} args={[undefined, mat, count]}>
+      <dodecahedronGeometry args={[0.042, 0]} />
+    </instancedMesh>
+  );
+};
+
+/** Đàn chim hải âu trắng lượn vòng chậm trên bầu trời ban ngày */
+export const GhibliBirds: React.FC<{ night: boolean }> = ({ night }) => {
+  const groupRef = useRef<THREE.Group>(null);
+  const wingGeo = useMemo(() => {
+    const g = new THREE.ConeGeometry(0.08, 0.28, 3);
+    g.rotateZ(Math.PI / 2);
+    return g;
+  }, []);
+  const birdMat = useMemo(() => new THREE.MeshBasicMaterial({ color: '#FFFDF7' }), []);
+
+  useFrame(({ clock }) => {
+    if (!groupRef.current || night) return;
+    const t = clock.elapsedTime;
+    groupRef.current.rotation.y = t * 0.14;
+    groupRef.current.position.y = 7.2 + Math.sin(t * 0.5) * 0.4;
+  });
+
+  if (night) return null;
+
+  return (
+    <group ref={groupRef} position={[2, 7.2, 4]}>
+      {[
+        [0, 0, 0],
+        [-0.6, 0.18, -0.45],
+        [0.55, 0.12, -0.5],
+        [-1.1, 0.32, -0.95],
+      ].map(([bx, by, bz], i) => (
+        <group key={i} position={[bx, by, bz]}>
+          <mesh geometry={wingGeo} material={birdMat} position={[-0.1, 0, 0]} rotation={[0, 0, 0.25]} />
+          <mesh geometry={wingGeo} material={birdMat} position={[0.1, 0, 0]} rotation={[0, Math.PI, 0.25]} />
+        </group>
+      ))}
+    </group>
+  );
 };
 
 export const GHIBLI_LIGHT = GHIBLI;

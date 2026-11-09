@@ -88,13 +88,17 @@ export const Walker: React.FC<{
 
 /** Bong bóng thoại 3D nhỏ trên đầu người đi đường (thay cho nhãn HTML) */
 const TalkBubble: React.FC = () => (
-  <group scale={0.9}>
-    <RoundedBox args={[0.34, 0.22, 0.08]} radius={0.06} smoothness={3} material={mat('#FFFFFF', { rough: 0.35, emissive: '#FFFFFF', ei: 0.25 })} />
-    <mesh position={[-0.06, -0.13, 0]} rotation={[0, 0, 0.6]} material={mat('#FFFFFF', { rough: 0.35, emissive: '#FFFFFF', ei: 0.25 })}>
+  <group scale={0.92}>
+    <RoundedBox args={[0.36, 0.23, 0.08]} radius={0.06} smoothness={3} material={mat('#FFF8EC', { rough: 0.45, emissive: '#FFF8EC', ei: 0.2 })} />
+    <mesh position={[-0.06, -0.13, 0]} rotation={[0, 0, 0.6]} material={mat('#FFF8EC', { rough: 0.45, emissive: '#FFF8EC', ei: 0.2 })}>
       <coneGeometry args={[0.045, 0.1, 4]} />
     </mesh>
-    {[-0.09, 0, 0.09].map((x) => (
-      <mesh key={x} position={[x, 0, 0.045]} material={mat('#22D3EE', { emissive: '#22D3EE', ei: 0.8 })}>
+    {[-0.09, 0, 0.09].map((x, idx) => (
+      <mesh
+        key={x}
+        position={[x, 0, 0.045]}
+        material={mat(idx === 1 ? '#E0643E' : '#3E9B94', { emissive: idx === 1 ? '#E0643E' : '#3E9B94', ei: 0.5 })}
+      >
         <sphereGeometry args={[0.028, 10, 8]} />
       </mesh>
     ))}

@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { WorldProp } from '../../types/game';
 import { mat } from './assets';
 import { gridToWorld } from './cityMap';
-import { GHIBLI, isGhibli } from '../artStyle';
+import { GHIBLI } from '../artStyle';
 
 type Xf = { p: [number, number, number]; s?: [number, number, number]; ry?: number; color?: string };
 
@@ -60,17 +60,39 @@ const G = {
   hydrant: new THREE.CylinderGeometry(0.05, 0.06, 0.2, 10),
 };
 
+const foliageWindUniform = { value: 0 };
+
+function makeWindMaterial(roughness: number, swayAmp: number) {
+  const m = new THREE.MeshStandardMaterial({ color: '#FFFFFF', roughness });
+  m.onBeforeCompile = (shader) => {
+    shader.uniforms.uTime = foliageWindUniform;
+    shader.vertexShader = `uniform float uTime;\n` + shader.vertexShader;
+    shader.vertexShader = shader.vertexShader.replace(
+      '#include <begin_vertex>',
+      [
+        '#include <begin_vertex>',
+        'vec4 instP = instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0);',
+        `float w = sin(uTime * 1.6 + instP.x * 0.55 + instP.z * 0.45 + position.y * 2.0) * ${swayAmp.toFixed(4)};`,
+        'transformed.x += w;',
+        'transformed.z += cos(uTime * 1.3 + instP.z * 0.5) * w * 0.6;',
+      ].join('\n')
+    );
+  };
+  m.customProgramCacheKey = () => `ghibli-foliage-${roughness}-${swayAmp}`;
+  return m;
+}
+
 const M = {
   trunk: mat('#7C4A2D', { rough: 0.9 }),
-  leaves: new THREE.MeshStandardMaterial({ color: '#FFFFFF', roughness: 0.8 }),
-  bush: new THREE.MeshStandardMaterial({ color: '#FFFFFF', roughness: 0.85 }),
+  leaves: makeWindMaterial(0.82, 0.035),
+  bush: makeWindMaterial(0.86, 0.018),
   flower: new THREE.MeshStandardMaterial({ color: '#FFFFFF', roughness: 0.6 }),
   palmTrunk: mat('#A0703A', { rough: 0.85 }),
-  palmLeaf: mat('#3FBF5F', { rough: 0.7 }),
-  pole: mat('#334155', { rough: 0.4, metal: 0.6 }),
-  bench: mat('#B45309', { rough: 0.8 }),
-  benchLeg: mat('#1F2937', { rough: 0.5, metal: 0.5 }),
-  hydrant: mat('#EF4444', { rough: 0.45 }),
+  palmLeaf: mat('#7DB86A', { rough: 0.72 }),
+  pole: mat('#4A4039', { rough: 0.45, metal: 0.4 }),
+  bench: mat('#B46530', { rough: 0.8 }),
+  benchLeg: mat('#3B2A22', { rough: 0.55, metal: 0.3 }),
+  hydrant: mat('#E0643E', { rough: 0.45 }),
 };
 
 let poolTex: THREE.CanvasTexture | null = null;
@@ -81,8 +103,8 @@ function lightPoolTexture() {
   cv.width = cv.height = S;
   const g = cv.getContext('2d')!;
   const grd = g.createRadialGradient(S / 2, S / 2, 0, S / 2, S / 2, S / 2);
-  grd.addColorStop(0, 'rgba(255,200,120,1)');
-  grd.addColorStop(0.45, 'rgba(255,170,80,0.45)');
+  grd.addColorStop(0, 'rgba(255,205,130,1)');
+  grd.addColorStop(0.45, 'rgba(255,175,90,0.45)');
   grd.addColorStop(1, 'rgba(255,150,60,0)');
   g.fillStyle = grd;
   g.fillRect(0, 0, S, S);
@@ -98,14 +120,14 @@ const LightPools: React.FC<{ items: Xf[] }> = ({ items }) => {
       new THREE.MeshBasicMaterial({
         map: lightPoolTexture(),
         transparent: true,
-        opacity: 0.55,
+        opacity: 0.58,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
       }),
     []
   );
   const g = useMemo(() => {
-    const pg = new THREE.PlaneGeometry(1.9, 1.9);
+    const pg = new THREE.PlaneGeometry(1.95, 1.95);
     pg.rotateX(-Math.PI / 2);
     return pg;
   }, []);
@@ -115,11 +137,11 @@ const LightPools: React.FC<{ items: Xf[] }> = ({ items }) => {
 
 const LampGlow: React.FC<{ items: Xf[]; night: boolean }> = ({ items, night }) => {
   const m = useMemo(
-    () => new THREE.MeshStandardMaterial({ color: '#FFF3C4', emissive: new THREE.Color('#FFC86B'), emissiveIntensity: 0.3 }),
+    () => new THREE.MeshStandardMaterial({ color: '#FFF3C4', emissive: new THREE.Color('#FFD58A'), emissiveIntensity: 0.3 }),
     []
   );
   useEffect(() => {
-    m.emissiveIntensity = night ? 4 : 0.25;
+    m.emissiveIntensity = night ? 3.2 : 0.25;
   }, [night, m]);
   return <Part items={items} geometry={G.lampHead} material={m} shadow={false} />;
 };
@@ -134,8 +156,8 @@ const Fountain: React.FC<{ p: [number, number, number] }> = ({ p }) => {
     });
   });
   const stone = mat('#EDE7DD', { rough: 0.55 });
-  const pool = mat('#3BB4E6', { rough: 0.06, metal: 0.15 });
-  const spray = mat('#E8F8FF', { rough: 0.05, opacity: 0.6 });
+  const pool = mat('#6BC2D4', { rough: 0.08, metal: 0.12 });
+  const spray = mat('#E8F8FF', { rough: 0.05, opacity: 0.62 });
   return (
     <group position={p}>
       {/* Bồn ngoài: vành tròn + mặt nước thấp hơn vành */}
@@ -182,21 +204,21 @@ const Lighthouse: React.FC<{ p: [number, number, number]; night: boolean }> = ({
   return (
     <group position={p}>
       {[0, 1, 2, 3].map((i) => (
-        <mesh key={i} position={[0, 0.25 + i * 0.4, 0]} material={mat(i % 2 ? '#EF4444' : '#F8FAFC', { rough: 0.5 })} castShadow>
+        <mesh key={i} position={[0, 0.25 + i * 0.4, 0]} material={mat(i % 2 ? '#C85A3B' : '#FFF8EC', { rough: 0.5 })} castShadow>
           <cylinderGeometry args={[0.24 - i * 0.03, 0.27 - i * 0.03, 0.4, 20]} />
         </mesh>
       ))}
-      <mesh position={[0, 1.78, 0]} material={mat('#FEF3C7', { emissive: '#FDE047', ei: night ? 3 : 0.6 })}>
+      <mesh position={[0, 1.78, 0]} material={mat('#FEF3C7', { emissive: '#FFD58A', ei: night ? 2.5 : 0.4 })}>
         <cylinderGeometry args={[0.15, 0.15, 0.22, 16]} />
       </mesh>
-      <mesh position={[0, 1.98, 0]} material={mat('#1F2937', { rough: 0.4 })} castShadow>
+      <mesh position={[0, 1.98, 0]} material={mat('#4A3B32', { rough: 0.4 })} castShadow>
         <coneGeometry args={[0.22, 0.22, 16]} />
       </mesh>
       {night && (
         <group ref={beam} position={[0, 1.78, 0]}>
           <mesh position={[1.6, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
             <coneGeometry args={[0.35, 3.2, 16, 1, true]} />
-            <meshBasicMaterial color="#FEF9C3" transparent opacity={0.16} depthWrite={false} side={THREE.DoubleSide} />
+            <meshBasicMaterial color="#FFF3C4" transparent opacity={0.16} depthWrite={false} side={THREE.DoubleSide} />
           </mesh>
         </group>
       )}
@@ -224,7 +246,7 @@ const Boat: React.FC<{ p: [number, number, number]; i: number; color: string }> 
       <mesh position={[0, 0.45, 0.05]} material={mat('#E5E7EB')}>
         <cylinderGeometry args={[0.012, 0.012, 0.85, 6]} />
       </mesh>
-      <mesh position={[0, 0.48, -0.08]} rotation={[0, Math.PI / 2, 0]} material={mat('#FFFFFF', { rough: 0.7 })} castShadow>
+      <mesh position={[0, 0.48, -0.08]} rotation={[0, Math.PI / 2, 0]} material={mat('#FFFDF7', { rough: 0.7 })} castShadow>
         <coneGeometry args={[0.24, 0.7, 3]} />
       </mesh>
     </group>
@@ -236,7 +258,7 @@ const Kiosk: React.FC<{ p: [number, number, number] }> = ({ p }) => (
     <mesh position={[0, 0.22, 0]} material={mat('#FDE68A', { rough: 0.6 })} castShadow>
       <boxGeometry args={[0.66, 0.42, 0.5]} />
     </mesh>
-    <mesh position={[0, 0.62, 0]} rotation={[0, Math.PI / 4, 0]} material={mat('#FF4FD8', { rough: 0.6 })} castShadow>
+    <mesh position={[0, 0.62, 0]} rotation={[0, Math.PI / 4, 0]} material={mat('#E0643E', { rough: 0.6 })} castShadow>
       <coneGeometry args={[0.6, 0.32, 4]} />
     </mesh>
     {[-0.25, 0.25].map((x) => (
@@ -244,7 +266,7 @@ const Kiosk: React.FC<{ p: [number, number, number] }> = ({ p }) => (
         <cylinderGeometry args={[0.015, 0.015, 0.4, 6]} />
       </mesh>
     ))}
-    <mesh position={[0.12, 0.5, 0.26]} material={mat('#F472B6', { rough: 0.4 })}>
+    <mesh position={[0.12, 0.5, 0.26]} material={mat('#F4A2B8', { rough: 0.4 })}>
       <sphereGeometry args={[0.06, 10, 8]} />
     </mesh>
     <mesh position={[0.12, 0.42, 0.26]} rotation={[Math.PI, 0, 0]} material={mat('#D97706', { rough: 0.7 })}>
@@ -254,6 +276,10 @@ const Kiosk: React.FC<{ p: [number, number, number] }> = ({ p }) => (
 );
 
 export const CityProps: React.FC<{ props: WorldProp[]; night: boolean }> = ({ props, night }) => {
+  useFrame(({ clock }) => {
+    foliageWindUniform.value = clock.elapsedTime;
+  });
+
   const parts = useMemo(() => {
     const trunk: Xf[] = [];
     const leaves: Xf[] = [];
@@ -274,7 +300,7 @@ export const CityProps: React.FC<{ props: WorldProp[]; night: boolean }> = ({ pr
       seed = (seed * 16807) % 2147483647;
       return seed / 2147483647;
     };
-    const greens = isGhibli ? GHIBLI.leaves : ['#3FA34D', '#4CB860', '#2F9447', '#5BC46B'];
+    const greens = GHIBLI.leaves;
 
     props.forEach((pr, idx) => {
       const [x, z] = gridToWorld(pr.c, pr.r);
@@ -283,7 +309,7 @@ export const CityProps: React.FC<{ props: WorldProp[]; night: boolean }> = ({ pr
         case 'tree': {
           const s = 0.85 + rnd() * 0.35;
           trunk.push({ p: [x, y + 0.25 * s, z], s: [s, s, s] });
-          const c = isGhibli && pr.color ? (idx % 3 === 0 ? '#F2B8C6' : greens[idx % greens.length]) : pr.color || greens[idx % greens.length];
+          const c = pr.color ? (idx % 3 === 0 ? '#F2B8C6' : greens[idx % greens.length]) : greens[idx % greens.length];
           leaves.push({ p: [x, y + 0.62 * s, z], s: [s * 1.05, s * 0.95, s * 1.05], ry: rnd() * 6, color: c });
           leaves.push({ p: [x + 0.12 * s, y + 0.86 * s, z - 0.05 * s], s: [s * 0.78, s * 0.72, s * 0.78], ry: rnd() * 6, color: c });
           leaves.push({ p: [x - 0.1 * s, y + 0.8 * s, z + 0.1 * s], s: [s * 0.62, s * 0.6, s * 0.62], ry: rnd() * 6, color: c });
@@ -293,12 +319,14 @@ export const CityProps: React.FC<{ props: WorldProp[]; night: boolean }> = ({ pr
           const c = pr.color || greens[(idx + 1) % greens.length];
           bush.push({ p: [x - 0.12, y + 0.12, z], s: [1, 0.8, 1], color: c });
           bush.push({ p: [x + 0.14, y + 0.1, z + 0.08], s: [0.8, 0.7, 0.8], color: c });
-          if (pr.color) for (let k = 0; k < 5; k++) flower.push({ p: [x - 0.2 + rnd() * 0.4, y + 0.24, z - 0.15 + rnd() * 0.3], color: '#FFF1F2' });
+          if (pr.color)
+            for (let k = 0; k < 5; k++)
+              flower.push({ p: [x - 0.2 + rnd() * 0.4, y + 0.24, z - 0.15 + rnd() * 0.3], color: '#FFF1F2' });
           break;
         }
         case 'flower': {
-          bush.push({ p: [x, y + 0.06, z], s: [1.6, 0.35, 1.6], color: '#3F9E4E' });
-          const cols = ['#F472B6', '#FBBF24', '#A78BFA', '#FB7185', '#FFFFFF'];
+          bush.push({ p: [x, y + 0.06, z], s: [1.6, 0.35, 1.6], color: '#7DB86A' });
+          const cols = ['#F4A2B8', '#F2B84B', '#C9B6E4', '#E0643E', '#FFF8EC'];
           for (let k = 0; k < 10; k++)
             flower.push({ p: [x - 0.3 + rnd() * 0.6, y + 0.13, z - 0.3 + rnd() * 0.6], color: cols[k % cols.length] });
           break;
@@ -306,7 +334,8 @@ export const CityProps: React.FC<{ props: WorldProp[]; night: boolean }> = ({ pr
         case 'palm': {
           const lean = (rnd() - 0.5) * 0.2;
           palmTrunk.push({ p: [x + lean, y + 0.52, z], s: [1, 1, 1] });
-          for (let k = 0; k < 7; k++) palmLeaf.push({ p: [x + lean * 2, y + 1.04, z], ry: (k / 7) * Math.PI * 2 + rnd() * 0.3, s: [1, 1, 1] });
+          for (let k = 0; k < 7; k++)
+            palmLeaf.push({ p: [x + lean * 2, y + 1.04, z], ry: (k / 7) * Math.PI * 2 + rnd() * 0.3, s: [1, 1, 1] });
           break;
         }
         case 'lamp': {
@@ -328,7 +357,7 @@ export const CityProps: React.FC<{ props: WorldProp[]; night: boolean }> = ({ pr
           hydrant.push({ p: [x - 0.36, y + 0.1, z - 0.36] });
           break;
         case 'umbrella':
-          umbrella.push({ p: [x, 0.03, z], color: pr.color || '#FF4FD8' });
+          umbrella.push({ p: [x, 0.03, z], color: pr.color || '#E0643E' });
           break;
         case 'fountain':
           singles.push(<Fountain key={`f${idx}`} p={[x, y, z]} />);
@@ -340,7 +369,7 @@ export const CityProps: React.FC<{ props: WorldProp[]; night: boolean }> = ({ pr
           singles.push(<Kiosk key={`k${idx}`} p={[x, 0.03, z]} />);
           break;
         case 'boat':
-          singles.push(<Boat key={`b${idx}`} p={[x, -0.08, z]} i={idx} color={['#EF4444', '#3B82F6', '#F8FAFC'][idx % 3]} />);
+          singles.push(<Boat key={`b${idx}`} p={[x, -0.08, z]} i={idx} color={['#C8643B', '#56709A', '#FFF8EC'][idx % 3]} />);
           break;
       }
     });
@@ -364,13 +393,13 @@ export const CityProps: React.FC<{ props: WorldProp[]; night: boolean }> = ({ pr
       <Part items={parts.hydrant} geometry={G.hydrant} material={M.hydrant} />
       {parts.umbrella.map((u, i) => (
         <group key={i} position={u.p}>
-          <mesh position={[0, 0.38, 0]} material={mat('#F8FAFC')}>
+          <mesh position={[0, 0.38, 0]} material={mat('#FFF8EC')}>
             <cylinderGeometry args={[0.012, 0.012, 0.76, 6]} />
           </mesh>
           <mesh position={[0, 0.72, 0]} material={mat(u.color, { rough: 0.7 })} castShadow>
             <coneGeometry args={[0.42, 0.18, 10]} />
           </mesh>
-          <mesh position={[0.3, 0.05, 0.1]} rotation={[0, 0.4, -0.12]} material={mat('#FFFFFF', { rough: 0.7 })} castShadow>
+          <mesh position={[0.3, 0.05, 0.1]} rotation={[0, 0.4, -0.12]} material={mat('#FFF8EC', { rough: 0.7 })} castShadow>
             <boxGeometry args={[0.2, 0.04, 0.46]} />
           </mesh>
         </group>

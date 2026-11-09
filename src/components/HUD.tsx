@@ -53,10 +53,10 @@ export const HUD: React.FC = () => {
   const energyPct = Math.round((state.energy / state.maxEnergy) * 100);
   const energyBarColor =
     energyPct <= 25
-      ? 'from-rose-500 to-red-600'
+      ? 'from-[#E26D52] to-[#C84B31]'
       : energyPct <= 50
-      ? 'from-amber-400 to-yellow-500'
-      : 'from-emerald-400 to-lime-400';
+      ? 'from-[#F2B84B] to-[#E29A2E]'
+      : 'from-[#7FBF6A] to-[#9FD68A]';
 
   const isMax = state.charisma.lv >= MAX_LV;
   const needCha = chaNeed(state.charisma.lv);
@@ -69,10 +69,10 @@ export const HUD: React.FC = () => {
       .map((f) => (
         <span
           key={f.id}
-          className={`pointer-events-none absolute -bottom-5 right-2 z-50 rounded-full px-1.5 py-0.5 text-[11px] font-black shadow-lg ${
+          className={`pointer-events-none absolute -bottom-5 right-2 z-50 rounded-full border border-ghibli-clay px-2 py-0.5 text-xs font-black shadow-md ${
             f.delta > 0
-              ? 'bg-emerald-400 text-slate-950'
-              : 'bg-rose-500 text-white'
+              ? 'bg-[#E4F2DC] text-[#3F7A32]'
+              : 'bg-[#FCE4DA] text-[#B2421E]'
           }`}
         >
           {f.delta > 0 ? `+${f.delta}` : f.delta}
@@ -90,7 +90,7 @@ export const HUD: React.FC = () => {
           {/* LEVEL CARD */}
           <div className="pointer-events-auto relative overflow-visible rounded-2xl ghibli-panel px-3 py-1.5">
             <div className="flex items-center justify-between gap-2 text-sm font-extrabold">
-              <span className="flex min-w-0 items-center gap-1 text-purple-700">
+              <span className="flex min-w-0 items-center gap-1 text-purple-800">
                 <span>✨</span>
                 <span className="truncate">Lv.{state.charisma.lv} · {levelTitle(state.charisma.lv)}</span>
               </span>
@@ -98,13 +98,13 @@ export const HUD: React.FC = () => {
                 {isMax ? 'MAX' : `${animChaPts}/${needCha}`}
               </span>
             </div>
-            <div className="mt-1 h-2.5 w-full overflow-hidden rounded-full bg-ghibli-track">
+            <div className="mt-1 h-2.5 w-full overflow-hidden rounded-full border border-ghibli-clay/40 bg-ghibli-track">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-300"
+                className="h-full rounded-full bg-gradient-to-r from-[#4BA8A0] to-[#7FBF6A] transition-all duration-300"
                 style={{ width: `${chaPct}%` }}
               />
             </div>
-            <div className="mt-0.5 flex items-center justify-between text-[11px] font-bold text-cyan-800">
+            <div className="mt-0.5 flex items-center justify-between text-xs font-bold text-[#23706A]">
               <span>🗣️ {animXp} XP</span>
             </div>
             {renderFloats('charisma')}
@@ -114,15 +114,15 @@ export const HUD: React.FC = () => {
           {/* CASH CARD */}
           <div className="pointer-events-auto relative overflow-visible rounded-2xl ghibli-panel px-3 py-1.5">
             <div className="flex items-center justify-between gap-2 text-sm font-extrabold">
-              <span className="flex items-center gap-1 text-amber-700">
+              <span className="flex items-center gap-1 text-[#8A5A00]">
                 <span>💵</span>
                 <span className="hidden sm:inline">Cát-xê</span>
               </span>
-              <span className="font-display text-amber-700">${animCash}</span>
+              <span className="font-display text-[#8A5A00]">${animCash}</span>
             </div>
-            <div className="mt-1 flex items-center justify-between text-[11px] font-bold text-ghibli-ink-soft">
+            <div className="mt-1 flex items-center justify-between text-xs font-bold text-ghibli-ink-soft">
               <span title="Danh tiếng: trung bình sao các show gần đây">
-                ⭐ <span className="text-amber-700">{fmtRep(state.rep)}</span>
+                ⭐ <span className="text-[#8A5A00]">{fmtRep(state.rep)}</span>
               </span>
               <span className="hidden sm:inline">🎤 {state.stats.shows} show</span>
               <span>🔥 {state.streak.count}d</span>
@@ -139,7 +139,7 @@ export const HUD: React.FC = () => {
       >
         <div className="pointer-events-auto relative mx-auto max-w-6xl overflow-visible rounded-2xl ghibli-panel px-3 py-2">
           <div className="flex items-center justify-between gap-3 text-sm font-extrabold">
-            <span className="flex items-center gap-1.5 text-emerald-700">
+            <span className="flex items-center gap-1.5 text-[#3F7A32]">
               <span>⚡</span>
               <span>Năng lượng</span>
             </span>
@@ -148,7 +148,7 @@ export const HUD: React.FC = () => {
               <span className="text-xs text-ghibli-ink-soft">/{state.maxEnergy}</span>
             </span>
           </div>
-          <div className="mt-1.5 h-3 w-full overflow-hidden rounded-full bg-ghibli-track">
+          <div className="mt-1.5 h-3 w-full overflow-hidden rounded-full border border-ghibli-clay/40 bg-ghibli-track">
             <div
               className={`h-full rounded-full bg-gradient-to-r transition-all duration-300 ${energyBarColor}`}
               style={{ width: `${energyPct}%` }}

@@ -57,12 +57,12 @@ export const App: React.FC = () => {
   }, [saveNow, startDayFromWelcome]);
 
   return (
-    <div className="relative h-[100dvh] w-screen select-none overflow-hidden bg-[#120A30] font-sans text-white">
+    <div className="relative h-[100dvh] w-screen select-none overflow-hidden bg-gradient-to-b from-[#BFE6F2] via-[#F6EBD2] to-[#F5E6CC] font-sans text-ghibli-ink">
       {/* Top Always-On HUD */}
       <HUD />
 
-      {/* Active View Router */}
-      <main className="h-full w-full">
+      {/* Active View Router with Ghibli View Transition */}
+      <main key={view} className="animate-ghibli-view h-full w-full">
         {view === 'hub' && <HubView />}
         {view === 'world' && <CityWorld3D />}
         {view === 'stage' && <StageView />}
