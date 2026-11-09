@@ -2,6 +2,7 @@ import { useDialog } from './useDialog';
 import React from 'react';
 import { CHAPTERS, QUESTS, objectiveLabel, objectiveMet, questMet } from '../core/quests';
 import { useGameStore } from '../core/store';
+import { objectiveReport } from '../core/progress';
 
 /** Bảng nhiệm vụ: liệt kê các chương, quest và tiến độ từng mục tiêu. */
 export const QuestSheet: React.FC = () => {
@@ -31,6 +32,24 @@ export const QuestSheet: React.FC = () => {
         </div>
 
         <div className="flex-1 space-y-5 overflow-y-auto px-5 py-4">
+          {(() => {
+            const rep = objectiveReport(state.stats.bestStars);
+            return (
+              <div className="rounded-2xl border ghibli-panel p-3.5">
+                <div className="text-xs font-black uppercase tracking-wider text-ghibli-clay">🎯 Tiến độ mục tiêu CEFR</div>
+                <div className="mt-2 grid grid-cols-3 gap-2 text-center">
+                  {(['A2', 'B1', 'B2'] as const).map((lv) => (
+                    <div key={lv} className="rounded-xl bg-[#FBEBD0] px-2 py-2">
+                      <div className="font-display text-base font-black text-ghibli-ink">{lv}</div>
+                      <div className="text-xs font-bold text-ghibli-ink-soft">
+                        {rep[lv].met}/{rep[lv].total} đạt
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
           {CHAPTERS.map((ch) => {
             const members = QUESTS.filter((q) => q.chapter === ch.id);
             const chDone = Boolean(state.quests.chapterDone[ch.id]);

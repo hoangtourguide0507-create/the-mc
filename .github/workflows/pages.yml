@@ -46,6 +46,9 @@ jobs:
       - name: Run spaced repetition tests
         run: npm run test:srs
 
+      - name: Run progress tests
+        run: npm run test:progress
+
       - name: Build (typecheck + Vite)
         run: npm run build
 

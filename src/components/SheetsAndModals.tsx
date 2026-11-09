@@ -1,4 +1,5 @@
 import { boxOf, dueCount, dueOf, isDue, SRS_MAX_BOX, sortForReview } from '../core/srs';
+import { SCENE_OBJECTIVES } from '../data/objectives';
 import { useDialog } from './useDialog';
 import React, { useEffect, useMemo, useState } from 'react';
 import { PASSER_LOOKS, SCENES, SHOP, STARTER } from '../data/content';
@@ -526,6 +527,8 @@ export const ResultModal: React.FC = () => {
       ? '💪 Hoàn thành buổi dẫn! Luyện thêm để lấy trọn 3 sao nhé!'
       : '😅 Hãy ôn lại câu thoại trong Sổ tay rồi thử sức lại nhé!';
 
+  const objective = SCENE_OBJECTIVES[summary.sceneId];
+
   const activeUpgrades = SHOP.filter(
     (i) => i.type === 'upgrade' && state.items[i.id]
   );
@@ -568,6 +571,22 @@ export const ResultModal: React.FC = () => {
         </div>
 
         <h2 className="font-display text-lg font-black text-ghibli-ink">{praise}</h2>
+
+        {objective && (
+          <div
+            className={`mt-3 rounded-2xl border px-3.5 py-2.5 text-left text-xs ${
+              summary.objectiveMet
+                ? 'border-emerald-400/50 bg-emerald-500/15 text-emerald-800'
+                : 'border-amber-400/50 bg-amber-500/10 text-amber-800'
+            }`}
+          >
+            <div className="font-black">
+              {summary.objectiveMet ? '✅ Đạt mục tiêu' : '🎯 Chưa đạt mục tiêu'} · CEFR {objective.cefr}
+            </div>
+            <div className="mt-0.5 font-semibold">Bạn có thể: {objective.canVi}</div>
+            <div className="mt-0.5 italic opacity-80">{objective.can}</div>
+          </div>
+        )}
 
         {/* Main Rewards Grid */}
         <div className="mt-4 grid grid-cols-3 gap-2.5">

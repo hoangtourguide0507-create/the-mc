@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { SCENES, SCHEDULE, SHOP, TIPS } from '../data/content';
 import { scheduleAfter, SRS_MAX_BOX, boxOf } from './srs';
+import { objectiveMetBy } from './progress';
 import { PRON_RECENT_WINDOW } from '../data/pronunciation';
 import {
   EvaluatedToken,
@@ -187,6 +188,8 @@ export interface StageFinishSummary {
   minutesLate: number;
   latePenaltyPct: number;
   returnTo: ViewName;
+  /** Buổi diễn này có đạt mục tiêu CEFR của cảnh không. */
+  objectiveMet: boolean;
 }
 
 export interface WorldAutoTarget {
@@ -783,6 +786,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         endAt,
         minutesLate,
         latePenaltyPct: Math.round(pen * 100),
+        objectiveMet: objectiveMetBy(avg),
         returnTo: stageReturnTo,
       },
     });
