@@ -6,6 +6,11 @@ import { getPlayerLook } from '../data/content';
 import { getPeriodMeta } from '../core/clock';
 import { useGameStore } from '../core/store';
 import { ClayCharacter3D } from './ClayCharacter3D';
+import { GHIBLI, ghibliSky, isGhibli } from './artStyle';
+
+/* Chip nhãn 2D trong phòng: kem + viền clay, không blur; vùng chạm tối thiểu 48px (STYLE_GHIBLI mục 4) */
+const LABEL_CHIP = 'rounded-full border-2 border-ghibli-clay bg-ghibli-cream px-3 py-1 text-xs font-bold text-ghibli-ink shadow-[0_2px_0_#6B4E3D]';
+const LABEL_HIT = 'flex min-h-[48px] min-w-[48px] items-center justify-center px-1 transition hover:scale-105 active:scale-95';
 
 const StudioRoomScene: React.FC = () => {
   const state = useGameStore((s) => s.state);
@@ -15,6 +20,8 @@ const StudioRoomScene: React.FC = () => {
 
   const periodMeta = getPeriodMeta(state.clock);
   const playerLook = getPlayerLook(state.items);
+  // Cửa sổ theo buổi: ghibli dùng màu trời mới; neon giữ màu cũ
+  const windowColor = ghibliSky(periodMeta.id)?.top ?? periodMeta.skyBottom;
 
   const moodText =
     state.energy >= 70
@@ -32,6 +39,8 @@ const StudioRoomScene: React.FC = () => {
       ? 'confused'
       : 'idle';
 
+  const lift = isGhibli ? (periodMeta.isNight ? 1.2 : 1.7) : 1;
+
   const spotRef = useRef<THREE.SpotLight>(null);
 
   useFrame(({ clock }) => {
@@ -43,10 +52,11 @@ const StudioRoomScene: React.FC = () => {
   return (
     <group position={[0, -0.85, 0]}>
       {/* Dynamic Lighting matching Time of Day */}
-      <ambientLight intensity={periodMeta.ambientIntensity * 0.85} color="#EDE9FE" />
+      {/* Ghibli: nâng ánh sáng để tường kem hiện đúng màu; ban đêm giữ tối hơn */}
+      <ambientLight intensity={periodMeta.ambientIntensity * 0.85 * lift} color={isGhibli ? '#FFF6E6' : '#EDE9FE'} />
       <directionalLight
         position={[4, 6, 4]}
-        intensity={periodMeta.sunIntensity}
+        intensity={periodMeta.sunIntensity * (isGhibli ? (periodMeta.isNight ? 1.2 : 1.5) : 1)}
         color={periodMeta.sunColor}
         castShadow
       />
@@ -56,46 +66,46 @@ const StudioRoomScene: React.FC = () => {
         angle={0.55}
         penumbra={0.8}
         intensity={2.2}
-        color="#FF4FD8"
+        color={isGhibli ? '#FFE2A8' : '#FF4FD8'}
         castShadow
       />
-      <pointLight position={[-2.4, 2.2, -1.2]} intensity={1.4} color="#22D3EE" />
+      <pointLight position={[-2.4, 2.2, -1.2]} intensity={1.4} color={isGhibli ? '#CFEFFF' : '#22D3EE'} />
 
-      {/* Studio Floor */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
+      {/* Studio Floor (Ghibli: nằm ngang để tường kem phía sau hiện ra; neon giữ như cũ) */}
+      <mesh rotation={isGhibli ? undefined : [-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
         <cylinderGeometry args={[3.4, 3.6, 0.18, 48]} />
-        <meshStandardMaterial color="#1E1646" roughness={0.35} metalness={0.15} />
+        <meshStandardMaterial color={isGhibli ? GHIBLI.wood : '#1E1646'} roughness={0.35} metalness={isGhibli ? 0 : 0.15} />
       </mesh>
 
       {/* Glowing Center Stage Rug */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.1, 0.2]} receiveShadow>
         <circleGeometry args={[1.45, 36]} />
-        <meshStandardMaterial color="#311B6B" roughness={0.6} />
+        <meshStandardMaterial color={isGhibli ? '#E8C9A0' : '#311B6B'} roughness={0.6} />
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.105, 0.2]}>
         <ringGeometry args={[1.42, 1.48, 48]} />
-        <meshBasicMaterial color="#FF4FD8" />
+        <meshBasicMaterial color={isGhibli ? '#F2B84B' : '#FF4FD8'} />
       </mesh>
 
       {/* Back Curved Studio Wall */}
       <mesh position={[0, 1.65, -2.1]} receiveShadow>
         <boxGeometry args={[5.8, 3.3, 0.22]} />
-        <meshStandardMaterial color="#170F3A" roughness={0.7} />
+        <meshStandardMaterial color={isGhibli ? GHIBLI.wallCream : '#170F3A'} roughness={0.7} />
       </mesh>
 
       {/* Window Looking Out to City Sky (Real-Time Period Color) */}
       <group position={[-1.55, 1.85, -1.95]}>
         <mesh>
           <boxGeometry args={[1.55, 1.35, 0.08]} />
-          <meshBasicMaterial color={periodMeta.skyBottom} />
+          <meshBasicMaterial color={windowColor} />
         </mesh>
-        {/* Window Frame */}
-        <mesh position={[0, 0, 0.03]}>
+        {/* Window Frame: nằm sau kính để viền bao quanh, không che mất bầu trời */}
+        <mesh position={[0, 0, -0.06]}>
           <boxGeometry args={[1.65, 1.45, 0.04]} />
-          <meshStandardMaterial color="#312E81" roughness={0.4} />
+          <meshStandardMaterial color={isGhibli ? '#8A6A4E' : '#312E81'} roughness={0.4} />
         </mesh>
         <Html position={[0, -0.52, 0.06]} center zIndexRange={[20, 0]}>
-          <div className="pointer-events-none whitespace-nowrap rounded-full bg-black/60 px-2.5 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm">
+          <div className={`pointer-events-none whitespace-nowrap ${LABEL_CHIP} py-0.5`}>
             {periodMeta.icon} {periodMeta.label}
           </div>
         </Html>
@@ -107,13 +117,13 @@ const StudioRoomScene: React.FC = () => {
           <mesh>
             <boxGeometry args={[1.7, 0.46, 0.08]} />
             <meshStandardMaterial
-              color="#1E1B4B"
-              emissive="#FF4FD8"
-              emissiveIntensity={0.45}
+              color={isGhibli ? '#FFF8EC' : '#1E1B4B'}
+              emissive={isGhibli ? '#F2B84B' : '#FF4FD8'}
+              emissiveIntensity={isGhibli ? 0.25 : 0.45}
             />
           </mesh>
           <Html position={[0, 0, 0.06]} center zIndexRange={[20, 0]}>
-            <div className="pointer-events-none select-none whitespace-nowrap rounded-lg border border-pink-400/60 bg-[#120A30]/90 px-3 py-1 font-display text-xs font-extrabold tracking-wider text-pink-300 shadow-[0_0_15px_#FF4FD8]">
+            <div className="pointer-events-none select-none whitespace-nowrap rounded-lg border-2 border-ghibli-clay bg-ghibli-cream px-3 py-1 font-display text-sm font-extrabold tracking-wider text-ghibli-ink shadow-[0_2px_0_#6B4E3D]">
               🎙️ MC THIÊN ÂN STUDIO
             </div>
           </Html>
@@ -131,18 +141,15 @@ const StudioRoomScene: React.FC = () => {
       >
         <mesh castShadow receiveShadow>
           <boxGeometry args={[0.9, 0.72, 0.55]} />
-          <meshStandardMaterial color="#4C1D95" roughness={0.4} />
+          <meshStandardMaterial color={isGhibli ? '#A0785A' : '#4C1D95'} roughness={0.4} />
         </mesh>
         <mesh position={[0, 0.42, 0]} rotation={[0.2, 0, 0]}>
           <boxGeometry args={[0.46, 0.08, 0.34]} />
-          <meshStandardMaterial color="#22D3EE" emissive="#22D3EE" emissiveIntensity={0.35} />
+          <meshStandardMaterial color={isGhibli ? '#8FD3E8' : '#22D3EE'} emissive={isGhibli ? '#8FD3E8' : '#22D3EE'} emissiveIntensity={0.35} />
         </mesh>
         <Html position={[0, 0.75, 0]} center zIndexRange={[20, 0]}>
-          <button
-            onClick={() => setBookOpen(true)}
-            className=" whitespace-nowrap rounded-full border border-cyan-400/50 bg-[#120A30]/85 px-2.5 py-0.5 text-[10px] font-bold text-cyan-200 shadow-lg transition hover:scale-105"
-          >
-            📖 Sổ Tay {state.weak.length > 0 ? `(${state.weak.length} từ yếu)` : ''}
+          <button onClick={() => setBookOpen(true)} className={LABEL_HIT}>
+            <span className={`whitespace-nowrap ${LABEL_CHIP}`}>📖 Sổ Tay {state.weak.length > 0 ? `(${state.weak.length} từ yếu)` : ''}</span>
           </button>
         </Html>
       </group>
@@ -158,24 +165,25 @@ const StudioRoomScene: React.FC = () => {
       >
         <mesh castShadow receiveShadow>
           <cylinderGeometry args={[0.42, 0.48, 0.9, 24]} />
-          <meshStandardMaterial color="#311042" roughness={0.3} metalness={0.3} />
+          <meshStandardMaterial color={isGhibli ? '#8A6A4E' : '#311042'} roughness={0.3} metalness={isGhibli ? 0 : 0.3} />
         </mesh>
         <mesh position={[0, 0.58, 0]}>
           <octahedronGeometry args={[0.2, 1]} />
           <meshStandardMaterial
-            color={state.items.goldmic ? '#FBBF24' : '#FF4FD8'}
-            emissive={state.items.goldmic ? '#F59E0B' : '#FF4FD8'}
+            color={state.items.goldmic ? '#FBBF24' : isGhibli ? '#F7B7C8' : '#FF4FD8'}
+            emissive={state.items.goldmic ? '#F59E0B' : isGhibli ? '#F7B7C8' : '#FF4FD8'}
             emissiveIntensity={0.6}
             metalness={0.8}
             roughness={0.2}
           />
         </mesh>
-        <Html position={[0, 0.98, 0]} center zIndexRange={[20, 0]}>
-          <button
-            onClick={() => setShopOpen(true)}
-            className="whitespace-nowrap rounded-full border border-amber-400/50 bg-[#120A30]/85 px-2.5 py-0.5 text-[10px] font-bold text-amber-200 shadow-lg transition hover:scale-105"
-          >
-            🛍️ Cửa Hàng & Trang Bị
+        {/* Nhãn neo ở góc phải của điểm (không căn giữa) để không tràn mép phải khung 390px */}
+        <Html position={[0, 0.98, 0]} zIndexRange={[20, 0]}>
+          <button onClick={() => setShopOpen(true)} className={`${LABEL_HIT} w-max -translate-x-full -translate-y-1/2`}>
+            <span className={`whitespace-nowrap text-center leading-tight ${LABEL_CHIP}`}>
+              🛍️ Cửa Hàng
+              <br />& Trang Bị
+            </span>
           </button>
         </Html>
       </group>
@@ -192,7 +200,7 @@ const StudioRoomScene: React.FC = () => {
 
       {/* Mood Speech Bubble above MC */}
       <Html position={[0, 2.18, 0.25]} center zIndexRange={[20, 0]}>
-        <div className="pointer-events-none whitespace-nowrap rounded-2xl border border-white/20 bg-white/10 px-3 py-1 text-xs font-bold text-white shadow-xl backdrop-blur-md">
+        <div className="pointer-events-none whitespace-nowrap rounded-2xl border-2 border-ghibli-clay bg-ghibli-cream px-3 py-1 text-sm font-bold text-ghibli-ink shadow-[0_2px_0_#6B4E3D]">
           {moodText}
         </div>
       </Html>
@@ -225,11 +233,16 @@ const FitRoomCamera: React.FC = () => {
 
 export const HubRoom3D: React.FC = () => {
   return (
-    <div className="relative h-full w-full overflow-hidden rounded-3xl border border-white/15 bg-gradient-to-b from-[#1D1147] to-[#0E0725] shadow-2xl">
+    <div
+      className={`relative h-full w-full overflow-hidden rounded-3xl shadow-2xl ${
+        isGhibli ? 'border-2 border-ghibli-clay bg-gradient-to-b from-[#BFE3F2] to-[#F5E6CC]' : 'border border-white/15 bg-gradient-to-b from-[#1D1147] to-[#0E0725]'
+      }`}
+    >
       <Canvas
         shadows
         dpr={[1, 2]}
         camera={{ position: [0, 1.35, 3.85], fov: 38 }}
+        gl={isGhibli ? { toneMapping: THREE.NeutralToneMapping } : undefined}
       >
         <StudioRoomScene />
         <FitRoomCamera />

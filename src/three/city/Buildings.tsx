@@ -108,7 +108,8 @@ const Glow: React.FC<{
   const m = useMemo(() => glowMat(color, color), [color]);
   useEffect(() => {
     // Ghibli: ban ngày gần như tắt ánh neon, ban đêm đèn lồng ấm dịu hơn
-    m.emissiveIntensity = isGhibli ? (night ? nightI * 0.75 : day * 0.25) : night ? nightI : day;
+    // Ghibli: viền/biển hiệu đêm dịu hơn (dưới ngưỡng bloom), không chói neon
+    m.emissiveIntensity = isGhibli ? (night ? nightI * 0.45 : day * 0.25) : night ? nightI : day;
   }, [night, m, day, nightI]);
   return (
     <mesh position={pos} rotation={rot} material={m}>
@@ -406,10 +407,14 @@ const TvStation: React.FC<LP> = ({ loc, night }) => {
   useFrame(({ clock }) => {
     const t = clock.elapsedTime;
     if (screen.current) {
-      screen.current.emissive.setHSL((t * 0.06) % 1, 0.75, 0.55);
+      // Ghibli: màn hình đổi sắc dịu (pastel), không neon
+      if (isGhibli) screen.current.emissive.setHSL((t * 0.06) % 1, 0.5, 0.66);
+      else screen.current.emissive.setHSL((t * 0.06) % 1, 0.75, 0.55);
       screen.current.emissiveIntensity = night ? 1.8 : 0.9;
     }
-    if (beacon.current) beacon.current.emissiveIntensity = Math.sin(t * 4) > 0.3 ? 4 : 0.2;
+    if (beacon.current)
+      // Ghibli: đèn báo thở chậm thay vì nháy liên tục
+      beacon.current.emissiveIntensity = isGhibli ? 0.6 + 0.9 * (0.5 + 0.5 * Math.sin(t * 1.6)) : Math.sin(t * 4) > 0.3 ? 4 : 0.2;
   });
   return (
     <group>
@@ -650,7 +655,10 @@ export const FillerBuilding: React.FC<{ f: Filler; night: boolean; idx: number }
   const v = idx % 4;
   const beacon = useRef<THREE.MeshStandardMaterial>(null);
   useFrame(({ clock }) => {
-    if (beacon.current) beacon.current.emissiveIntensity = Math.sin(clock.elapsedTime * 3 + idx) > 0.4 ? 4 : 0.15;
+    if (beacon.current)
+      beacon.current.emissiveIntensity = isGhibli
+        ? 0.5 + 0.7 * (0.5 + 0.5 * Math.sin(clock.elapsedTime * 1.4 + idx))
+        : Math.sin(clock.elapsedTime * 3 + idx) > 0.4 ? 4 : 0.15;
   });
 
   const base = <RB args={[f.w - 0.06, 0.08, f.d - 0.06]} pos={[0, 0.04, 0]} color="#CBD5E1" r={0.02} />;

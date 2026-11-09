@@ -4,8 +4,8 @@
  * - Hạ tay khỏi tư thế chữ T, thở nhẹ, gật đầu khi nói, vung tay chân khi đi
  * File .vrm đặt trong public/vrm/ (ví dụ public/vrm/mc.vrm → vrmUrl: 'vrm/mc.vrm').
  */
-import React, { useEffect, useMemo, useRef } from 'react';
-import { useFrame, useLoader } from '@react-three/fiber';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useFrame } from '@react-three/fiber';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { VRM, VRMLoaderPlugin, VRMUtils } from '@pixiv/three-vrm';
 import * as THREE from 'three';
@@ -15,6 +15,49 @@ const damp = (a: number, b: number, k: number, dt: number) => a + (b - a) * (1 -
 
 const VISEME_KEYS = ['aa', 'ee', 'oh', 'ih', 'ou'] as const;
 
+function disposeVrm(vrm: VRM) {
+  vrm.scene.removeFromParent();
+  VRMUtils.deepDispose(vrm.scene);
+}
+
+/**
+ * Nạp một bản VRM riêng cho từng nhân vật. Không dùng cache của useLoader: cache theo URL
+ * khiến mọi nhân vật cùng URL dùng chung một scene graph và một bộ trạng thái (bone, biểu cảm),
+ * và không có cách nào giải phóng an toàn khi một trong số đó unmount.
+ * Lỗi nạp (thiếu file, file hỏng) chỉ giữ lại hình tạm, không làm sập Canvas.
+ */
+function useVrmInstance(url: string): VRM | null {
+  const [vrm, setVrm] = useState<VRM | null>(null);
+  useEffect(() => {
+    let alive = true;
+    let owned: VRM | null = null;
+    const loader = new GLTFLoader();
+    loader.register((parser) => new VRMLoaderPlugin(parser));
+    loader
+      .loadAsync(url)
+      .then((gltf) => {
+        const loaded = gltf.userData.vrm as VRM | undefined;
+        if (!loaded) throw new Error('File không phải VRM hợp lệ');
+        if (!alive) {
+          disposeVrm(loaded); // component đã unmount trong lúc nạp
+          return;
+        }
+        owned = loaded;
+        setVrm(loaded);
+      })
+      .catch((err) => {
+        if (alive) console.warn(`[VRM] Không nạp được "${url}", giữ hình tạm.`, err);
+      });
+    return () => {
+      alive = false;
+      setVrm(null);
+      if (owned) disposeVrm(owned);
+      owned = null;
+    };
+  }, [url]);
+  return vrm;
+}
+
 export const VrmCharacter3D: React.FC<{
   url: string;
   mood: NpcMood;
@@ -22,12 +65,11 @@ export const VrmCharacter3D: React.FC<{
   isWalking: boolean;
   isSpeaking: boolean;
   rotationY: number;
-}> = ({ url, mood, viseme, isWalking, isSpeaking, rotationY }) => {
+  /** Hình hiển thị trong lúc VRM chưa nạp xong hoặc khi nạp lỗi */
+  placeholder?: React.ReactNode;
+}> = ({ url, mood, viseme, isWalking, isSpeaking, rotationY, placeholder }) => {
   const full = useMemo(() => (url.startsWith('http') || url.startsWith('/') ? url : `${import.meta.env.BASE_URL}${url}`), [url]);
-  const gltf = useLoader(GLTFLoader, full, (loader) => {
-    (loader as GLTFLoader).register((parser) => new VRMLoaderPlugin(parser));
-  });
-  const vrm = gltf.userData.vrm as VRM;
+  const vrm = useVrmInstance(full);
   const group = useRef<THREE.Group>(null);
   const blink = useRef({ next: 2, t: 0 });
 
@@ -119,6 +161,8 @@ export const VrmCharacter3D: React.FC<{
     }
     vrm.update(dt);
   });
+
+  if (!vrm) return <>{placeholder ?? null}</>;
 
   return (
     <group ref={group}>

@@ -27,21 +27,21 @@ export const HelpSheet: React.FC = () => {
   const gigs = ['backstage', 'wedding', 'beach', 'gala', 'interview'];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-md sm:items-center sm:p-4">
-      <div className="flex max-h-[88vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl border border-white/20 bg-[#150C38] shadow-2xl sm:rounded-3xl">
-        <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
-          <h2 className="font-display text-xl font-black text-white">❓ Hướng dẫn chơi</h2>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ghibli-ink/40 sm:items-center sm:p-4">
+ <div className="flex max-h-[88vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl border ghibli-panel shadow-2xl sm:rounded-3xl">
+        <div className="flex items-center justify-between border-b border-ghibli-track px-5 py-4">
+          <h2 className="font-display text-xl font-black text-ghibli-ink">❓ Hướng dẫn chơi</h2>
           <button
             onClick={() => setHelpOpen(false)}
-            className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-black text-white hover:bg-white/20"
+ className="rounded-full ghibli-panel px-3 py-1.5 text-xs font-black text-ghibli-ink hover:ghibli-panel"
           >
             Đóng ✕
           </button>
         </div>
 
-        <div className="flex-1 space-y-5 overflow-y-auto px-5 py-4 text-sm text-slate-200">
+        <div className="flex-1 space-y-5 overflow-y-auto px-5 py-4 text-sm text-ghibli-ink">
           <section>
-            <h3 className="mb-1 font-display font-black text-pink-200">Mục tiêu</h3>
+            <h3 className="mb-1 font-display font-black text-pink-700">Mục tiêu</h3>
             <p>
               Bạn vào vai MC Thiên Ân. Mỗi ngày, hãy nhận và dẫn show, luyện nói tiếng Anh, và
               tăng Charisma để lên cấp. Không có giới hạn thời gian: bạn tự quyết định làm gì trước.
@@ -49,11 +49,11 @@ export const HelpSheet: React.FC = () => {
           </section>
 
           <section>
-            <h3 className="mb-1 font-display font-black text-pink-200">Các chỉ số</h3>
+            <h3 className="mb-1 font-display font-black text-pink-700">Các chỉ số</h3>
             <ul className="space-y-1.5">
               {STATS.map((s) => (
                 <li key={s.name}>
-                  <span className="font-black text-white">
+                  <span className="font-black text-ghibli-ink">
                     {s.icon} {s.name}:
                   </span>{' '}
                   {s.desc}
@@ -63,7 +63,7 @@ export const HelpSheet: React.FC = () => {
           </section>
 
           <section>
-            <h3 className="mb-1 font-display font-black text-pink-200">Thời gian</h3>
+            <h3 className="mb-1 font-display font-black text-pink-700">Thời gian</h3>
             <p>
               Đồng hồ chỉ chạy khi bạn đi bộ, làm một hoạt động, hoặc bấm ⏩ Chờ đến. Đến trễ show
               sẽ bị trừ tiền, nên hãy tới sớm. Đến 24:00 bạn sẽ ngất và tự động đi ngủ.
@@ -71,29 +71,29 @@ export const HelpSheet: React.FC = () => {
           </section>
 
           <section>
-            <h3 className="mb-1 font-display font-black text-pink-200">Năm kiểu lượt diễn</h3>
+            <h3 className="mb-1 font-display font-black text-pink-700">Năm kiểu lượt diễn</h3>
             <ul className="space-y-1.5">
               {MODES.map((m) => (
                 <li key={m.name}>
-                  <span className="font-black text-white">{m.name}:</span> {m.desc}
+                  <span className="font-black text-ghibli-ink">{m.name}:</span> {m.desc}
                 </li>
               ))}
             </ul>
-            <p className="mt-2 text-xs text-slate-400">
+            <p className="mt-2 text-xs text-ghibli-ink-soft">
               Trong lượt diễn: 🔊 nghe mẫu, 🐢 nghe chậm, 👁️ hiện chữ (ít XP hơn), 🎙️ bấm để nói.
               Cần đạt ít nhất 1★ mới bấm được Tiếp tục.
             </p>
           </section>
 
           <section>
-            <h3 className="mb-1 font-display font-black text-pink-200">Mở khóa show</h3>
+            <h3 className="mb-1 font-display font-black text-pink-700">Mở khóa show</h3>
             <ul className="space-y-1.5">
               {gigs.map((id) => {
                 const sc = SCENES[id];
                 if (!sc) return null;
                 return (
                   <li key={id}>
-                    <span className="font-black text-white">{sc.title}:</span> cần Lv.{sc.reqLv} (
+                    <span className="font-black text-ghibli-ink">{sc.title}:</span> cần Lv.{sc.reqLv} (
                     {levelTitle(sc.reqLv)})
                     {sc.minRep ? ` và ⭐${sc.minRep.toFixed(1)} danh tiếng` : ''}.
                   </li>

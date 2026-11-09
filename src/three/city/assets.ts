@@ -55,7 +55,9 @@ export function facadeTextures(kind: FacadeKind, variant = 0) {
       const x0 = col * cell;
       const y0 = row * cell;
       const lit = rnd() < (kind === 'glass' || kind === 'office' ? 0.62 : 0.5);
-      const warm = rnd() < 0.75 ? '#FFD38A' : '#BDE6FF';
+      // Ghibli: đèn cửa sổ luôn vàng ấm (không xanh lạnh); neon chỉ còn ở chế độ cũ
+      const warmPick = rnd() < 0.75;
+      const warm = isGhibli || warmPick ? '#FFD58A' : '#BDE6FF';
 
       if (kind === 'glass' || kind === 'office') {
         // Tường kính: dải kính gần kín ô, đố mảnh
@@ -162,7 +164,7 @@ export function mat(
       color: softTint(color, 0.2),
       roughness: opts.rough ?? 0.6,
       metalness: opts.metal ?? 0,
-      emissive: opts.emissive ? new THREE.Color(opts.emissive) : new THREE.Color('#000000'),
+      emissive: opts.emissive ? new THREE.Color(isGhibli ? softTint(opts.emissive, 0.3) : opts.emissive) : new THREE.Color('#000000'),
       emissiveIntensity: opts.ei ?? 0,
       transparent: (opts.opacity ?? 1) < 1,
       opacity: opts.opacity ?? 1,
@@ -176,7 +178,7 @@ export function mat(
 export function glowMat(color: string, emissive: string) {
   return new THREE.MeshStandardMaterial({
     color: isGhibli ? softTint(color, 0.15) : color,
-    emissive: new THREE.Color(emissive),
+    emissive: new THREE.Color(isGhibli ? softTint(emissive, 0.3) : emissive),
     emissiveIntensity: 0.4,
     roughness: 0.35,
   });

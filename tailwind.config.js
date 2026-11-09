@@ -12,6 +12,18 @@ export default {
           green: '#7CFF6B',
           gold: '#FBBF24',
         },
+        ghibli: {
+          cream: '#FFF8EC',
+          ink: '#3B2A22',
+          'ink-soft': '#6B5A4E',
+          clay: '#6B4E3D',
+          track: '#EADFCB',
+          sky: '#BFE6F2',
+          sage: '#7FBF6A',
+          sun: '#F2B84B',
+          coral: '#E0643E',
+          teal: '#3E9B94',
+        },
       },
       keyframes: {
         shake: {

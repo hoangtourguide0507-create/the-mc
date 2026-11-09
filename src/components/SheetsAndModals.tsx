@@ -23,46 +23,46 @@ export const WelcomeOverlay: React.FC = () => {
       : '🌅 Bắt đầu Ngày mới (07:00)';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#120A30]/95 p-4 backdrop-blur-2xl">
-      <div className="relative w-full max-w-md overflow-hidden rounded-3xl border border-white/20 bg-gradient-to-b from-[#23145B] to-[#120A30] p-6 text-center shadow-[0_0_60px_rgba(255,79,216,0.35)]">
-        <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-3xl border border-pink-400/50 bg-gradient-to-br from-pink-500/30 to-cyan-500/30 text-4xl shadow-inner">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ghibli-ink/40 p-4">
+      <div className="relative w-full max-w-md overflow-hidden rounded-3xl border-2 border-ghibli-clay bg-gradient-to-b from-ghibli-sky to-[#FFF1D6] p-6 text-center shadow-[0_3px_0_rgba(107,78,61,0.35),0_12px_30px_rgba(59,42,34,0.25)]">
+        <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-3xl border-2 border-ghibli-clay bg-ghibli-cream text-4xl shadow-inner">
           🎙️
         </div>
-        <div className="inline-block rounded-full border border-cyan-400/40 bg-cyan-500/15 px-3 py-0.5 text-[11px] font-black uppercase tracking-widest text-cyan-300">
+        <div className="inline-block rounded-full border-2 border-ghibli-clay bg-ghibli-cream px-3 py-1 text-xs font-black uppercase tracking-wider text-ghibli-clay">
           3D WebGL Edition · Neon Stage × Clay
         </div>
-        <h1 className="mt-2 font-display text-3xl font-black tracking-tight text-white">
+        <h1 className="mt-2 font-display text-3xl font-black tracking-tight text-ghibli-ink">
           MC Life · English Stage
         </h1>
-        <p className="mt-2 text-xs font-semibold leading-relaxed text-slate-300">
-          Nhập vai <strong className="text-pink-300">MC Thiên Ân</strong> trong thành phố 3D sống động:
-          đi bộ nhận show đúng giờ, luyện nghe phản xạ <strong className="text-cyan-300">Blind Listening</strong> và
+        <p className="mt-2 text-xs font-semibold leading-relaxed text-ghibli-ink-soft">
+          Nhập vai <strong className="text-pink-700">MC Thiên Ân</strong> trong thành phố 3D sống động:
+          đi bộ nhận show đúng giờ, luyện nghe phản xạ <strong className="text-ghibli-clay">Blind Listening</strong> và
           làm chủ sân khấu song ngữ!
         </p>
 
-        <div className="mt-5 grid grid-cols-3 gap-2 rounded-2xl border border-white/10 bg-black/25 p-3 text-xs">
+ <div className="mt-5 grid grid-cols-3 gap-2 rounded-2xl border ghibli-panel p-3 text-xs">
           <div>
-            <div className="font-black text-emerald-300">📖 Reading</div>
-            <div className="text-[10px] text-slate-400">Cue Card & Semi</div>
+            <div className="font-black text-[#3F7A32]">📖 Reading</div>
+            <div className="text-xs text-ghibli-ink-soft">Cue Card & Semi</div>
           </div>
           <div>
-            <div className="font-black text-cyan-300">🎧 Listening</div>
-            <div className="text-[10px] text-slate-400">Blind & In-ear</div>
+            <div className="font-black text-[#23706A]">🎧 Listening</div>
+            <div className="text-xs text-ghibli-ink-soft">Blind & In-ear</div>
           </div>
           <div>
-            <div className="font-black text-pink-300">🗣️ Speaking</div>
-            <div className="text-[10px] text-slate-400">Chấm phát âm AI</div>
+            <div className="font-black text-pink-700">🗣️ Speaking</div>
+            <div className="text-xs text-ghibli-ink-soft">Chấm phát âm AI</div>
           </div>
         </div>
 
         <button
           onClick={startDayFromWelcome}
-          className="mt-6 w-full rounded-2xl bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 py-4 font-display text-base font-black text-white shadow-[0_0_30px_rgba(255,79,216,0.5)] transition hover:scale-[1.02]"
+          className="mt-6 min-h-[48px] w-full rounded-2xl border-2 border-ghibli-clay bg-gradient-to-r from-ghibli-sage to-[#9FD68A] py-4 font-display text-base font-black text-ghibli-ink shadow-[0_3px_0_#6B4E3D] transition hover:scale-[1.02]"
         >
           {btnLabel}
         </button>
 
-        <p className="mt-3 text-[11px] text-slate-400">
+        <p className="mt-3 text-xs text-ghibli-ink-soft">
           Chạm nút trên để kích hoạt Âm thanh 3D & Giọng đọc TTS trên thiết bị.
         </p>
       </div>
@@ -154,28 +154,28 @@ export const PhrasebookSheet: React.FC = () => {
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-md sm:items-center sm:p-4">
-      <div className="flex max-h-[88vh] w-full max-w-3xl flex-col overflow-hidden rounded-t-3xl border border-white/20 bg-[#150C38] shadow-2xl sm:rounded-3xl">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ghibli-ink/40 sm:items-center sm:p-4">
+ <div className="flex max-h-[88vh] w-full max-w-3xl flex-col overflow-hidden rounded-t-3xl border ghibli-panel shadow-2xl sm:rounded-3xl">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
+        <div className="flex items-center justify-between border-b-2 border-ghibli-track px-5 py-4">
           <div>
-            <h2 className="font-display text-xl font-black text-white">
+            <h2 className="font-display text-xl font-black text-ghibli-ink">
               📖 Sổ Tay Từ Vựng & Mẫu Câu MC
             </h2>
-            <p className="text-xs font-semibold text-cyan-300">
+            <p className="text-xs font-semibold text-cyan-700">
               Đã làm chủ {state.stats.mastered} từ yếu · Mở khoá {state.learned.length + 5} cụm từ
             </p>
           </div>
           <button
             onClick={() => setBookOpen(false)}
-            className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-black text-white hover:bg-white/20"
+ className="rounded-full ghibli-panel px-3 py-1.5 text-xs font-black text-ghibli-ink hover:bg-[#FBEBD0]"
           >
             Đóng ✕
           </button>
         </div>
 
         {/* Category Tabs */}
-        <div className="flex gap-1.5 overflow-x-auto border-b border-white/10 px-5 py-2.5">
+        <div className="flex shrink-0 gap-2 overflow-x-auto border-b border-ghibli-track px-5 py-3">
           {tabs.map((tab) => (
             <button
               key={tab}
@@ -183,15 +183,15 @@ export const PhrasebookSheet: React.FC = () => {
                 SFX.play('tap');
                 setActiveTab(tab);
               }}
-              className={`whitespace-nowrap rounded-full px-3.5 py-1 text-xs font-extrabold transition ${
+              className={`inline-flex min-h-[40px] shrink-0 items-center whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-extrabold leading-tight transition ${
                 activeTab === tab
-                  ? 'bg-gradient-to-r from-pink-500 to-cyan-500 text-white shadow'
-                  : 'bg-white/5 text-slate-300 hover:bg-white/15'
+                  ? 'bg-gradient-to-r from-[#7FBF6A] to-[#9FD68A] text-ghibli-ink shadow'
+                  : 'border-2 border-ghibli-clay bg-ghibli-cream text-ghibli-ink-soft hover:bg-[#FBEBD0]'
               }`}
             >
               {tab}
               {tab === 'Cần luyện' && state.weak.length > 0 && (
-                <span className="ml-1.5 rounded-full bg-rose-500 px-1.5 py-0.2 text-[10px] text-white">
+                <span className="ml-1.5 rounded-full bg-rose-500 px-1.5 py-0.5 text-xs text-white">
                   {state.weak.length}
                 </span>
               )}
@@ -203,12 +203,12 @@ export const PhrasebookSheet: React.FC = () => {
         <div className="flex-1 space-y-2.5 overflow-y-auto p-5">
           {activeTab === 'Cần luyện' ? (
             state.weak.length === 0 ? (
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-8 text-center">
+ <div className="rounded-2xl border ghibli-panel p-8 text-center">
                 <div className="text-3xl">🌟</div>
-                <div className="mt-2 font-display text-base font-black text-white">
+                <div className="mt-2 font-display text-base font-black text-ghibli-ink">
                   Tuyệt vời! Bạn không có từ yếu nào tồn đọng!
                 </div>
-                <p className="mt-1 text-xs text-slate-300">
+                <p className="mt-1 text-xs text-ghibli-ink-soft">
                   Các từ phát âm chưa chuẩn trên sân khấu sẽ tự động lưu vào đây để bạn luyện riêng.
                 </p>
               </div>
@@ -216,7 +216,7 @@ export const PhrasebookSheet: React.FC = () => {
               state.weak.map((w) => (
                 <div
                   key={w.key}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/15 bg-white/5 p-3.5"
+ className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border ghibli-panel p-3.5"
                 >
                   <div>
                     <div className="flex items-center gap-2">
@@ -225,14 +225,14 @@ export const PhrasebookSheet: React.FC = () => {
                           w.status === 'bad' ? 'bg-rose-500' : 'bg-amber-400'
                         }`}
                       />
-                      <span className="font-display text-lg font-black text-white">
+                      <span className="font-display text-lg font-black text-ghibli-ink">
                         {w.word}
                       </span>
-                      <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-bold text-slate-300">
+ <span className="rounded-full ghibli-panel px-2 py-0.5 text-xs font-bold text-ghibli-ink-soft">
                         Sai {w.misses} lần · +{w.status === 'bad' ? 10 : 6} XP
                       </span>
                     </div>
-                    <p className="mt-1 text-xs italic text-slate-300">
+                    <p className="mt-1 text-xs italic text-ghibli-ink-soft">
                       Ngữ cảnh: “{w.ctx}”
                     </p>
                   </div>
@@ -242,20 +242,20 @@ export const PhrasebookSheet: React.FC = () => {
                       onClick={() =>
                         Voice.speak(w.word, { preferredURI: state.voiceURI })
                       }
-                      className="rounded-xl border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-extrabold text-white hover:bg-white/20"
+ className="rounded-xl border ghibli-panel px-3 py-1.5 text-xs font-extrabold text-ghibli-ink hover:bg-[#FBEBD0]"
                     >
                       🔊 Nghe
                     </button>
                     <button
                       onClick={() => handlePracticeWeakWord(w.key, w.word)}
-                      className="rounded-xl bg-gradient-to-r from-pink-500 to-cyan-500 px-3.5 py-1.5 text-xs font-black text-white shadow"
+                      className="rounded-xl bg-gradient-to-r from-[#7FBF6A] to-[#9FD68A] px-3.5 py-1.5 text-xs font-black text-ghibli-ink shadow"
                     >
                       {practicingKey === w.key ? '🎙️ Đang nghe...' : '🎙️ Đọc từ'}
                     </button>
                     <button
                       onClick={() => resolveWeakWord(w.key, 'ok')}
                       title="Giả lập đọc chuẩn từ này"
-                      className="rounded-xl border border-emerald-400/40 bg-emerald-500/20 px-2.5 py-1.5 text-xs font-black text-emerald-200 hover:bg-emerald-500/30"
+                      className="rounded-xl border border-emerald-400/40 bg-emerald-500/20 px-2.5 py-1.5 text-xs font-black text-emerald-700 hover:bg-emerald-500/30"
                     >
                       ✓ Chuẩn
                     </button>
@@ -269,20 +269,20 @@ export const PhrasebookSheet: React.FC = () => {
                 key={p.id}
                 className={`rounded-2xl border p-3.5 ${
                   p.unlocked
-                    ? 'border-white/15 bg-white/5'
-                    : 'border-white/5 bg-white/[0.02] opacity-55'
+ ? ' ghibli-panel'
+ : ' ghibli-panel opacity-60'
                 }`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <span className="rounded-full bg-cyan-500/20 px-2 py-0.5 text-[10px] font-black text-cyan-300">
+                    <span className="rounded-full bg-cyan-500/20 px-2 py-0.5 text-xs font-black text-cyan-700">
                       {p.cat}
                     </span>
-                    <p className="mt-1.5 font-display text-sm font-extrabold text-white">
+                    <p className="mt-1.5 font-display text-sm font-extrabold text-ghibli-ink">
                       {p.unlocked ? p.en : '🔒 Hoàn thành lượt diễn tương ứng trên sân khấu để mở khoá cụm từ này'}
                     </p>
                     {p.unlocked && p.vi && (
-                      <p className="mt-1 text-xs font-semibold text-slate-300">
+                      <p className="mt-1 text-xs font-semibold text-ghibli-ink-soft">
                         🇻🇳 {p.vi}
                       </p>
                     )}
@@ -297,7 +297,7 @@ export const PhrasebookSheet: React.FC = () => {
                             preferredURI: state.voiceURI,
                           })
                         }
-                        className="rounded-xl border border-white/15 bg-white/10 px-2.5 py-1 text-xs font-bold text-white hover:bg-white/20"
+ className="rounded-xl border ghibli-panel px-2.5 py-1 text-xs font-bold text-ghibli-ink hover:bg-[#FBEBD0]"
                       >
                         🔊 1×
                       </button>
@@ -308,7 +308,7 @@ export const PhrasebookSheet: React.FC = () => {
                             preferredURI: state.voiceURI,
                           })
                         }
-                        className="rounded-xl border border-white/15 bg-white/10 px-2.5 py-1 text-xs font-bold text-cyan-200 hover:bg-white/20"
+ className="rounded-xl border ghibli-panel px-2.5 py-1 text-xs font-bold text-cyan-700 hover:bg-[#FBEBD0]"
                       >
                         🐢 0.8×
                       </button>
@@ -338,33 +338,33 @@ export const ShopSheet: React.FC = () => {
   const upgrades = SHOP.filter((i) => i.type === 'upgrade');
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-md sm:items-center sm:p-4">
-      <div className="flex max-h-[88vh] w-full max-w-3xl flex-col overflow-hidden rounded-t-3xl border border-white/20 bg-[#150C38] shadow-2xl sm:rounded-3xl">
-        <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ghibli-ink/40 sm:items-center sm:p-4">
+ <div className="flex max-h-[88vh] w-full max-w-3xl flex-col overflow-hidden rounded-t-3xl border ghibli-panel shadow-2xl sm:rounded-3xl">
+        <div className="flex items-center justify-between border-b-2 border-ghibli-track px-5 py-4">
           <div>
-            <h2 className="font-display text-xl font-black text-white">
+            <h2 className="font-display text-xl font-black text-ghibli-ink">
               🛍️ Cửa Hàng MC & Trang Bị Sân Khấu 3D
             </h2>
-            <p className="text-xs font-semibold text-amber-300">
+            <p className="text-xs font-semibold text-amber-700">
               Số dư: ${state.cash} · Năng lượng: {state.energy}/{state.maxEnergy} ⚡
             </p>
           </div>
           <button
             onClick={() => setShopOpen(false)}
-            className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-black text-white hover:bg-white/20"
+ className="rounded-full ghibli-panel px-3 py-1.5 text-xs font-black text-ghibli-ink hover:bg-[#FBEBD0]"
           >
             Đóng ✕
           </button>
         </div>
 
         <div className="flex-1 space-y-5 overflow-y-auto p-5">
-          <div className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-3.5 py-2 text-xs font-semibold text-emerald-200">
+          <div className="rounded-2xl border-2 border-emerald-600/40 bg-emerald-50 px-3.5 py-2 text-xs font-semibold text-emerald-900">
             💡 Mẹo tiết kiệm: Hai hoạt động hằng ngày (Morning Coffee & Supermarket) hoàn toàn miễn phí và hồi +25 ⚡!
           </div>
 
           {/* Consumables */}
           <div>
-            <h3 className="mb-2.5 font-display text-sm font-black uppercase tracking-wider text-emerald-300">
+            <h3 className="mb-2.5 font-display text-sm font-black uppercase tracking-wider text-emerald-700">
               ⚡ Hồi Năng Lượng Tức Thì
             </h3>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -374,22 +374,22 @@ export const ShopSheet: React.FC = () => {
                 return (
                   <div
                     key={item.id}
-                    className="flex flex-col justify-between rounded-2xl border border-white/15 bg-white/5 p-3.5"
+ className="flex flex-col justify-between rounded-2xl border ghibli-panel p-3.5"
                   >
                     <div>
                       <div className="text-3xl">{item.icon}</div>
-                      <div className="mt-2 font-display text-sm font-black text-white">
+                      <div className="mt-2 font-display text-sm font-black text-ghibli-ink">
                         {item.name}
                       </div>
-                      <div className="mt-0.5 text-xs font-extrabold text-emerald-300">
+                      <div className="mt-0.5 text-xs font-extrabold text-emerald-700">
                         +{item.energy} ⚡ Energy
                       </div>
-                      <p className="mt-1 text-[11px] text-slate-300">{item.sub}</p>
+                      <p className="mt-1 text-xs text-ghibli-ink-soft">{item.sub}</p>
                     </div>
                     <button
                       disabled={!canAfford || fullEnergy}
                       onClick={() => buyShopItem(item.id)}
-                      className="mt-3 w-full rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 py-2 text-xs font-black text-slate-950 shadow transition hover:scale-[1.02] disabled:opacity-40"
+                      className="mt-3 min-h-[48px] w-full rounded-xl bg-gradient-to-r from-ghibli-sage to-[#9FD68A] py-2.5 text-sm font-black text-ghibli-ink shadow transition hover:scale-[1.02] disabled:bg-none disabled:bg-[#F1E9DC] disabled:text-ghibli-ink-soft disabled:shadow-none disabled:opacity-60"
                     >
                       {fullEnergy ? 'Đầy ⚡' : `Mua $${item.price}`}
                     </button>
@@ -401,7 +401,7 @@ export const ShopSheet: React.FC = () => {
 
           {/* Permanent 3D Upgrades */}
           <div>
-            <h3 className="mb-2.5 font-display text-sm font-black uppercase tracking-wider text-pink-300">
+            <h3 className="mb-2.5 font-display text-sm font-black uppercase tracking-wider text-pink-700">
               ✨ Nâng Cấp Vĩnh Viễn (Hiển Thị Trực Tiếp Lên Nhân Vật 3D)
             </h3>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -414,23 +414,23 @@ export const ShopSheet: React.FC = () => {
                     className={`flex flex-col justify-between rounded-2xl border p-3.5 ${
                       owned
                         ? 'border-amber-400/50 bg-amber-500/10'
-                        : 'border-white/15 bg-white/5'
+ : ' ghibli-panel'
                     }`}
                   >
                     <div>
                       <div className="text-3xl">{item.icon}</div>
-                      <div className="mt-2 font-display text-sm font-black text-white">
+                      <div className="mt-2 font-display text-sm font-black text-ghibli-ink">
                         {item.name}
                       </div>
-                      <p className="mt-1 text-[11px] text-slate-300">{item.sub}</p>
+                      <p className="mt-1 text-xs text-ghibli-ink-soft">{item.sub}</p>
                     </div>
                     <button
                       disabled={owned || !canAfford}
                       onClick={() => buyShopItem(item.id)}
                       className={`mt-3 w-full rounded-xl py-2 text-xs font-black shadow transition ${
                         owned
-                          ? 'bg-amber-400/20 text-amber-300'
-                          : 'bg-gradient-to-r from-amber-400 to-pink-500 text-slate-950 hover:scale-[1.02] disabled:opacity-40'
+                          ? 'bg-amber-400/20 text-amber-700'
+                          : 'bg-gradient-to-r from-ghibli-sun to-[#F7C35C] text-ghibli-ink hover:scale-[1.02] disabled:bg-none disabled:bg-[#F1E9DC] disabled:text-ghibli-ink-soft disabled:shadow-none disabled:opacity-60'
                       }`}
                     >
                       {owned ? 'Đã sở hữu ✓' : `Mua $${item.price}`}
@@ -442,7 +442,7 @@ export const ShopSheet: React.FC = () => {
           </div>
 
           {/* Reset Save Data */}
-          <div className="border-t border-white/10 pt-4 text-right">
+          <div className="border-t-2 border-ghibli-track pt-4 text-right">
             <button
               onClick={() => {
                 if (
@@ -453,7 +453,7 @@ export const ShopSheet: React.FC = () => {
                   resetAllData();
                 }
               }}
-              className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-3.5 py-1.5 text-xs font-bold text-rose-300 hover:bg-rose-500/20"
+              className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-3.5 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-500/20"
             >
               🗑️ Xoá dữ liệu chơi lại từ đầu
             </button>
@@ -518,9 +518,9 @@ export const ResultModal: React.FC = () => {
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-xl">
-      <div className="relative w-full max-w-md overflow-hidden rounded-3xl border border-white/25 bg-gradient-to-b from-[#251360] to-[#120A30] p-6 text-center shadow-[0_0_60px_rgba(255,79,216,0.4)]">
-        <div className="text-xs font-black uppercase tracking-widest text-pink-300">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ghibli-ink/40 p-4">
+      <div className="relative w-full max-w-md overflow-hidden rounded-3xl ghibli-panel p-6 text-center">
+        <div className="text-sm font-black uppercase tracking-wider text-ghibli-clay">
           {scene.icon} {scene.title}
         </div>
 
@@ -531,7 +531,7 @@ export const ResultModal: React.FC = () => {
               className="pointer-events-none absolute left-1/2 top-1/2 h-72 w-72 animate-ray-spin rounded-full opacity-80"
               style={{
                 background:
-                  'repeating-conic-gradient(from 0deg, rgba(251,191,36,0.32) 0deg 9deg, transparent 9deg 24deg, rgba(255,79,216,0.22) 24deg 33deg, transparent 33deg 48deg)',
+                  'repeating-conic-gradient(from 0deg, rgba(242,184,75,0.4) 0deg 9deg, transparent 9deg 24deg, rgba(127,191,106,0.32) 24deg 33deg, transparent 33deg 48deg)',
                 WebkitMaskImage: 'radial-gradient(circle, #000 20%, transparent 70%)',
                 maskImage: 'radial-gradient(circle, #000 20%, transparent 70%)',
               }}
@@ -543,8 +543,8 @@ export const ResultModal: React.FC = () => {
               key={s}
               className={`transition-all duration-300 ${
                 s <= visibleStars
-                  ? 'scale-110 text-amber-400 drop-shadow-[0_0_20px_rgba(251,191,36,0.9)]'
-                  : 'scale-90 text-white/15'
+                  ? 'scale-110 text-ghibli-sun drop-shadow-[0_2px_0_#6B4E3D]'
+                  : 'scale-90 text-ghibli-ink/15'
               }`}
             >
               ★
@@ -554,63 +554,63 @@ export const ResultModal: React.FC = () => {
           <Confetti trigger={confettiBurst} />
         </div>
 
-        <h2 className="font-display text-lg font-black text-white">{praise}</h2>
+        <h2 className="font-display text-lg font-black text-ghibli-ink">{praise}</h2>
 
         {/* Main Rewards Grid */}
         <div className="mt-4 grid grid-cols-3 gap-2.5">
           {scene.type === 'show' ? (
-            <div className="rounded-2xl border border-amber-400/40 bg-amber-500/15 p-3">
-              <div className="text-[11px] font-bold text-amber-200">Cát-xê</div>
-              <div className="font-display text-xl font-black text-amber-300">
+            <div className="rounded-2xl border-2 border-ghibli-clay bg-[#FDF0CF] p-3">
+              <div className="text-xs font-bold text-[#8A5A00]">Cát-xê</div>
+              <div className="font-display text-xl font-black text-[#8A5A00]">
                 +${summary.cashEarned}
               </div>
             </div>
           ) : (
-            <div className="rounded-2xl border border-emerald-400/40 bg-emerald-500/15 p-3">
-              <div className="text-[11px] font-bold text-emerald-200">Hồi sức</div>
-              <div className="font-display text-xl font-black text-emerald-300">
+            <div className="rounded-2xl border-2 border-ghibli-clay bg-[#E4F2DC] p-3">
+              <div className="text-xs font-bold text-[#3F7A32]">Hồi sức</div>
+              <div className="font-display text-xl font-black text-[#3F7A32]">
                 +{summary.energyEarned} ⚡
               </div>
             </div>
           )}
 
-          <div className="rounded-2xl border border-purple-400/40 bg-purple-500/15 p-3">
-            <div className="text-[11px] font-bold text-purple-200">Charisma</div>
-            <div className="font-display text-xl font-black text-purple-300">
+          <div className="rounded-2xl border-2 border-ghibli-clay bg-[#EFE4F8] p-3">
+            <div className="text-xs font-bold text-purple-800">Charisma</div>
+            <div className="font-display text-xl font-black text-purple-800">
               +{summary.charismaEarned}
             </div>
           </div>
 
-          <div className="rounded-2xl border border-cyan-400/40 bg-cyan-500/15 p-3">
-            <div className="text-[11px] font-bold text-cyan-200">Fluency XP</div>
-            <div className="font-display text-xl font-black text-cyan-300">
+          <div className="rounded-2xl border-2 border-ghibli-clay bg-ghibli-sky/50 p-3">
+            <div className="text-xs font-bold text-[#23706A]">Fluency XP</div>
+            <div className="font-display text-xl font-black text-[#23706A]">
               +{summary.xpEarned}
             </div>
           </div>
         </div>
 
         {/* Details Lines */}
-        <div className="mt-4 space-y-1.5 rounded-2xl border border-white/10 bg-black/30 p-3 text-xs font-semibold text-slate-200">
+ <div className="mt-4 space-y-1.5 rounded-2xl ghibli-panel p-3 text-sm font-semibold text-ghibli-ink">
           <div>
             🎧 Điểm Nghe hiểu (Listening XP):{' '}
-            <strong className="text-cyan-300">+{summary.listeningXpEarned} XP</strong>
+            <strong className="text-cyan-700">+{summary.listeningXpEarned} XP</strong>
           </div>
           <div>
             🕒 Thời gian: {fmtTime(summary.beginAt)} → {fmtTime(summary.endAt)}
           </div>
           {summary.minutesLate > 0 && (
-            <div className="text-rose-300">
+            <div className="text-rose-700">
               ⚠️ Đến trễ {summary.minutesLate} phút (−{summary.latePenaltyPct}% cát-xê)
             </div>
           )}
           {activeUpgrades.length > 0 && (
-            <div className="text-amber-300">
+            <div className="text-[#8A5A00]">
               ✨ Thưởng trang bị:{' '}
               {activeUpgrades.map((u) => `${u.icon} ${u.name}`).join(', ')}
             </div>
           )}
           {state.weak.length > 0 && (
-            <div className="text-pink-300">
+            <div className="text-pink-700">
               📖 Có {state.weak.length} từ đang chờ ôn luyện trong Sổ tay
             </div>
           )}
@@ -618,7 +618,7 @@ export const ResultModal: React.FC = () => {
 
         <button
           onClick={closeResultSummary}
-          className="mt-5 w-full rounded-2xl bg-gradient-to-r from-pink-500 to-cyan-500 py-3.5 font-display text-sm font-black text-white shadow-xl transition hover:scale-[1.02]"
+          className="mt-5 min-h-[48px] w-full rounded-2xl border-2 border-ghibli-clay bg-gradient-to-r from-ghibli-sage to-[#9FD68A] py-3.5 font-display text-sm font-black text-ghibli-ink shadow-[0_3px_0_#6B4E3D] transition hover:scale-[1.02]"
         >
           Về {summary.returnTo === 'world' ? 'Bản đồ Thành phố 🗺️' : 'Phòng MC 🏠'}
         </button>
@@ -778,37 +778,37 @@ export const StreetTalkModal: React.FC = () => {
   const canContinue = isSpeak ? speakDone : answered;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-md">
-      <div className="w-full max-w-md rounded-3xl border border-white/20 bg-[#150C38] p-5 shadow-2xl">
-        <div className="flex items-center justify-between border-b border-white/10 pb-3">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ghibli-ink/40 p-4">
+ <div className="w-full max-w-md rounded-3xl border ghibli-panel p-5 shadow-2xl">
+        <div className="flex items-center justify-between border-b-2 border-ghibli-track pb-3">
           <div className="flex items-center gap-2.5">
-            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-cyan-500/20 text-xl">
+            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-500/20 text-xl">
               {isSpeak ? '🎤' : '👋'}
             </span>
             <div>
-              <h3 className="font-display text-base font-black text-white">
+              <h3 className="font-display text-base font-black text-ghibli-ink">
                 Trò chuyện cùng {passerName}
               </h3>
-              <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-bold text-cyan-300">
+              <span className="inline-block max-w-full rounded-2xl leading-snug ghibli-panel px-2.5 py-1 text-xs font-bold text-[#23706A]">
                 CEFR {item.level} · {isSpeak ? 'Luyện nói' : 'Phản xạ đường phố'} (+3 XP)
               </span>
             </div>
           </div>
           <button
             onClick={closeStreetTalk}
-            className="rounded-full bg-white/10 px-2.5 py-1 text-xs font-bold text-slate-300 hover:bg-white/20"
+ className="flex h-12 w-12 items-center justify-center rounded-full ghibli-panel text-sm font-bold text-ghibli-ink-soft hover:bg-[#FBEBD0]"
           >
             ✕
           </button>
         </div>
 
         {/* Prompt */}
-        <div className="mt-3.5 rounded-2xl border border-white/15 bg-white/5 p-3.5">
-          <p className="font-display text-sm font-extrabold text-white">
+ <div className="mt-3.5 rounded-2xl border ghibli-panel p-3.5">
+          <p className="font-display text-sm font-extrabold text-ghibli-ink">
             “{item.prompt.en}”
           </p>
           {showViPrompt && (
-            <p className="mt-1.5 text-xs font-semibold italic text-amber-200">
+            <p className="mt-1.5 text-sm font-semibold italic text-[#8A5A00]">
               🇻🇳 {item.prompt.vi}
             </p>
           )}
@@ -817,13 +817,13 @@ export const StreetTalkModal: React.FC = () => {
               onClick={() =>
                 Voice.speak(item.prompt.en, { preferredURI: state.voiceURI })
               }
-              className="rounded-xl bg-white/10 px-2.5 py-1 text-xs font-bold text-white hover:bg-white/20"
+ className="min-h-[48px] rounded-xl ghibli-panel px-3 text-sm font-bold text-ghibli-ink hover:bg-[#FBEBD0]"
             >
               🔊 Nghe lại
             </button>
             <button
               onClick={() => setShowViPrompt((v) => !v)}
-              className="rounded-xl bg-amber-500/20 px-2.5 py-1 text-xs font-bold text-amber-200"
+              className="min-h-[48px] rounded-xl border-2 border-ghibli-clay bg-[#FDF0CF] px-3 text-sm font-bold text-[#8A5A00]"
             >
               🇻🇳 Dịch câu hỏi
             </button>
@@ -836,14 +836,14 @@ export const StreetTalkModal: React.FC = () => {
               <button
                 onClick={handleSpeak}
                 disabled={recording || speakDone}
-                className="flex-1 rounded-2xl bg-gradient-to-r from-pink-500 to-cyan-500 py-2.5 text-xs font-black text-white shadow-lg disabled:opacity-50"
+                className="flex-1 rounded-2xl bg-gradient-to-r from-[#7FBF6A] to-[#9FD68A] py-2.5 text-xs font-black text-ghibli-ink border-2 border-ghibli-clay shadow-md disabled:opacity-50"
               >
                 {recording ? '🎙️ Đang nghe…' : speakDone ? '✅ Xong' : '🎤 Nói câu trả lời'}
               </button>
               {!speakDone && (
                 <button
                   onClick={() => setShowTyped((v) => !v)}
-                  className="rounded-2xl bg-white/10 px-3 text-xs font-bold text-white hover:bg-white/20"
+ className="rounded-2xl ghibli-panel px-3 text-xs font-bold text-ghibli-ink hover:ghibli-panel"
                 >
                   ⌨️ Gõ
                 </button>
@@ -851,7 +851,7 @@ export const StreetTalkModal: React.FC = () => {
             </div>
 
             {recording && interim && (
-              <p className="rounded-xl bg-white/5 p-2 text-[11px] italic text-slate-300">{interim}</p>
+ <p className="rounded-xl ghibli-panel p-2 text-[11px] italic text-ghibli-ink-soft">{interim}</p>
             )}
 
             {showTyped && !speakDone && (
@@ -861,11 +861,11 @@ export const StreetTalkModal: React.FC = () => {
                   onChange={(e) => setTyped(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && submitTyped()}
                   placeholder="Gõ câu trả lời tiếng Anh…"
-                  className="flex-1 rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-xs text-white outline-none focus:border-cyan-400"
+ className="flex-1 rounded-xl border ghibli-panel px-3 py-2 text-xs text-ghibli-ink outline-none focus:border-cyan-400"
                 />
                 <button
                   onClick={submitTyped}
-                  className="rounded-xl bg-cyan-500/30 px-3 text-xs font-bold text-white"
+                  className="rounded-xl bg-cyan-500/30 px-3 text-xs font-bold text-ghibli-ink"
                 >
                   Gửi
                 </button>
@@ -873,10 +873,10 @@ export const StreetTalkModal: React.FC = () => {
             )}
 
             {speakResult && (
-              <div className="rounded-2xl border border-white/15 bg-white/5 p-3">
+ <div className="rounded-2xl border ghibli-panel p-3">
                 <div className="flex items-center justify-between text-[11px] font-bold">
-                  <span className="text-cyan-200">Điểm: {speakResult.score}</span>
-                  <span className="text-amber-300">{'⭐'.repeat(speakResult.stars) || '—'}</span>
+                  <span className="text-cyan-700">Điểm: {speakResult.score}</span>
+                  <span className="text-amber-700">{'⭐'.repeat(speakResult.stars) || '—'}</span>
                 </div>
                 <p className="mt-1.5 text-xs font-bold leading-relaxed">
                   {speakResult.tokens.map((t, i) => (
@@ -884,30 +884,30 @@ export const StreetTalkModal: React.FC = () => {
                       key={i}
                       className={
                         t.status === 'ok'
-                          ? 'text-emerald-300'
+                          ? 'text-emerald-700'
                           : t.status === 'near'
-                          ? 'text-amber-300'
-                          : 'text-rose-300'
+                          ? 'text-amber-700'
+                          : 'text-rose-700'
                       }
                     >
                       {t.word}{' '}
                     </span>
                   ))}
                 </p>
-                <p className="mt-1 text-[10px] text-slate-400">Bạn nói: “{speakResult.transcript}”</p>
+                <p className="mt-1 text-[11px] text-ghibli-ink-soft">Bạn nói: “{speakResult.transcript}”</p>
               </div>
             )}
 
             {!speakDone && speakAttempts > 0 && (
-              <p className="text-[11px] font-bold text-amber-200">
+              <p className="text-[11px] font-bold text-amber-700">
                 Chưa đạt ({SPEAK_MAX_ATTEMPTS - speakAttempts} lượt còn lại). Thử lại nhé!
               </p>
             )}
 
             {speakDone && (
               <div className="rounded-2xl border border-emerald-400/40 bg-emerald-500/15 p-3">
-                <p className="text-[11px] font-bold text-emerald-200">Câu mẫu:</p>
-                <p className="mt-1 text-xs font-bold text-white">{target}</p>
+                <p className="text-[11px] font-bold text-emerald-700">Câu mẫu:</p>
+                <p className="mt-1 text-xs font-bold text-ghibli-ink">{target}</p>
               </div>
             )}
           </div>
@@ -923,22 +923,22 @@ export const StreetTalkModal: React.FC = () => {
                   onClick={() => handleChooseOption(idx)}
                   className={`w-full rounded-2xl border p-3 text-left text-xs transition ${shakeIdx === idx ? 'animate-shake' : ''} ${
                     !answered
-                      ? 'border-white/15 bg-white/5 text-white hover:border-cyan-400 hover:bg-white/10'
+ ? ' ghibli-panel text-ghibli-ink hover:border-cyan-400 hover:ghibli-panel'
                       : opt.ok
-                      ? 'border-emerald-400 bg-emerald-500/25 text-white'
+                      ? 'border-emerald-400 bg-emerald-500/25 text-ghibli-ink'
                       : isSelected
-                      ? 'border-rose-500 bg-rose-500/25 text-rose-200'
-                      : 'border-white/10 bg-white/5 text-slate-400'
+                      ? 'border-rose-500 bg-rose-500/25 text-rose-700'
+ : ' ghibli-panel text-ghibli-ink-soft'
                   }`}
                 >
                   <div className="font-bold">{opt.en}</div>
                   {answered && (
-                    <div className="mt-1 text-[11px] text-amber-200">
+                    <div className="mt-1 text-[11px] text-amber-700">
                       🇻🇳 {opt.vi}
                     </div>
                   )}
                   {answered && isSelected && !opt.ok && opt.why && (
-                    <div className="mt-1 text-[11px] font-bold text-rose-300">
+                    <div className="mt-1 text-[11px] font-bold text-rose-700">
                       💡 {opt.why}
                     </div>
                   )}
@@ -951,7 +951,7 @@ export const StreetTalkModal: React.FC = () => {
         {canContinue && (
           <button
             onClick={closeStreetTalk}
-            className="mt-4 w-full rounded-2xl bg-gradient-to-r from-pink-500 to-cyan-500 py-2.5 text-xs font-black text-white shadow-lg"
+            className="mt-4 min-h-[48px] w-full rounded-2xl border-2 border-ghibli-clay bg-gradient-to-r from-ghibli-sage to-[#9FD68A] py-2.5 text-sm font-black text-ghibli-ink shadow-[0_3px_0_#6B4E3D]"
           >
             Tiếp tục dạo phố ➔
           </button>
@@ -971,25 +971,25 @@ export const GlobalOverlays: React.FC = () => {
     <>
       {/* Stage Curtain Transition */}
       {curtain.visible && (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#120A30] p-6 text-center transition-opacity">
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-b from-ghibli-sky to-[#FFF1D6] p-6 text-center transition-opacity">
           <div className="text-4xl animate-bounce">🎭</div>
-          <h2 className="mt-3 font-display text-2xl font-black text-white">
+          <h2 className="mt-3 font-display text-2xl font-black text-ghibli-ink">
             {curtain.title}
           </h2>
-          <p className="mt-2 max-w-md text-xs font-semibold text-cyan-200">
+          <p className="mt-2 max-w-md text-sm font-semibold text-ghibli-clay">
             {curtain.tip}
           </p>
-          <div className="mt-5 h-1.5 w-48 overflow-hidden rounded-full bg-white/15">
-            <div className="h-full w-full animate-pulse bg-gradient-to-r from-pink-500 via-cyan-400 to-lime-400" />
+ <div className="mt-5 h-1.5 w-48 overflow-hidden rounded-full ghibli-panel">
+            <div className="h-full w-full animate-pulse bg-gradient-to-r from-ghibli-sun via-ghibli-coral to-ghibli-sage" />
           </div>
         </div>
       )}
 
       {/* Sleep Dark Fade Overlay */}
       {sleepOverlay && (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/95 text-center">
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-b from-[#2E3F6B] to-[#5A5C8F] p-6 text-center">
           <div className="text-5xl">🌙💤</div>
-          <div className="mt-3 font-display text-xl font-black text-indigo-200">
+          <div className="mt-3 font-display text-xl font-black text-ghibli-cream">
             Đang nghỉ ngơi hồi phục năng lượng...
           </div>
         </div>
@@ -1000,16 +1000,16 @@ export const GlobalOverlays: React.FC = () => {
         {toasts.map((t) => (
           <div
             key={t.id}
-            className={`w-full rounded-2xl border px-4 py-2.5 text-center text-xs font-extrabold shadow-2xl backdrop-blur-xl ${
+            className={`w-full rounded-2xl border-2 px-4 py-2.5 text-center text-sm font-extrabold shadow-lg ${
               t.tone === 'success'
-                ? 'border-emerald-400/60 bg-emerald-950/90 text-emerald-200'
+                ? 'border-ghibli-clay bg-[#E4F2DC] text-[#3F7A32]'
                 : t.tone === 'warn'
-                ? 'border-amber-400/60 bg-amber-950/90 text-amber-200'
+                ? 'border-ghibli-clay bg-[#FDF0CF] text-[#8A5A00]'
                 : t.tone === 'error'
-                ? 'border-rose-400/60 bg-rose-950/90 text-rose-200'
+                ? 'border-ghibli-clay bg-[#FCE4DA] text-[#B2421E]'
                 : t.tone === 'pink'
-                ? 'border-pink-400/60 bg-pink-950/90 text-pink-200'
-                : 'border-cyan-400/60 bg-[#120A30]/95 text-cyan-200'
+                ? 'border-ghibli-clay bg-[#FBE3EC] text-pink-800'
+ : 'ghibli-panel text-[#23706A]'
             }`}
           >
             {t.msg}

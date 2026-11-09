@@ -83,18 +83,18 @@ export const HUD: React.FC = () => {
     >
       <div className="mx-auto grid max-w-6xl grid-cols-4 gap-2 sm:gap-3">
         {/* 1. ENERGY PILL */}
-        <div className="pointer-events-auto relative overflow-visible rounded-2xl border border-white/15 bg-[#120A30]/85 px-2.5 py-1.5 shadow-lg backdrop-blur-xl">
-          <div className="flex items-center justify-between text-xs font-extrabold">
-            <span className="flex items-center gap-1 text-emerald-300">
+        <div className="pointer-events-auto relative overflow-visible rounded-2xl ghibli-panel px-2.5 py-1.5">
+          <div className="flex items-center justify-between text-sm font-extrabold">
+            <span className="flex items-center gap-1 text-emerald-700">
               <span>⚡</span>
               <span className="hidden sm:inline">Năng lượng</span>
             </span>
-            <span className="font-display text-white">
+            <span className="font-display text-ghibli-ink">
               {animEnergy}
-              <span className="text-[10px] text-slate-400">/{state.maxEnergy}</span>
+              <span className="text-[11px] text-ghibli-ink-soft">/{state.maxEnergy}</span>
             </span>
           </div>
-          <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+          <div className="mt-1 h-2.5 w-full overflow-hidden rounded-full bg-ghibli-track">
             <div
               className={`h-full rounded-full bg-gradient-to-r transition-all duration-300 ${energyBarColor}`}
               style={{ width: `${energyPct}%` }}
@@ -104,39 +104,39 @@ export const HUD: React.FC = () => {
         </div>
 
         {/* 2. CHARISMA PILL */}
-        <div className="pointer-events-auto relative overflow-visible rounded-2xl border border-white/15 bg-[#120A30]/85 px-2.5 py-1.5 shadow-lg backdrop-blur-xl">
-          <div className="flex items-center justify-between text-xs font-extrabold">
-            <span className="flex items-center gap-1 text-purple-300">
+        <div className="pointer-events-auto relative overflow-visible rounded-2xl ghibli-panel px-2.5 py-1.5">
+          <div className="flex items-center justify-between text-sm font-extrabold">
+            <span className="flex items-center gap-1 text-purple-700">
               <span>✨</span>
               <span>Lv.{state.charisma.lv}</span>
             </span>
-            <span className="hidden font-display text-[11px] text-slate-200 sm:inline">
+            <span className="hidden font-display text-[11px] text-ghibli-ink sm:inline">
               {isMax ? 'MAX' : `${animChaPts}/${needCha}`}
             </span>
           </div>
-          <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+          <div className="mt-1 h-2.5 w-full overflow-hidden rounded-full bg-ghibli-track">
             <div
               className="h-full rounded-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-300"
               style={{ width: `${chaPct}%` }}
             />
           </div>
-          <div className="mt-0.5 flex items-center justify-between gap-1 text-[10px] font-bold text-purple-200/80">
+          <div className="mt-0.5 flex items-center justify-between gap-1 text-[11px] font-bold text-purple-700">
             <span className="truncate">{levelTitle(state.charisma.lv)}</span>
-            <span className="shrink-0 text-slate-300 sm:hidden">{isMax ? 'MAX' : `${animChaPts}/${needCha}`}</span>
+            <span className="shrink-0 text-ghibli-ink-soft sm:hidden">{isMax ? 'MAX' : `${animChaPts}/${needCha}`}</span>
           </div>
           {renderFloats('charisma')}
         </div>
 
         {/* 3. FLUENCY XP PILL */}
-        <div className="pointer-events-auto relative overflow-visible rounded-2xl border border-white/15 bg-[#120A30]/85 px-2.5 py-1.5 shadow-lg backdrop-blur-xl">
-          <div className="flex items-center justify-between text-xs font-extrabold">
-            <span className="flex items-center gap-1 text-cyan-300">
+        <div className="pointer-events-auto relative overflow-visible rounded-2xl ghibli-panel px-2.5 py-1.5">
+          <div className="flex items-center justify-between text-sm font-extrabold">
+            <span className="flex items-center gap-1 text-cyan-700">
               <span>🗣️</span>
               <span className="hidden sm:inline">Fluency</span>
             </span>
-            <span className="font-display text-white">{animXp} XP</span>
+            <span className="font-display text-ghibli-ink">{animXp} XP</span>
           </div>
-          <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+          <div className="mt-1 h-2.5 w-full overflow-hidden rounded-full bg-ghibli-track">
             <div
               className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 transition-all duration-300"
               style={{ width: `${xpModPct}%` }}
@@ -146,17 +146,17 @@ export const HUD: React.FC = () => {
         </div>
 
         {/* 4. CASH PILL */}
-        <div className="pointer-events-auto relative overflow-visible rounded-2xl border border-white/15 bg-[#120A30]/85 px-2.5 py-1.5 shadow-lg backdrop-blur-xl">
-          <div className="flex items-center justify-between text-xs font-extrabold">
-            <span className="flex items-center gap-1 text-amber-300">
+        <div className="pointer-events-auto relative overflow-visible rounded-2xl ghibli-panel px-2.5 py-1.5">
+          <div className="flex items-center justify-between text-sm font-extrabold">
+            <span className="flex items-center gap-1 text-amber-700">
               <span>💵</span>
               <span className="hidden sm:inline">Cát-xê</span>
             </span>
-            <span className="font-display text-amber-300">${animCash}</span>
+            <span className="font-display text-amber-700">${animCash}</span>
           </div>
-          <div className="mt-1 flex items-center justify-between text-[10px] font-bold text-slate-400">
+          <div className="mt-1 flex items-center justify-between text-[11px] font-bold text-ghibli-ink-soft">
             <span title="Danh tiếng: trung bình sao các show gần đây">
-              ⭐ <span className="text-amber-200">{fmtRep(state.rep)}</span>
+              ⭐ <span className="text-amber-700">{fmtRep(state.rep)}</span>
             </span>
             <span className="hidden sm:inline">🎤 {state.stats.shows} show</span>
             <span className="hidden md:inline">🔥 {state.streak.count}d</span>

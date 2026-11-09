@@ -57,7 +57,7 @@ export const App: React.FC = () => {
   }, [saveNow, startDayFromWelcome]);
 
   return (
-    <div className="relative h-screen w-screen select-none overflow-hidden bg-[#120A30] font-sans text-white">
+    <div className="relative h-[100dvh] w-screen select-none overflow-hidden bg-[#120A30] font-sans text-white">
       {/* Top Always-On HUD */}
       <HUD />
 

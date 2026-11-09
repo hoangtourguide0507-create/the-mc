@@ -59,17 +59,17 @@ export const TourOverlay: React.FC = () => {
       <div
         role="dialog"
         aria-label="Hướng dẫn chơi"
-        className="fixed inset-x-3 z-[61] mx-auto max-w-md rounded-2xl border border-amber-300/60 bg-[#150C38] p-4 shadow-2xl"
+ className="fixed inset-x-3 z-[61] mx-auto max-w-md rounded-2xl border border-amber-300/60 ghibli-panel p-4 shadow-2xl"
         style={tipPos}
       >
-        <p className="text-[11px] font-black uppercase tracking-wider text-amber-300">
+        <p className="text-[11px] font-black uppercase tracking-wider text-amber-700">
           Hướng dẫn · {n}/{TOUR_STEPS.length}
         </p>
-        <p className="mt-1 text-sm font-semibold leading-relaxed text-white">{step.text}</p>
+        <p className="mt-1 text-sm font-semibold leading-relaxed text-ghibli-ink">{step.text}</p>
         <div className="mt-3 flex items-center justify-between gap-2">
           <button
             onClick={skipTour}
-            className="rounded-lg px-2 py-1 text-xs font-bold text-slate-400 hover:text-white"
+            className="rounded-lg px-2 py-1 text-xs font-bold text-ghibli-ink-soft hover:text-ghibli-ink"
           >
             Bỏ qua hướng dẫn
           </button>

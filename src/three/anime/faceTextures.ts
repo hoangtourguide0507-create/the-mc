@@ -4,6 +4,7 @@
  * Toàn bộ là thiết kế gốc, không sao chép nhân vật có sẵn.
  */
 import * as THREE from 'three';
+import { isGhibli } from '../artStyle';
 
 const cache = new Map<string, THREE.CanvasTexture>();
 
@@ -276,14 +277,16 @@ export function mouthTexture(state: MouthState, lipLine: string) {
 
 export function blushTexture() {
   return make('blush', 160, 100, (g) => {
+    // Ghibli: má hồng nhạt, mềm; chế độ neon giữ màu cũ
+    const blushRgb = isGhibli ? '247,165,178' : '255,120,140';
     const rg = g.createRadialGradient(80, 50, 4, 80, 50, 70);
-    rg.addColorStop(0, 'rgba(255,120,140,0.7)');
-    rg.addColorStop(1, 'rgba(255,120,140,0)');
+    rg.addColorStop(0, `rgba(${blushRgb},${isGhibli ? 0.55 : 0.7})`);
+    rg.addColorStop(1, `rgba(${blushRgb},0)`);
     g.fillStyle = rg;
     g.beginPath();
     g.ellipse(80, 50, 76, 44, 0, 0, Math.PI * 2);
     g.fill();
-    g.strokeStyle = 'rgba(220,70,100,0.75)';
+    g.strokeStyle = isGhibli ? 'rgba(214,128,136,0.45)' : 'rgba(220,70,100,0.75)';
     g.lineWidth = 5;
     for (let i = 0; i < 3; i++) {
       g.beginPath();

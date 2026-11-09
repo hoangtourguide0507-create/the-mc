@@ -12,6 +12,7 @@ import { Html, RoundedBox } from '@react-three/drei';
 import * as THREE from 'three';
 import { LookConfig, NpcMood, VisemeType } from '../types/game';
 import { GlbCharacter3D } from './GlbCharacter3D';
+import { isGhibli } from './artStyle';
 // Thư viện VRM tách gói riêng: chỉ tải khi có nhân vật dùng mô hình VRM
 const VrmCharacter3D = React.lazy(() => import('./VrmCharacter3D').then((m) => ({ default: m.VrmCharacter3D })));
 import { hairGeometry, halo } from './anime/hair';
@@ -68,7 +69,8 @@ function hullMat(thickness: number) {
   const k = Math.round(thickness * 10000);
   let m = hullCache.get(k);
   if (!m) {
-    m = new THREE.MeshBasicMaterial({ color: '#2B1C24', side: THREE.BackSide });
+    // Ghibli: viền nét nâu ấm thay vì đen (STYLE_GHIBLI mục 7)
+    m = new THREE.MeshBasicMaterial({ color: isGhibli ? '#6B4E3D' : '#2B1C24', side: THREE.BackSide });
     m.onBeforeCompile = (sh) => {
       sh.vertexShader = sh.vertexShader.replace(
         '#include <begin_vertex>',
@@ -171,12 +173,27 @@ const decalMat = (map: THREE.Texture) =>
 
 /* ------------------------------------------------------------------ */
 
+/* Hình tạm (thân capsule + đầu cầu) hiện khi VRM chưa nạp xong hoặc nạp lỗi. Dùng geometry dùng chung, rẻ GPU. */
+const PH_BODY_GEO = new THREE.CapsuleGeometry(0.2, 0.55, 4, 8);
+const PH_HEAD_GEO = new THREE.SphereGeometry(0.17, 12, 10);
+const VrmPlaceholder: React.FC<{ look: LookConfig }> = ({ look }) => (
+  <group>
+    <mesh geometry={PH_BODY_GEO} position={[0, 0.5, 0]}>
+      <meshStandardMaterial color={look.cloth || '#64748B'} roughness={0.6} />
+    </mesh>
+    <mesh geometry={PH_HEAD_GEO} position={[0, 1.3, 0]}>
+      <meshStandardMaterial color={look.skin || '#FCE3D3'} roughness={0.6} />
+    </mesh>
+  </group>
+);
+
 export const ClayCharacter3D: React.FC<ClayCharacter3DProps> = (props) => {
   if (props.look.vrmUrl) {
+    const placeholder = <VrmPlaceholder look={props.look} />;
     return (
       <group position={props.position} scale={props.scale ?? 1} onClick={props.onClick}>
         {props.highlightRing && <RingMarker />}
-        <Suspense fallback={null}>
+        <Suspense fallback={placeholder}>
           <VrmCharacter3D
             url={props.look.vrmUrl}
             mood={props.mood ?? 'idle'}
@@ -184,6 +201,7 @@ export const ClayCharacter3D: React.FC<ClayCharacter3DProps> = (props) => {
             isWalking={!!props.isWalking}
             isSpeaking={!!props.isSpeaking}
             rotationY={props.rotationY ?? 0}
+            placeholder={placeholder}
           />
         </Suspense>
         {props.nameTag && <NameTag y={1.7} text={props.nameTag} />}
@@ -195,7 +213,7 @@ export const ClayCharacter3D: React.FC<ClayCharacter3DProps> = (props) => {
 
 const RingMarker: React.FC = () => (
   <mesh geometry={GEO.ring} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]}>
-    <meshBasicMaterial color="#22D3EE" transparent opacity={0.85} side={THREE.DoubleSide} depthWrite={false} />
+    <meshBasicMaterial color={isGhibli ? '#F2B84B' : '#22D3EE'} transparent opacity={0.85} side={THREE.DoubleSide} depthWrite={false} />
   </mesh>
 );
 
@@ -406,7 +424,7 @@ const AnimeChibi: React.FC<ClayCharacter3DProps> = ({
     <group ref={rootRef} position={position} scale={scale} onClick={onClick}>
       {highlightRing && <RingMarker />}
       <mesh geometry={GEO.shadow} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.012, 0]}>
-        <meshBasicMaterial color="#090518" transparent opacity={0.3} depthWrite={false} />
+        <meshBasicMaterial color={isGhibli ? '#6B5A4E' : '#090518'} transparent opacity={isGhibli ? 0.2 : 0.3} depthWrite={false} />
       </mesh>
 
       <group ref={bodyRef}>
@@ -500,7 +518,11 @@ const AnimeChibi: React.FC<ClayCharacter3DProps> = ({
           {has('earrings') && [-1, 1].map((s) => <mesh key={`er${s}`} geometry={GEO.earring} material={M.gold} position={[s * 0.355, -0.11, 0]} />)}
           {has('inear') && (
             <mesh geometry={GEO.earring} position={[0.36, -0.04, 0.03]} scale={1.6}>
-              <meshStandardMaterial color="#22D3EE" emissive="#22D3EE" emissiveIntensity={1.4} />
+              <meshStandardMaterial
+                color={isGhibli ? '#3E9B94' : '#22D3EE'}
+                emissive={isGhibli ? '#3E9B94' : '#22D3EE'}
+                emissiveIntensity={1.4}
+              />
             </mesh>
           )}
 
@@ -607,7 +629,13 @@ function irisFromHair(hair: string) {
 
 const NameTag: React.FC<{ y: number; text: string }> = ({ y, text }) => (
   <Html position={[0, y, 0]} center zIndexRange={[20, 0]}>
-    <div className="pointer-events-none whitespace-nowrap rounded-full border border-white/25 bg-[#120A30]/85 px-2.5 py-0.5 text-[11px] font-bold text-white shadow-lg backdrop-blur-md">
+    <div
+      className={
+        isGhibli
+          ? 'pointer-events-none whitespace-nowrap rounded-full border-2 border-ghibli-clay bg-ghibli-cream px-2.5 py-0.5 text-xs font-bold text-ghibli-ink shadow-[0_2px_0_#6B4E3D]'
+          : 'pointer-events-none whitespace-nowrap rounded-full border border-white/25 bg-[#120A30]/85 px-2.5 py-0.5 text-[11px] font-bold text-white shadow-lg backdrop-blur-md'
+      }
+    >
       {text}
     </div>
   </Html>

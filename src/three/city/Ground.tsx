@@ -3,7 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { TileKind } from '../../types/game';
 import { GRID, GridData, gridToWorld, ROAD_COLS, ROAD_ROWS } from './cityMap';
-import { GHIBLI, isGhibli } from '../artStyle';
+import { GHIBLI, GHIBLI_NIGHT_LIGHT, isGhibli } from '../artStyle';
 
 /* Texture mặt đất vẽ bằng canvas (1 ô = 1 texture) */
 const groundTex = new Map<string, THREE.CanvasTexture>();
@@ -268,7 +268,7 @@ const Water: React.FC<{ night: boolean }> = ({ night }) => {
         <planeGeometry args={[GRID, half + 4]} />
         <meshStandardMaterial
           ref={matRef}
-          color={night ? '#0B3A6B' : isGhibli ? GHIBLI.water : '#1FA2D8'}
+          color={night ? (isGhibli ? GHIBLI_NIGHT_LIGHT.water : '#0B3A6B') : isGhibli ? GHIBLI.water : '#1FA2D8'}
           roughness={0.12}
           metalness={0.25}
           normalMap={normal}

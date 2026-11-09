@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { ContactShadows, Float, Html } from '@react-three/drei';
 import { Bloom, EffectComposer, ToneMapping } from '@react-three/postprocessing';
@@ -8,6 +8,39 @@ import { getPlayerLook, NPCS } from '../data/content';
 import { NpcMood, SceneData, StageMicPhase, VisemeType } from '../types/game';
 import { useGameStore } from '../core/store';
 import { ClayCharacter3D } from './ClayCharacter3D';
+import { isGhibli } from './artStyle';
+
+/** Sân khấu Ghibli: phông gradient ấm theo bối cảnh (ban ngày / hoàng hôn), đèn #FFE2A8, sàn gỗ */
+const GHIBLI_STAGE: Record<string, { floor: string; wall: string; neon: string; spot: string; top: string; bottom: string }> = {
+  cafe: { floor: '#DDBB92', wall: '#F2DEC0', neon: '#F2B84B', spot: '#FFE2A8', top: '#FFF1D6', bottom: '#F7D9B0' },
+  market: { floor: '#CFE3BC', wall: '#D9EEC8', neon: '#A8D98A', spot: '#FFE2A8', top: '#CFEFFF', bottom: '#E8F6D8' },
+  backstage: { floor: '#B49678', wall: '#E9D8C6', neon: '#C9B6E4', spot: '#FFE2A8', top: '#F7C6A0', bottom: '#B9D8F0' },
+  wedding: { floor: '#F2E2D6', wall: '#F8E6EC', neon: '#F7B7C8', spot: '#FFE2A8', top: '#FBE3EA', bottom: '#CFE8F6' },
+  beach: { floor: '#F0D7AE', wall: '#BFE6F2', neon: '#F2B84B', spot: '#FFE2A8', top: '#9FD8EE', bottom: '#FFE7B0' },
+  gala: { floor: '#9C7E68', wall: '#F3E2B8', neon: '#FFE2A8', spot: '#FFE2A8', top: '#F7C6A0', bottom: '#B9D8F0' },
+  talkshow: { floor: '#BE9B80', wall: '#CFE6F0', neon: '#8FD3E8', spot: '#FFE2A8', top: '#B9D8F0', bottom: '#FFF1D6' },
+  room: { floor: '#D9B48A', wall: '#F5E6CC', neon: '#F7B7C8', spot: '#FFE2A8', top: '#F5E6CC', bottom: '#FBE3EA' },
+  launch: { floor: '#CDAE8A', wall: '#D9EEF5', neon: '#3E9B94', spot: '#FFE2A8', top: '#9FD8EE', bottom: '#CFEFFF' },
+};
+
+/** Sóng âm pastel (hồng nhạt, vàng, xanh ngọc) thay cho cầu vồng neon */
+const HOLO_GHIBLI = ['#F7B7C8', '#F9CFA0', '#F2B84B', '#A8E0D6', '#8FD3E8', '#F7B7C8', '#F9CFA0', '#A8E0D6', '#F2B84B', '#F7B7C8', '#8FD3E8'];
+
+/** Dải gradient dọc làm phông (texture canvas nhỏ, tạo một lần cho mỗi bối cảnh) */
+function gradientTexture(top: string, bottom: string) {
+  const cv = document.createElement('canvas');
+  cv.width = 8;
+  cv.height = 256;
+  const g = cv.getContext('2d')!;
+  const grd = g.createLinearGradient(0, 0, 0, 256);
+  grd.addColorStop(0, top);
+  grd.addColorStop(1, bottom);
+  g.fillStyle = grd;
+  g.fillRect(0, 0, 8, 256);
+  const t = new THREE.CanvasTexture(cv);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
 
 export interface Stage3DProps {
   scene: SceneData;
@@ -79,8 +112,15 @@ const StageSceneContent: React.FC<Stage3DProps> = ({
     }
   });
 
+  const ghibliTheme = GHIBLI_STAGE[scene.art] ?? GHIBLI_STAGE.room;
+  const backdropTex = useMemo(
+    () => (isGhibli ? gradientTexture(ghibliTheme.top, ghibliTheme.bottom) : null),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [ghibliTheme.top, ghibliTheme.bottom]
+  );
+
   // Theme colors by scene.art
-  const theme = {
+  const theme = isGhibli ? ghibliTheme : {
     cafe: { floor: '#2E1C14', wall: '#432818', neon: '#F59E0B', spot: '#FDE68A' },
     market: { floor: '#064E3B', wall: '#065F46', neon: '#10B981', spot: '#A7F3D0' },
     backstage: { floor: '#18181B', wall: '#27272A', neon: '#A855F7', spot: '#D8B4FE' },
@@ -92,7 +132,7 @@ const StageSceneContent: React.FC<Stage3DProps> = ({
     launch: { floor: '#0F172A', wall: '#1E293B', neon: '#22D3EE', spot: '#A5F3FC' },
   }[scene.art] || { floor: '#1E1646', wall: '#170F3A', neon: '#FF4FD8', spot: '#FBCFE8' };
 
-  const rainbowColors = [
+  const rainbowColors = isGhibli ? HOLO_GHIBLI : [
     '#FF4FD8',
     '#EC4899',
     '#A855F7',
@@ -108,14 +148,14 @@ const StageSceneContent: React.FC<Stage3DProps> = ({
 
   return (
     <group position={[0, -0.75, 0]}>
-      <ambientLight intensity={0.75} color="#F8FAFC" />
-      <directionalLight position={[3, 6, 4]} intensity={1.35} color={theme.spot} castShadow />
+      <ambientLight intensity={isGhibli ? 1.5 : 0.75} color={isGhibli ? '#FFF6E6' : '#F8FAFC'} />
+      <directionalLight position={[3, 6, 4]} intensity={isGhibli ? 1.8 : 1.35} color={theme.spot} castShadow />
       <spotLight
         position={[-1.2, 4.2, 2.2]}
         angle={0.5}
         penumbra={0.7}
         intensity={npcSpeaking ? 3.2 : 1.5}
-        color={theme.neon}
+        color={isGhibli ? theme.spot : theme.neon}
         castShadow
       />
       <spotLight
@@ -123,14 +163,14 @@ const StageSceneContent: React.FC<Stage3DProps> = ({
         angle={0.5}
         penumbra={0.7}
         intensity={micPhase === 'rec' ? 3.4 : 1.5}
-        color={micPhase === 'rec' ? '#22D3EE' : '#FF4FD8'}
+        color={isGhibli ? (micPhase === 'rec' ? '#FFF1C9' : '#FFE2A8') : micPhase === 'rec' ? '#22D3EE' : '#FF4FD8'}
         castShadow
       />
 
-      {/* Stage Deck */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
+      {/* Stage Deck (Ghibli: nằm ngang để phông gradient hiện phía sau; neon giữ như cũ) */}
+      <mesh rotation={isGhibli ? undefined : [-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
         <cylinderGeometry args={[3.9, 4.1, 0.22, 48]} />
-        <meshStandardMaterial color={theme.floor} roughness={0.35} metalness={0.2} />
+        <meshStandardMaterial color={theme.floor} roughness={0.35} metalness={isGhibli ? 0 : 0.2} />
       </mesh>
 
       {/* Neon Stage Rim Ring */}
@@ -142,17 +182,21 @@ const StageSceneContent: React.FC<Stage3DProps> = ({
       {/* Stage Backdrop & Theme Set Pieces */}
       <group position={[0, 1.65, -1.9]}>
         <mesh receiveShadow>
-          <boxGeometry args={[6.8, 3.4, 0.2]} />
-          <meshStandardMaterial color={theme.wall} roughness={0.65} />
+          <boxGeometry args={[8.4, 4.6, 0.2]} />
+          {isGhibli && backdropTex ? (
+            <meshStandardMaterial color="#FFFFFF" map={backdropTex} roughness={0.9} />
+          ) : (
+            <meshStandardMaterial color={theme.wall} roughness={0.65} />
+          )}
         </mesh>
 
-        {/* Neon Arch / Set Frame */}
+        {/* Neon Arch / Set Frame (Ghibli: vòng pastel dịu) */}
         <mesh position={[0, -0.2, 0.14]}>
           <torusGeometry args={[1.65, 0.06, 12, 48, Math.PI]} />
           <meshStandardMaterial
             color={theme.neon}
             emissive={theme.neon}
-            emissiveIntensity={1.4}
+            emissiveIntensity={isGhibli ? 0.5 : 1.4}
           />
         </mesh>
 
@@ -173,7 +217,7 @@ const StageSceneContent: React.FC<Stage3DProps> = ({
         )}
         {scene.art === 'talkshow' && (
           <Html position={[0, 1.05, 0.18]} center zIndexRange={[20, 0]}>
-            <div className="rounded-lg border border-red-400 bg-red-950/90 px-3 py-0.5 text-xs font-black tracking-widest text-red-200 shadow-[0_0_16px_#EF4444]">
+            <div className="whitespace-nowrap rounded-lg border-2 border-ghibli-clay bg-ghibli-cream px-3 py-0.5 text-xs font-black tracking-widest text-[#9C3F22] shadow-[0_2px_0_#6B4E3D]">
               🔴 ON AIR · LIVE TV
             </div>
           </Html>
@@ -189,7 +233,7 @@ const StageSceneContent: React.FC<Stage3DProps> = ({
               <meshStandardMaterial
                 color={col}
                 emissive={col}
-                emissiveIntensity={npcSpeaking ? 1.5 : 0.45}
+                emissiveIntensity={isGhibli ? (npcSpeaking ? 0.9 : 0.35) : npcSpeaking ? 1.5 : 0.45}
               />
             </mesh>
           ))}
@@ -268,7 +312,11 @@ const StageSceneContent: React.FC<Stage3DProps> = ({
 
 export const Stage3D: React.FC<Stage3DProps> = (props) => {
   return (
-    <div className="relative h-full w-full overflow-hidden rounded-3xl border border-white/15 bg-[#0D0620] shadow-2xl">
+    <div
+      className={`relative h-full w-full overflow-hidden rounded-3xl shadow-2xl ${
+        isGhibli ? 'border-2 border-ghibli-clay bg-[#F5E6CC]' : 'border border-white/15 bg-[#0D0620]'
+      }`}
+    >
       <Canvas
         shadows="soft"
         dpr={[1, 2]}
@@ -279,9 +327,9 @@ export const Stage3D: React.FC<Stage3DProps> = (props) => {
         {/* Neon arch, rainbow hologram bars and the spotlight cones glow; matte clay stays unaffected */}
         <EffectComposer multisampling={4}>
           <Bloom
-            luminanceThreshold={0.85}
+            luminanceThreshold={isGhibli ? 1 : 0.85}
             luminanceSmoothing={0.2}
-            intensity={props.npcSpeaking ? 0.9 : 0.6}
+            intensity={isGhibli ? (props.npcSpeaking ? 0.5 : 0.3) : props.npcSpeaking ? 0.9 : 0.6}
             mipmapBlur
           />
           <ToneMapping mode={ToneMappingMode.NEUTRAL} />

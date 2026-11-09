@@ -1,13 +1,12 @@
 /**
- * Phong cách đồ hoạ: 'neon' (mặc định hiện tại) hoặc 'ghibli' (anime mềm mại kiểu tranh màu nước).
+ * Phong cách đồ hoạ: 'ghibli' (mặc định, anime mềm mại kiểu tranh màu nước) hoặc 'neon' (bản cũ để so sánh).
  *
- * Bật thử: thêm ?style=ghibli vào link (được nhớ trong localStorage). Tắt: ?style=neon.
- * Khi đã duyệt, chỉ cần đổi DEFAULT_STYLE thành 'ghibli'.
+ * So sánh: thêm ?style=neon vào link (được nhớ trong localStorage). Quay lại: ?style=ghibli.
  */
 import * as THREE from 'three';
 
 export type ArtStyle = 'neon' | 'ghibli';
-const DEFAULT_STYLE: ArtStyle = 'neon';
+const DEFAULT_STYLE: ArtStyle = 'ghibli';
 const KEY = 'mclife.style';
 
 export const ART_STYLE: ArtStyle = (() => {
@@ -42,9 +41,10 @@ export function installGhibliShading() {
   installed = true;
   const chunk = THREE.ShaderChunk.lights_physical_pars_fragment;
   THREE.ShaderChunk.lights_physical_pars_fragment = chunk
-    // Ánh sáng mặt trời: 2 mảng (sáng / tối) với vùng chuyển mềm, bọc nhẹ ra mặt sau
+    // Ánh sáng mặt trời: 2 mảng (sáng / tối) với vùng chuyển mềm, bọc nhẹ ra mặt sau.
+    // Khớp theo khoảng trắng bất kỳ: bản build three.js không có dòng trống giữa hai lệnh.
     .replace(
-      'float dotNL = saturate( dot( geometryNormal, directLight.direction ) );\n\n\tvec3 irradiance = dotNL * directLight.color;',
+      /float dotNL = saturate\( dot\( geometryNormal, directLight\.direction \) \);\s*vec3 irradiance = dotNL \* directLight\.color;/,
       'float dotNLraw = dot( geometryNormal, directLight.direction );\n\tfloat dotNL = mix( 0.16, 1.0, smoothstep( -0.08, 0.32, dotNLraw ) );\n\tvec3 irradiance = dotNL * directLight.color;'
     )
     // Giảm mạnh phản xạ bóng loáng (tranh vẽ tay không có highlight kim loại)
@@ -53,7 +53,8 @@ export function installGhibliShading() {
       'reflectedLight.directSpecular += irradiance * BRDF_GGX( directLight.direction, geometryViewDir, geometryNormal, material );',
       'reflectedLight.directSpecular += 0.18 * irradiance * BRDF_GGX( directLight.direction, geometryViewDir, geometryNormal, material );'
     );
-  if (THREE.ShaderChunk.lights_physical_pars_fragment === chunk || !THREE.ShaderChunk.lights_physical_pars_fragment.includes('dotNLraw')) {
+  const patched = THREE.ShaderChunk.lights_physical_pars_fragment;
+  if (!patched.includes('dotNLraw') || !patched.includes('0.18 * irradiance')) {
     console.warn('[artStyle] Không vá được shader Ghibli — kiểm tra phiên bản three.js');
   }
 }
@@ -81,19 +82,47 @@ export function softTint(hex: string, amount = 0.28): string {
   return out;
 }
 
+/** Bảng màu 3D ban ngày (STYLE_GHIBLI.md mục 3) */
 export const GHIBLI = {
-  skyTop: '#3F8FDB',
-  skyBottom: '#A9D6EE',
-  sun: '#FFE6BF',
-  hemiSky: '#A9D2F2',
-  hemiGround: '#6E8F4C',
-  grass: ['#6DB33F', '#64A93A', '#78BE48'],
-  park: ['#7CC24E', '#74BA47'],
-  walk: ['#D8C8AA', '#D1C0A1'],
-  plaza: ['#E4D2AE', '#DDCAA5'],
-  sand: ['#F2E0B2', '#EFDBA8', '#F4E4BA'],
-  road: '#7A736B',
-  water: '#3C9FCB',
+  skyTop: '#9FD8EE',
+  skyBottom: '#FFF1D6',
+  fog: '#F6EBD2',
+  sun: '#FFE7B0',
+  hemiSky: '#CFEFFF',
+  hemiGround: '#B8A07A',
+  grass: ['#A8D98A', '#9ED382', '#B2DE93'],
+  park: ['#B3DD92', '#A9D78B'],
+  walk: ['#F3E7CF', '#EEDFC3'],
+  plaza: ['#EBDAB8', '#E4D1AB'],
+  sand: ['#F5E4B8', '#F1DCA6', '#F7EBC8'],
+  road: '#8E8576',
+  water: '#8FD3E8',
   roofs: ['#C8643B', '#3D8A8A', '#56709A', '#B5523A', '#7A5C99'],
-  leaves: ['#4E9A3A', '#62AE43', '#3F8A33', '#74BC4C'],
+  leaves: ['#8CC770', '#9BD27F', '#7DB86A', '#A8D98A'],
+  /** Đèn đường, cửa sổ đêm: vàng ấm, không neon */
+  lamp: '#FFD58A',
+  /** Sàn gỗ và tường studio (phòng hub) */
+  wood: '#C89A6B',
+  wallCream: '#F5E6CC',
 };
+
+/** Trời theo buổi cho bản đồ thành phố và cửa sổ phòng hub (STYLE_GHIBLI.md mục 3) */
+export const GHIBLI_SKY: Record<string, { top: string; bottom: string; fog: string }> = {
+  morning: { top: GHIBLI.skyTop, bottom: GHIBLI.skyBottom, fog: GHIBLI.fog },
+  afternoon: { top: GHIBLI.skyTop, bottom: GHIBLI.skyBottom, fog: GHIBLI.fog },
+  evening: { top: '#8E9BD6', bottom: '#F7C6A0', fog: '#E9BFA6' },
+  night: { top: '#2E3F6B', bottom: '#5A5C8F', fog: '#3A4A74' },
+};
+
+/** Ánh sáng ban đêm: xanh tím dịu, đèn ấm */
+export const GHIBLI_NIGHT_LIGHT = {
+  hemiSky: '#3B4A7A',
+  hemiGround: '#2A2F4F',
+  water: '#3A5680',
+};
+
+/** Trời theo buổi trong chế độ Ghibli; trả về undefined ở chế độ neon */
+export function ghibliSky(periodId: string) {
+  if (!isGhibli) return undefined;
+  return GHIBLI_SKY[periodId] ?? GHIBLI_SKY.morning;
+}
