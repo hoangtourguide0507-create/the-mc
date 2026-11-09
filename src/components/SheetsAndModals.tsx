@@ -23,46 +23,46 @@ export const WelcomeOverlay: React.FC = () => {
       : '🌅 Bắt đầu Ngày mới (07:00)';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ghibli-ink/40 p-4">
-      <div className="relative w-full max-w-md overflow-hidden rounded-3xl border-2 border-ghibli-clay bg-gradient-to-b from-ghibli-sky to-[#FFF1D6] p-6 text-center shadow-[0_3px_0_rgba(107,78,61,0.35),0_12px_30px_rgba(59,42,34,0.25)]">
-        <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-3xl border-2 border-ghibli-clay bg-ghibli-cream text-4xl shadow-inner">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ghibli-ink/35 p-4">
+      <div className="cozy-card relative w-full max-w-md overflow-hidden rounded-3xl bg-gradient-to-b from-[#E5F5FB] via-[#FFFBF3] to-[#FFF6E4] p-6 text-center">
+        <div className="mx-auto mb-3.5 flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-[#FFE082] to-[#FFC652] text-4xl shadow-md">
           🎙️
         </div>
-        <div className="inline-block rounded-full border-2 border-ghibli-clay bg-ghibli-cream px-3 py-1 text-xs font-black uppercase tracking-wider text-ghibli-clay">
+        <div className="inline-block rounded-full bg-[#FFF0D4] px-3.5 py-1 text-xs font-black uppercase tracking-wider text-[#9C5B00]">
           3D WebGL Edition · Ghibli Studio
         </div>
         <h1 className="mt-2 font-display text-3xl font-black tracking-tight text-ghibli-ink">
           MC Life · English Stage
         </h1>
         <p className="mt-2 text-xs font-semibold leading-relaxed text-ghibli-ink-soft">
-          Nhập vai <strong className="text-pink-700">MC Thiên Ân</strong> trong thành phố 3D sống động:
-          đi bộ nhận show đúng giờ, luyện nghe phản xạ <strong className="text-ghibli-clay">Blind Listening</strong> và
+          Nhập vai <strong className="text-[#C83E6B]">MC Thiên Ân</strong> trong thành phố 3D sống động:
+          đi bộ nhận show đúng giờ, luyện nghe phản xạ <strong className="text-[#1F7A73]">Blind Listening</strong> và
           làm chủ sân khấu song ngữ!
         </p>
 
- <div className="mt-5 grid grid-cols-3 gap-2 rounded-2xl border ghibli-panel p-3 text-xs">
+        <div className="mt-5 grid grid-cols-3 gap-2 rounded-2xl border border-[#E6D6C1] bg-white/85 p-3 text-xs">
           <div>
-            <div className="font-black text-[#3F7A32]">📖 Reading</div>
+            <div className="font-black text-[#2C731D]">📖 Reading</div>
             <div className="text-xs text-ghibli-ink-soft">Cue Card & Semi</div>
           </div>
           <div>
-            <div className="font-black text-[#23706A]">🎧 Listening</div>
+            <div className="font-black text-[#1F7A73]">🎧 Listening</div>
             <div className="text-xs text-ghibli-ink-soft">Blind & In-ear</div>
           </div>
           <div>
-            <div className="font-black text-pink-700">🗣️ Speaking</div>
+            <div className="font-black text-[#C83E6B]">🗣️ Speaking</div>
             <div className="text-xs text-ghibli-ink-soft">Chấm phát âm AI</div>
           </div>
         </div>
 
         <button
           onClick={startDayFromWelcome}
-          className="mt-6 min-h-[48px] w-full rounded-2xl border-2 border-ghibli-clay bg-gradient-to-r from-ghibli-sage to-[#9FD68A] py-4 font-display text-base font-black text-ghibli-ink shadow-[0_3px_0_#6B4E3D] transition hover:scale-[1.02]"
+          className="btn-tactile-sage mt-6 min-h-[50px] w-full rounded-2xl py-4 font-display text-base font-black text-white"
         >
           {btnLabel}
         </button>
 
-        <p className="mt-3 text-xs text-ghibli-ink-soft">
+        <p className="mt-3 text-xs font-semibold text-ghibli-ink-soft">
           Chạm nút trên để kích hoạt Âm thanh 3D & Giọng đọc TTS trên thiết bị.
         </p>
       </div>
@@ -175,7 +175,7 @@ export const PhrasebookSheet: React.FC = () => {
         </div>
 
         {/* Category Tabs */}
-        <div className="flex shrink-0 gap-2 overflow-x-auto border-b border-ghibli-track px-5 py-3">
+        <div className="flex shrink-0 gap-2 overflow-x-auto border-b border-[#EFE5D4] px-5 py-3">
           {tabs.map((tab) => (
             <button
               key={tab}
@@ -183,15 +183,15 @@ export const PhrasebookSheet: React.FC = () => {
                 SFX.play('tap');
                 setActiveTab(tab);
               }}
-              className={`inline-flex min-h-[40px] shrink-0 items-center whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-extrabold leading-tight transition ${
+              className={`inline-flex min-h-[38px] shrink-0 items-center whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-extrabold leading-tight transition ${
                 activeTab === tab
-                  ? 'bg-gradient-to-r from-[#7FBF6A] to-[#9FD68A] text-ghibli-ink shadow'
-                  : 'border-2 border-ghibli-clay bg-ghibli-cream text-ghibli-ink-soft hover:bg-[#FBEBD0]'
+                  ? 'btn-tactile-sage text-white'
+                  : 'btn-tactile text-ghibli-ink-soft'
               }`}
             >
               {tab}
               {tab === 'Cần luyện' && state.weak.length > 0 && (
-                <span className="ml-1.5 rounded-full bg-rose-500 px-1.5 py-0.5 text-xs text-white">
+                <span className="ml-1.5 rounded-full bg-[#D94E2F] px-1.5 py-0.5 text-xs text-white">
                   {state.weak.length}
                 </span>
               )}
@@ -559,58 +559,58 @@ export const ResultModal: React.FC = () => {
         {/* Main Rewards Grid */}
         <div className="mt-4 grid grid-cols-3 gap-2.5">
           {scene.type === 'show' ? (
-            <div className="rounded-2xl border-2 border-ghibli-clay bg-[#FDF0CF] p-3">
-              <div className="text-xs font-bold text-[#8A5A00]">Cát-xê</div>
-              <div className="font-display text-xl font-black text-[#8A5A00]">
+            <div className="rounded-2xl bg-[#FFF0D4] p-3">
+              <div className="text-xs font-bold text-[#9C5B00]">Cát-xê</div>
+              <div className="font-display text-xl font-black text-[#9C5B00]">
                 +${summary.cashEarned}
               </div>
             </div>
           ) : (
-            <div className="rounded-2xl border-2 border-ghibli-clay bg-[#E4F2DC] p-3">
-              <div className="text-xs font-bold text-[#3F7A32]">Hồi sức</div>
-              <div className="font-display text-xl font-black text-[#3F7A32]">
+            <div className="rounded-2xl bg-[#E5F6DF] p-3">
+              <div className="text-xs font-bold text-[#2C731D]">Hồi sức</div>
+              <div className="font-display text-xl font-black text-[#2C731D]">
                 +{summary.energyEarned} ⚡
               </div>
             </div>
           )}
 
-          <div className="rounded-2xl border-2 border-ghibli-clay bg-[#EFE4F8] p-3">
-            <div className="text-xs font-bold text-purple-800">Charisma</div>
-            <div className="font-display text-xl font-black text-purple-800">
+          <div className="rounded-2xl bg-[#F3E8FB] p-3">
+            <div className="text-xs font-bold text-[#6535C4]">Charisma</div>
+            <div className="font-display text-xl font-black text-[#6535C4]">
               +{summary.charismaEarned}
             </div>
           </div>
 
-          <div className="rounded-2xl border-2 border-ghibli-clay bg-ghibli-sky/50 p-3">
-            <div className="text-xs font-bold text-[#23706A]">Fluency XP</div>
-            <div className="font-display text-xl font-black text-[#23706A]">
+          <div className="rounded-2xl bg-[#E6F4F1] p-3">
+            <div className="text-xs font-bold text-[#1F7A73]">Fluency XP</div>
+            <div className="font-display text-xl font-black text-[#1F7A73]">
               +{summary.xpEarned}
             </div>
           </div>
         </div>
 
         {/* Details Lines */}
- <div className="mt-4 space-y-1.5 rounded-2xl ghibli-panel p-3 text-sm font-semibold text-ghibli-ink">
+        <div className="mt-4 space-y-1.5 rounded-2xl bg-[#FAF4E8] p-3 text-xs font-bold text-ghibli-ink">
           <div>
             🎧 Điểm Nghe hiểu (Listening XP):{' '}
-            <strong className="text-cyan-700">+{summary.listeningXpEarned} XP</strong>
+            <strong className="text-[#1F7A73]">+{summary.listeningXpEarned} XP</strong>
           </div>
           <div>
             🕒 Thời gian: {fmtTime(summary.beginAt)} → {fmtTime(summary.endAt)}
           </div>
           {summary.minutesLate > 0 && (
-            <div className="text-rose-700">
+            <div className="text-[#B2351A]">
               ⚠️ Đến trễ {summary.minutesLate} phút (−{summary.latePenaltyPct}% cát-xê)
             </div>
           )}
           {activeUpgrades.length > 0 && (
-            <div className="text-[#8A5A00]">
+            <div className="text-[#9C5B00]">
               ✨ Thưởng trang bị:{' '}
               {activeUpgrades.map((u) => `${u.icon} ${u.name}`).join(', ')}
             </div>
           )}
           {state.weak.length > 0 && (
-            <div className="text-pink-700">
+            <div className="text-[#C83E6B]">
               📖 Có {state.weak.length} từ đang chờ ôn luyện trong Sổ tay
             </div>
           )}
@@ -618,7 +618,7 @@ export const ResultModal: React.FC = () => {
 
         <button
           onClick={closeResultSummary}
-          className="mt-5 min-h-[48px] w-full rounded-2xl border-2 border-ghibli-clay bg-gradient-to-r from-ghibli-sage to-[#9FD68A] py-3.5 font-display text-sm font-black text-ghibli-ink shadow-[0_3px_0_#6B4E3D] transition hover:scale-[1.02]"
+          className="btn-tactile-sage mt-5 min-h-[48px] w-full rounded-2xl py-3.5 font-display text-sm font-black text-white"
         >
           Về {summary.returnTo === 'world' ? 'Bản đồ Thành phố 🗺️' : 'Phòng MC 🏠'}
         </button>
@@ -1008,16 +1008,16 @@ export const GlobalOverlays: React.FC = () => {
         {toasts.map((t) => (
           <div
             key={t.id}
-            className={`w-full rounded-2xl border-2 px-4 py-2.5 text-center text-sm font-extrabold shadow-lg ${
+            className={`w-full rounded-full border px-4 py-2.5 text-center text-xs font-extrabold shadow-lg ${
               t.tone === 'success'
-                ? 'border-ghibli-clay bg-[#E4F2DC] text-[#3F7A32]'
+                ? 'border-[#3F8D2B] bg-[#E8F8E2] text-[#286618]'
                 : t.tone === 'warn'
-                ? 'border-ghibli-clay bg-[#FDF0CF] text-[#8A5A00]'
+                ? 'border-[#C97D10] bg-[#FFF5DC] text-[#8A5200]'
                 : t.tone === 'error'
-                ? 'border-ghibli-clay bg-[#FCE4DA] text-[#B2421E]'
+                ? 'border-[#AE361B] bg-[#FDECE7] text-[#B2351A]'
                 : t.tone === 'pink'
-                ? 'border-ghibli-clay bg-[#FBE3EC] text-pink-800'
- : 'ghibli-panel text-[#23706A]'
+                ? 'border-[#C83E6B] bg-[#FCEAF0] text-[#9E224C]'
+                : 'cozy-pill text-[#1F7A73]'
             }`}
           >
             {t.msg}

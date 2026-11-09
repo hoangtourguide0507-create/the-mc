@@ -18,7 +18,7 @@ const MODES: { name: string; desc: string }[] = [
   { name: 'Quiz', desc: 'Nghe xong chọn đáp án đúng, càng nhanh càng được nhiều sao.' },
 ];
 
-/** Hướng dẫn chơi: mở từ nút ❓ ở Hub. */
+/** Hướng dẫn chơi: mở từ nút ❓ ở Hub (Cozy Modern Tactile). */
 export const HelpSheet: React.FC = () => {
   const helpOpen = useGameStore((s) => s.helpOpen);
   const setHelpOpen = useGameStore((s) => s.setHelpOpen);
@@ -27,75 +27,96 @@ export const HelpSheet: React.FC = () => {
   const gigs = ['backstage', 'wedding', 'beach', 'gala', 'interview'];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ghibli-ink/40 sm:items-center sm:p-4">
- <div className="flex max-h-[88vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl border ghibli-panel shadow-2xl sm:rounded-3xl">
-        <div className="flex items-center justify-between border-b border-ghibli-track px-5 py-4">
-          <h2 className="font-display text-xl font-black text-ghibli-ink">❓ Hướng dẫn chơi</h2>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ghibli-ink/35 sm:items-center sm:p-4">
+      <div className="cozy-card flex max-h-[86vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl sm:rounded-3xl">
+        <div className="flex items-center justify-between border-b border-[#EFE5D4] px-5 py-4">
+          <div className="flex items-center gap-3">
+            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#FFF0D4] text-2xl">
+              ❓
+            </span>
+            <div>
+              <h2 className="font-display text-xl font-black text-ghibli-ink">Cẩm Nang MC Thiên Ân</h2>
+              <p className="text-xs font-semibold text-ghibli-ink-soft">
+                Bí quyết làm chủ sân khấu song ngữ & quản lý lịch trình
+              </p>
+            </div>
+          </div>
           <button
             onClick={() => setHelpOpen(false)}
- className="rounded-full ghibli-panel px-3 py-1.5 text-xs font-black text-ghibli-ink hover:ghibli-panel"
+            className="btn-tactile rounded-full px-3.5 py-1.5 text-xs font-black text-ghibli-ink"
           >
             Đóng ✕
           </button>
         </div>
 
-        <div className="flex-1 space-y-5 overflow-y-auto px-5 py-4 text-sm text-ghibli-ink">
-          <section>
-            <h3 className="mb-1 font-display font-black text-pink-700">Mục tiêu</h3>
-            <p>
+        <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4 text-sm text-ghibli-ink">
+          <section className="rounded-2xl bg-[#FAF4E8] p-3.5">
+            <h3 className="mb-1 font-display text-sm font-black uppercase tracking-wider text-[#C83E6B]">
+              🌟 Mục tiêu Sự nghiệp
+            </h3>
+            <p className="text-xs font-semibold leading-relaxed text-ghibli-ink">
               Bạn vào vai MC Thiên Ân. Mỗi ngày, hãy nhận và dẫn show, luyện nói tiếng Anh, và
               tăng Charisma để lên cấp. Không có giới hạn thời gian: bạn tự quyết định làm gì trước.
             </p>
           </section>
 
-          <section>
-            <h3 className="mb-1 font-display font-black text-pink-700">Các chỉ số</h3>
-            <ul className="space-y-1.5">
+          <section className="rounded-2xl bg-[#FAF4E8] p-3.5">
+            <h3 className="mb-2 font-display text-sm font-black uppercase tracking-wider text-[#1F7A73]">
+              📊 Các chỉ số chính
+            </h3>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {STATS.map((s) => (
-                <li key={s.name}>
-                  <span className="font-black text-ghibli-ink">
-                    {s.icon} {s.name}:
-                  </span>{' '}
-                  {s.desc}
-                </li>
+                <div key={s.name} className="rounded-xl bg-white p-2.5 text-xs">
+                  <div className="font-black text-ghibli-ink">
+                    {s.icon} {s.name}
+                  </div>
+                  <p className="mt-0.5 text-ghibli-ink-soft">{s.desc}</p>
+                </div>
               ))}
-            </ul>
+            </div>
           </section>
 
-          <section>
-            <h3 className="mb-1 font-display font-black text-pink-700">Thời gian</h3>
-            <p>
+          <section className="rounded-2xl bg-[#FAF4E8] p-3.5">
+            <h3 className="mb-1 font-display text-sm font-black uppercase tracking-wider text-[#9C5B00]">
+              🕒 Thời gian & Lịch trình
+            </h3>
+            <p className="text-xs font-semibold leading-relaxed text-ghibli-ink">
               Đồng hồ chỉ chạy khi bạn đi bộ, làm một hoạt động, hoặc bấm ⏩ Chờ đến. Đến trễ show
               sẽ bị trừ tiền, nên hãy tới sớm. Đến 24:00 bạn sẽ ngất và tự động đi ngủ.
             </p>
           </section>
 
-          <section>
-            <h3 className="mb-1 font-display font-black text-pink-700">Năm kiểu lượt diễn</h3>
-            <ul className="space-y-1.5">
+          <section className="rounded-2xl bg-[#FAF4E8] p-3.5">
+            <h3 className="mb-2 font-display text-sm font-black uppercase tracking-wider text-[#6535C4]">
+              🎙️ Năm kiểu lượt diễn trên sân khấu
+            </h3>
+            <ul className="space-y-1.5 text-xs">
               {MODES.map((m) => (
                 <li key={m.name}>
-                  <span className="font-black text-ghibli-ink">{m.name}:</span> {m.desc}
+                  <span className="font-black text-ghibli-ink">• {m.name}:</span>{' '}
+                  <span className="text-ghibli-ink-soft">{m.desc}</span>
                 </li>
               ))}
             </ul>
-            <p className="mt-2 text-xs text-ghibli-ink-soft">
-              Trong lượt diễn: 🔊 nghe mẫu, 🐢 nghe chậm, 👁️ hiện chữ (ít XP hơn), 🎙️ bấm để nói.
-              Cần đạt ít nhất 1★ mới bấm được Tiếp tục.
-            </p>
           </section>
 
-          <section>
-            <h3 className="mb-1 font-display font-black text-pink-700">Mở khóa show</h3>
-            <ul className="space-y-1.5">
+          <section className="rounded-2xl bg-[#FAF4E8] p-3.5">
+            <h3 className="mb-2 font-display text-sm font-black uppercase tracking-wider text-[#2C731D]">
+              🔓 Điều kiện mở khóa Show
+            </h3>
+            <ul className="space-y-1 text-xs">
               {gigs.map((id) => {
                 const sc = SCENES[id];
                 if (!sc) return null;
                 return (
                   <li key={id}>
-                    <span className="font-black text-ghibli-ink">{sc.title}:</span> cần Lv.{sc.reqLv} (
-                    {levelTitle(sc.reqLv)})
-                    {sc.minRep ? ` và ⭐${sc.minRep.toFixed(1)} danh tiếng` : ''}.
+                    <span className="font-black text-ghibli-ink">
+                      {sc.icon} {sc.title}:
+                    </span>{' '}
+                    <span className="text-ghibli-ink-soft">
+                      cần Lv.{sc.reqLv} ({levelTitle(sc.reqLv)})
+                      {sc.minRep ? ` và ⭐${sc.minRep.toFixed(1)} danh tiếng` : ''}.
+                    </span>
                   </li>
                 );
               })}

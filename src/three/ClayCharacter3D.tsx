@@ -682,7 +682,7 @@ function irisFromHair(hair: string) {
 
 const NameTag: React.FC<{ y: number; text: string }> = ({ y, text }) => (
   <Html position={[0, y, 0]} center zIndexRange={[20, 0]}>
-    <div className="pointer-events-none whitespace-nowrap rounded-full border-2 border-ghibli-clay bg-ghibli-cream px-2.5 py-0.5 text-xs font-bold text-ghibli-ink shadow-[0_2px_0_#6B4E3D]">
+    <div className="pointer-events-none whitespace-nowrap rounded-full border border-[#D4B896] bg-[#FFFDF9]/95 px-2.5 py-0.5 text-xs font-extrabold text-ghibli-ink shadow-[0_2px_0_rgba(138,104,74,0.22),0_4px_10px_rgba(59,42,34,0.1)]">
       {text}
     </div>
   </Html>

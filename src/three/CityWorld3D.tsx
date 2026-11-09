@@ -38,16 +38,15 @@ const LABEL_Y: Record<string, number> = {
   beach: 2.6,
 };
 
-/* Lớp giao diện Ghibli cho overlay 2D (STYLE_GHIBLI mục 4): khung kem, viền clay, không blur,
-   nút tối thiểu 48px. Chỉ đổi giao diện, không đổi handler. */
+/* Lớp giao diện Cozy Modern Tactile cho overlay 2D trên bản đồ thành phố */
 const BTN_PRIMARY =
-  'min-h-[48px] rounded-2xl border-2 border-ghibli-clay bg-gradient-to-b from-[#B9E29C] to-[#9FD68A] px-3 text-sm font-black text-ghibli-ink shadow-[0_3px_0_#6B4E3D] transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60';
+  'btn-tactile-sage min-h-[44px] rounded-2xl px-3.5 text-xs font-black text-white disabled:cursor-not-allowed disabled:opacity-55';
 const BTN_SUN =
-  'min-h-[48px] rounded-2xl border-2 border-ghibli-clay bg-gradient-to-b from-[#FBD27A] to-[#F7C35C] px-3 text-sm font-black text-ghibli-ink shadow-[0_3px_0_#6B4E3D] transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60';
+  'btn-tactile-amber min-h-[44px] rounded-2xl px-3.5 text-xs font-black text-ghibli-ink disabled:cursor-not-allowed disabled:opacity-55';
 const BTN_CHIP =
-  'min-h-[48px] rounded-2xl border-2 border-ghibli-clay bg-ghibli-cream px-3 text-sm font-extrabold text-ghibli-ink shadow-[0_3px_0_#6B4E3D] transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60';
+  'btn-tactile min-h-[40px] rounded-full px-3 text-xs font-extrabold text-ghibli-ink disabled:cursor-not-allowed disabled:opacity-55';
 const TEXT_SOFT = 'text-ghibli-ink-soft';
-const ACCENT_TEXT = 'text-[#9C3F22]';
+const ACCENT_TEXT = 'text-[#1F7A73]';
 
 interface McState extends PasserAgentLike {
   stepsWalked: number;
@@ -341,7 +340,7 @@ export const CityWorld3D: React.FC = () => {
     WORLD_LOCS[locId].scenes.length > 0 &&
     WORLD_LOCS[locId].scenes.every((sId) => state.charisma.lv < SCENES[sId].reqLv || !repOk(sId, state));
 
-  const topOffset = 'calc(max(0.5rem, env(safe-area-inset-top)) + 74px)';
+  const topOffset = 'calc(max(0.5rem, env(safe-area-inset-top)) + 52px)';
 
   return (
     <div
@@ -444,14 +443,16 @@ export const CityWorld3D: React.FC = () => {
                 className="flex min-h-[48px] min-w-[48px] items-center justify-center px-1 py-1 transition active:scale-95"
               >
                 <span
-                  className={`flex items-center gap-1 whitespace-nowrap rounded-full border-2 px-2.5 py-1 text-xs font-extrabold shadow-[0_2px_0_#6B4E3D] ${
-                    hot ? 'border-ghibli-clay bg-[#FBD27A] text-ghibli-ink' : 'border-ghibli-clay bg-ghibli-cream text-ghibli-ink'
+                  className={`flex items-center gap-1 whitespace-nowrap rounded-full border px-2.5 py-1 text-xs font-extrabold shadow-[0_3px_0_rgba(138,104,74,0.22),0_6px_12px_rgba(59,42,34,0.12)] ${
+                    hot
+                      ? 'border-[#C97D10] bg-gradient-to-b from-[#FFE082] to-[#FFC652] text-ghibli-ink'
+                      : 'border-[#D4B896] bg-[#FFFDF9]/95 text-ghibli-ink'
                   }`}
                 >
                   <span>{loc.icon}</span>
                   <span>{loc.name}</span>
-                  {locked && <span>🔒</span>}
-                  {hot && <span className="ml-0.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-ghibli-coral text-xs font-black text-white">!</span>}
+                  {locked && <span className="opacity-70">🔒</span>}
+                  {hot && <span className="ml-0.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-[#D94E2F] text-xs font-black text-white">!</span>}
                 </span>
               </button>
             </Html>
@@ -483,21 +484,19 @@ export const CityWorld3D: React.FC = () => {
       </Canvas>
 
       {/* Thanh trên: đồng hồ, khu phố, nút nhanh */}
-      <div className="pointer-events-none absolute inset-x-0 z-20 flex items-start justify-between gap-2 px-3 sm:px-6" style={{ top: topOffset }}>
-        <div className="ghibli-panel pointer-events-auto flex min-w-0 items-center gap-2.5 rounded-2xl px-3 py-1.5">
-          <span className="text-lg">{periodMeta.icon}</span>
+      <div className="pointer-events-none absolute inset-x-0 z-20 mx-auto flex max-w-6xl items-start justify-between gap-2 px-2.5 sm:px-5" style={{ top: topOffset }}>
+        <div className="cozy-pill pointer-events-auto flex min-w-0 items-center gap-2 rounded-full px-3.5 py-1.5">
+          <span className="text-base">{periodMeta.icon}</span>
           <div className="min-w-0">
-            <div className="font-display text-sm font-black leading-snug text-ghibli-ink">
-              {fmtTime(state.clock)} · {periodMeta.label}
-              <span className={TEXT_SOFT}> · Ngày {state.day}</span>
-            </div>
-            <div className={`truncate text-xs font-semibold ${ACCENT_TEXT}`}>
-              {district.icon} {district.name} · {locationBannerText}
+            <div className="flex items-center gap-1.5 font-display text-xs font-black leading-snug text-ghibli-ink">
+              <span>{fmtTime(state.clock)} · {periodMeta.label}</span>
+              <span className="hidden text-ghibli-ink-soft sm:inline">· Ngày {state.day}</span>
+              <span className="text-[#1F7A73]">· {district.icon} {district.name}</span>
             </div>
           </div>
         </div>
         <div className="pointer-events-auto flex shrink-0 flex-col items-end gap-1.5 sm:flex-row sm:items-center">
-          <div className="flex gap-1">
+          <div className="flex gap-1.5">
             <button onClick={() => handleSelectBuilding('home')} className={BTN_CHIP}>
               🏠<span className="ml-1 hidden sm:inline">Về Nhà</span>
             </button>
@@ -520,17 +519,17 @@ export const CityWorld3D: React.FC = () => {
         <button
           onClick={() => setFollow(true)}
           aria-label="Định tâm về MC"
-          className="ghibli-panel pointer-events-auto absolute right-4 z-30 flex h-12 w-12 items-center justify-center rounded-full text-2xl transition active:scale-95"
-          style={{ bottom: 'calc(max(12px, env(safe-area-inset-bottom)) + 76px)' }}
+          className="btn-tactile pointer-events-auto absolute right-4 z-30 flex h-12 w-12 items-center justify-center rounded-full text-xl"
+          style={{ bottom: 'calc(max(12px, env(safe-area-inset-bottom)) + 68px)' }}
         >
           🎯
         </button>
       )}
 
-      {/* Đáy màn hình: thẻ cửa địa điểm + show kế tiếp, xếp chồng không đè nhau */}
+      {/* Đáy màn hình: thẻ cửa địa điểm + show kế tiếp */}
       <div
-        className="pointer-events-none absolute inset-x-0 bottom-0 z-30 flex flex-col items-center gap-2 px-3 sm:items-end sm:px-6"
-        style={{ paddingBottom: 'calc(max(12px, env(safe-area-inset-bottom)) + 64px)' }}
+        className="pointer-events-none absolute inset-x-0 bottom-0 z-30 mx-auto flex max-w-6xl flex-col items-center gap-2 px-2.5 sm:items-end sm:px-5"
+        style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}
       >
         {activeDoorLocId && WORLD_LOCS[activeDoorLocId] && (
           <DoorCard
@@ -546,19 +545,25 @@ export const CityWorld3D: React.FC = () => {
         {nextShowInfo ? (
           <button
             onClick={() => handleSelectBuilding(nextShowInfo.locId)}
-            className="ghibli-panel pointer-events-auto flex min-h-[48px] w-full max-w-md items-center gap-3 rounded-2xl px-4 py-2 text-left text-sm font-extrabold text-ghibli-ink transition active:scale-[0.98]"
+            className="cozy-card pointer-events-auto flex min-h-[48px] w-full max-w-md items-center gap-3 rounded-3xl px-4 py-2.5 text-left text-xs font-extrabold text-ghibli-ink transition hover:bg-[#FFF6E6] active:scale-[0.98]"
           >
-            <span className="text-lg">{nextShowInfo.scene.icon}</span>
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#FFF3D6] text-xl">
+              {nextShowInfo.scene.icon}
+            </span>
             <div className="min-w-0 flex-1">
-              <div className={`text-xs uppercase tracking-wider ${ACCENT_TEXT}`}>Show kế tiếp · {fmtTime(nextShowInfo.startMin)}</div>
+              <div className={`text-xs font-black uppercase tracking-wider ${ACCENT_TEXT}`}>
+                Show kế tiếp · {fmtTime(nextShowInfo.startMin)}
+              </div>
               <div className="truncate font-display text-sm font-black text-ghibli-ink">
                 {nextShowInfo.scene.title} · {nextShowInfo.status.label}
               </div>
             </div>
-            <span className="rounded-full border-2 border-ghibli-clay bg-[#FBD27A] px-2.5 py-1 text-xs font-black text-ghibli-ink">Đi tới ➔</span>
+            <span className="btn-tactile-amber rounded-full px-3 py-1.5 text-xs font-black">
+              Đi tới ➔
+            </span>
           </button>
         ) : (
-          <div className={`ghibli-panel pointer-events-auto w-full max-w-md rounded-2xl px-4 py-2 text-center text-sm font-bold ${TEXT_SOFT}`}>
+          <div className={`cozy-pill pointer-events-auto w-full max-w-md rounded-full px-4 py-2 text-center text-xs font-bold ${TEXT_SOFT}`}>
             🌙 Hết show phù hợp hôm nay — luyện cà phê/siêu thị, trò chuyện người đi đường hoặc về nhà nghỉ.
           </div>
         )}
@@ -582,19 +587,19 @@ const DoorCard: React.FC<{
 }> = ({ locId, state, onClose, onEnterHub, onSleep, onWait, onStart }) => {
   const loc = WORLD_LOCS[locId];
   return (
-    <div className="ghibli-panel pointer-events-auto w-full max-w-md rounded-3xl p-3.5">
-      <div className="mb-2.5 flex items-center justify-between">
+    <div className="cozy-card pointer-events-auto w-full max-w-md rounded-3xl p-4">
+      <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-ghibli-track text-2xl">{loc.icon}</span>
+          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#FAF4E8] text-2xl">{loc.icon}</span>
           <div>
             <h3 className="font-display text-base font-black text-ghibli-ink">{loc.name}</h3>
-            <p className={`text-xs ${TEXT_SOFT}`}>Đang đứng trước cửa</p>
+            <p className={`text-xs font-semibold ${TEXT_SOFT}`}>Đang đứng trước sảnh</p>
           </div>
         </div>
         <button
           onClick={onClose}
           aria-label="Đóng"
-          className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-ghibli-clay bg-ghibli-cream text-base font-bold text-ghibli-ink transition active:scale-95"
+          className="btn-tactile flex h-9 w-9 items-center justify-center rounded-full text-xs font-black"
         >
           ✕
         </button>
@@ -610,33 +615,33 @@ const DoorCard: React.FC<{
           </button>
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-2.5">
           {loc.scenes.map((sceneId) => {
             const sc = SCENES[sceneId];
             const st = sceneStatus(sceneId, state.clock, state.doneToday);
             const reason = blockReason(sceneId, state);
             const waitMin = getWaitTargetMinute(sceneId, state.clock);
             return (
-              <div key={sceneId} className="rounded-2xl border-2 border-ghibli-clay/40 bg-ghibli-track/50 p-2.5">
+              <div key={sceneId} className="ticket-pass rounded-2xl p-3">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5">
                       <span>{sc.icon}</span>
                       <span className="truncate font-display text-sm font-extrabold text-ghibli-ink">{sc.title}</span>
                     </div>
-                    <div className={`mt-0.5 text-xs font-semibold ${ACCENT_TEXT}`}>{st.label}</div>
+                    <div className={`mt-0.5 text-xs font-bold ${ACCENT_TEXT}`}>🕒 {st.label}</div>
                   </div>
-                  <span className="shrink-0 rounded-full border-2 border-ghibli-clay bg-ghibli-cream px-2 py-0.5 text-xs font-bold text-ghibli-ink">
+                  <span className="shrink-0 rounded-full bg-[#F3E8FB] px-2.5 py-0.5 text-xs font-black text-[#6535C4]">
                     Lv.{sc.reqLv}
                     {sc.minRep ? ` · ⭐${sc.minRep.toFixed(1)}` : ''}
                   </span>
                 </div>
-                <div className="mt-2 flex items-center justify-between gap-2 text-xs">
-                  <div className="flex flex-wrap items-center gap-2 font-bold text-ghibli-ink">
-                    {sc.reward.cash ? <span className="text-[#8A5A00]">+${sc.reward.cash}</span> : null}
-                    {sc.reward.energy ? <span className="text-[#3F7A2E]">+{sc.reward.energy} ⚡</span> : null}
-                    <span className="text-[#5B3F8C]">+{sc.reward.charisma} Cha</span>
-                    {sc.energy > 0 && <span className="text-[#A4472A]">−{sc.energy} ⚡</span>}
+                <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-dashed border-[#E6D6C1] pt-2 text-xs">
+                  <div className="flex flex-wrap items-center gap-2 font-extrabold text-ghibli-ink">
+                    {sc.reward.cash ? <span className="text-[#9C5B00]">+${sc.reward.cash}</span> : null}
+                    {sc.reward.energy ? <span className="text-[#2C731D]">+{sc.reward.energy} ⚡</span> : null}
+                    <span className="text-[#6535C4]">+{sc.reward.charisma} Cha</span>
+                    {sc.energy > 0 && <span className="text-[#B2351A]">−{sc.energy} ⚡</span>}
                   </div>
                   <div className="flex items-center gap-1.5">
                     {waitMin !== null && (st.state === 'early' || st.state === 'closed') && (
@@ -649,7 +654,7 @@ const DoorCard: React.FC<{
                     </button>
                   </div>
                 </div>
-                {reason && <p className="mt-1.5 text-xs font-semibold text-[#A4472A]">⚠️ {reason}</p>}
+                {reason && <p className="mt-1.5 text-xs font-bold text-[#B2351A]">⚠️ {reason}</p>}
               </div>
             );
           })}

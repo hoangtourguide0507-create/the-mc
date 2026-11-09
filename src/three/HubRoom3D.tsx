@@ -8,9 +8,9 @@ import { useGameStore } from '../core/store';
 import { ClayCharacter3D } from './ClayCharacter3D';
 import { GHIBLI, ghibliSky } from './artStyle';
 
-/* Chip nhãn 2D trong phòng: kem + viền clay, không blur; vùng chạm tối thiểu 48px (STYLE_GHIBLI mục 4) */
+/* Chip nhãn 2D nổi trong phòng 3D: Cozy Modern Tactile */
 const LABEL_CHIP =
-  'rounded-full border-2 border-ghibli-clay bg-ghibli-cream px-3 py-1 text-xs font-bold text-ghibli-ink shadow-[0_2px_0_#6B4E3D]';
+  'rounded-2xl border border-[#D4B896] bg-[#FFFDF9]/95 px-3 py-1.5 text-xs font-extrabold text-ghibli-ink shadow-[0_3px_0_rgba(138,104,74,0.22),0_6px_14px_rgba(59,42,34,0.12)]';
 const LABEL_HIT =
   'flex min-h-[48px] min-w-[48px] items-center justify-center px-1 transition hover:scale-105 active:scale-95';
 
@@ -510,7 +510,7 @@ const StudioRoomScene: React.FC = () => {
 
       {/* Bong bóng trạng thái năng lượng phía trên MC */}
       <Html position={[0, 2.18, 0.25]} center zIndexRange={[20, 0]}>
-        <div className="pointer-events-none whitespace-nowrap rounded-2xl border-2 border-ghibli-clay bg-ghibli-cream px-3 py-1 text-sm font-bold text-ghibli-ink shadow-[0_2px_0_#6B4E3D]">
+        <div className="pointer-events-none whitespace-nowrap rounded-full border border-[#D4B896] bg-[#FFFDF9] px-3.5 py-1 text-xs font-extrabold text-ghibli-ink shadow-[0_3px_0_rgba(138,104,74,0.2),0_6px_14px_rgba(59,42,34,0.1)]">
           {moodText}
         </div>
       </Html>
@@ -520,16 +520,17 @@ const StudioRoomScene: React.FC = () => {
   );
 };
 
-/** Lùi camera khi khung hẹp (iPhone dọc) để thấy đủ cả phòng, không cắt nhãn */
+/** Lùi camera và nâng tâm nhìn xuống nhẹ để phòng 3D nằm cân đối ở nửa trên màn hình tràn viền */
 const FitRoomCamera: React.FC = () => {
   const { camera, size, controls } = useThree();
   useEffect(() => {
     const aspect = size.width / Math.max(1, size.height);
-    const need = 4.6 / (2 * Math.tan(THREE.MathUtils.degToRad(19)) * Math.min(aspect, 1.5));
-    const z = Math.max(3.85, need);
-    camera.position.set(0, 1.35 * (z / 3.85), z);
-    camera.lookAt(0, 0, 0);
-    (controls as any)?.target?.set(0, 0, 0);
+    const need = 4.9 / (2 * Math.tan(THREE.MathUtils.degToRad(19)) * Math.min(aspect, 1.35));
+    const z = Math.max(4.1, need);
+    const lookY = aspect < 0.85 ? -0.32 : -0.15;
+    camera.position.set(0, 1.45 * (z / 4.1), z);
+    camera.lookAt(0, lookY, 0);
+    (controls as any)?.target?.set(0, lookY, 0);
     (controls as any)?.update?.();
   }, [camera, size.width, size.height, controls]);
   return null;
@@ -537,11 +538,11 @@ const FitRoomCamera: React.FC = () => {
 
 export const HubRoom3D: React.FC = () => {
   return (
-    <div className="relative h-full w-full overflow-hidden rounded-3xl border-2 border-ghibli-clay bg-gradient-to-b from-[#BFE3F2] to-[#F5E6CC] shadow-[0_4px_0_rgba(107,78,61,0.35),0_10px_24px_rgba(59,42,34,0.18)]">
+    <div className="relative h-full w-full overflow-hidden bg-gradient-to-b from-[#BCE4F2] via-[#E8F1DC] to-[#F3E2C3]">
       <Canvas
         shadows
         dpr={[1, 2]}
-        camera={{ position: [0, 1.35, 3.85], fov: 38 }}
+        camera={{ position: [0, 1.45, 4.1], fov: 38 }}
         gl={{ toneMapping: THREE.NeutralToneMapping }}
       >
         <StudioRoomScene />

@@ -882,7 +882,7 @@ const StageSceneContent: React.FC<Stage3DProps> = ({
 
 export const Stage3D: React.FC<Stage3DProps> = (props) => {
   return (
-    <div className="relative h-full w-full overflow-hidden rounded-3xl border-2 border-ghibli-clay bg-[#F5E6CC] shadow-[0_4px_0_rgba(107,78,61,0.35),0_10px_24px_rgba(59,42,34,0.18)]">
+    <div className="relative h-full w-full overflow-hidden rounded-3xl border border-[#DFC9AE] bg-[#F5E6CC] shadow-[0_4px_0_rgba(138,104,74,0.15),0_12px_28px_rgba(59,42,34,0.12)]">
       <Canvas
         shadows="soft"
         dpr={[1, 2]}

@@ -464,187 +464,210 @@ export const StageView: React.FC = () => {
       : 0;
   const progressPct = Math.round(((turnIdx + 1) / scene.turns.length) * 100);
 
+  const speakerDisplayName = currentNpc.isCouple
+    ? turn.speaker === 'liam'
+      ? 'Liam (Chú rể)'
+      : 'Emma (Cô dâu)'
+    : currentNpc.name;
+
   return (
-    <div className="mx-auto flex h-full max-w-6xl flex-col gap-3 overflow-y-auto px-3 pb-6 sm:px-6" style={{ paddingTop: HUD_PAD, paddingBottom: HUD_BOTTOM_PAD }}>
-      {/* Top Stage Header Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl ghibli-panel px-3.5 py-2">
-        <div className="flex items-center gap-2.5">
-          <button
-            onClick={handleLeaveStage}
-            className="min-h-[48px] rounded-xl border-2 border-ghibli-clay bg-ghibli-cream px-3 text-sm font-extrabold text-ghibli-ink transition hover:bg-[#FCE4DA] hover:text-[#B2421E]"
-          >
-            ✕ Rời
-          </button>
-          <div>
-            <div className="text-xs font-black uppercase tracking-wider text-pink-700">
-              ACTIVITY: {scene.title}
+    <div
+      className="mx-auto flex h-full max-w-6xl flex-col gap-2.5 overflow-y-auto px-2.5 pb-4 sm:px-5 md:grid md:grid-cols-12 md:gap-4 md:overflow-hidden"
+      style={{ paddingTop: HUD_PAD, paddingBottom: HUD_BOTTOM_PAD }}
+    >
+      {/* LEFT / TOP COLUMN: EXPANSIVE 3D STAGE VIEWPORT WITH FLOATING CORNER PILLS */}
+      <div className="relative h-52 w-full shrink-0 sm:h-72 md:col-span-6 md:h-full">
+        <Stage3D
+          scene={scene}
+          npcId={currentNpcId}
+          speaker={turn.speaker}
+          npcMood={npcMood}
+          npcViseme={npcViseme}
+          npcSpeaking={npcSpeaking}
+          micPhase={micPhase}
+          playerViseme={playerViseme}
+          channel={turn.channel}
+        />
+
+        {/* Top-Left Floating Exit & Show Title Pill */}
+        <div className="pointer-events-none absolute inset-x-3 top-3 z-20 flex items-center justify-between gap-2">
+          <div className="pointer-events-auto flex items-center gap-1.5">
+            <button
+              onClick={handleLeaveStage}
+              className="btn-tactile flex h-10 items-center gap-1 rounded-full px-3 text-xs font-black text-[#B2351A]"
+            >
+              <span>✕</span>
+              <span>Rời</span>
+            </button>
+            <div className="cozy-pill hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-extrabold text-ghibli-ink sm:flex">
+              <span>{scene.icon}</span>
+              <span className="max-w-[160px] truncate">{scene.title}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="h-2.5 w-28 overflow-hidden rounded-full bg-ghibli-track sm:w-44">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-ghibli-sun to-ghibli-sage transition-all duration-300"
-                  style={{ width: `${progressPct}%` }}
-                />
-              </div>
-              <span className="text-sm font-black text-ghibli-ink">
-                Lượt {turnIdx + 1}/{scene.turns.length}
-              </span>
+          </div>
+
+          {/* Top-Right Turn Progress & Stars Pill */}
+          <div className="cozy-pill pointer-events-auto flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-black">
+            <span className="text-ghibli-ink">
+              Lượt {turnIdx + 1}/{scene.turns.length}
+            </span>
+            <div className="h-2 w-16 overflow-hidden rounded-full bg-[#EFE6D5] sm:w-20">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-[#FFC652] to-[#58AD42] transition-all duration-300"
+                style={{ width: `${progressPct}%` }}
+              />
+            </div>
+            <div className="flex items-center gap-0.5">
+              {[1, 2, 3].map((s) => (
+                <span
+                  key={s}
+                  className={
+                    s <= currentAvgStars ? 'text-[#F0A32A]' : 'text-ghibli-ink/20'
+                  }
+                >
+                  ★
+                </span>
+              ))}
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-1 text-sm">
-          {[1, 2, 3].map((s) => (
-            <span
-              key={s}
-              className={s <= currentAvgStars ? 'text-ghibli-sun drop-shadow-[0_1px_0_#6B4E3D]' : 'text-ghibli-ink/20'}
-            >
-              ★
-            </span>
-          ))}
+        {/* Bottom-Left Floating Speaker Status Chip on Stage */}
+        <div className="pointer-events-none absolute bottom-3 left-3 z-20 flex items-center gap-2 rounded-full border border-[#D4B896] bg-[#FFFDF9]/95 px-3 py-1 text-xs font-extrabold text-ghibli-ink shadow-md">
+          <span>{turn.channel === 'inear' ? '🎧 Tai nghe:' : '💬 Đang thoại:'}</span>
+          <span className="font-black text-[#1F7A73]">{speakerDisplayName}</span>
+          {npcSpeaking && (
+            <span className="inline-flex h-2 w-2 animate-ping rounded-full bg-[#43B0A8]" />
+          )}
         </div>
       </div>
 
-      {/* Main Content Split: 3D Stage Viewport (Left on iPad) + Interactive Listening & Cue Cards (Right on iPad) */}
-      <div className="grid flex-1 grid-cols-1 gap-3.5 md:grid-cols-12 md:overflow-hidden">
-        {/* 3D STAGE VIEWPORT */}
-        <div className="relative h-36 w-full sm:h-72 md:col-span-5 md:h-full">
-          <Stage3D
-            scene={scene}
-            npcId={currentNpcId}
-            speaker={turn.speaker}
-            npcMood={npcMood}
-            npcViseme={npcViseme}
-            npcSpeaking={npcSpeaking}
-            micPhase={micPhase}
-            playerViseme={playerViseme}
-            channel={turn.channel}
-          />
-
-          {/* Floating NPC Active Speech Indicator */}
-          <div className="pointer-events-none absolute left-3 top-3 flex items-center gap-2 rounded-full ghibli-panel px-3 py-1 text-sm font-extrabold text-ghibli-ink">
-            <span>{turn.channel === 'inear' ? '🎧 In-ear:' : '💬'}</span>
-            <span>
-              {currentNpc.isCouple
-                ? turn.speaker === 'liam'
-                  ? 'Liam (Chú rể)'
-                  : 'Emma (Cô dâu)'
-                : currentNpc.name}
-            </span>
-            {npcSpeaking && <span className="text-[#23706A]">•••</span>}
-          </div>
-        </div>
-
-        {/* RIGHT PANEL: INTERACTIVE LISTENING + CUE CARD + MICROPHONE CONTROLS */}
-        <div className="flex flex-col justify-between gap-3 md:col-span-7 md:h-full md:overflow-y-auto md:pr-1">
-          {/* 1. INTERACTIVE LISTENING CARD */}
-          <div className="rounded-3xl ghibli-panel p-3.5">
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b-2 border-ghibli-track pb-2.5">
-              <div className="flex items-center gap-2">
-                <span className="rounded-lg bg-ghibli-sky px-2 py-1 text-xs font-black text-ghibli-ink">
-                  🎧 INTERACTIVE LISTENING
-                </span>
-                {!revealed && (
-                  <span className="rounded-full bg-[#E4F2DC] px-2 py-1 text-xs font-extrabold text-[#3F7A32]">
-                    Blind ×2 XP
+      {/* RIGHT / BOTTOM COLUMN: SPEECH BUBBLE + CUE CARD + HERO MIC DOCK */}
+      <div className="flex flex-1 flex-col justify-between gap-2.5 md:col-span-6 md:h-full md:overflow-y-auto md:pr-1">
+        {/* 1. NPC DIALOGUE SPEECH BUBBLE */}
+        <div className="cozy-card relative rounded-3xl p-3.5">
+          {/* Bubble Header: Speaker Name + Blind Bonus + Compact Audio Controls */}
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#EFE5D4] pb-2">
+            <div className="flex items-center gap-2">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#E6F4F1] text-sm">
+                {turn.channel === 'inear' ? '🎧' : '💬'}
+              </span>
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-display text-sm font-black text-ghibli-ink">
+                    {speakerDisplayName}
                   </span>
-                )}
+                  {!revealed && (
+                    <span className="rounded-full bg-[#E5F6DF] px-2 py-0.5 text-xs font-black text-[#2C731D]">
+                      Blind ×2 XP
+                    </span>
+                  )}
+                </div>
               </div>
+            </div>
 
-              <div className="flex items-center gap-1.5">
-                <button
-                  onClick={() => handlePlayNpcAudio(false)}
-                  className="min-h-[48px] rounded-xl border-2 border-ghibli-clay bg-ghibli-cream px-3 text-sm font-extrabold text-ghibli-ink transition hover:bg-[#FBEBD0]"
-                >
-                  🔊 1×
-                </button>
-                <button
-                  onClick={() => handlePlayNpcAudio(true)}
-                  className="min-h-[48px] rounded-xl border-2 border-ghibli-clay bg-ghibli-cream px-3 text-sm font-extrabold text-[#23706A] transition hover:bg-[#FBEBD0]"
-                >
-                  🐢 0.8×
-                </button>
+            {/* Compact Tactile Audio Control Strip */}
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => handlePlayNpcAudio(false)}
+                title="Nghe lại tốc độ chuẩn"
+                className="btn-tactile flex h-9 items-center gap-1 rounded-full px-3 text-xs font-extrabold"
+              >
+                <span>🔊</span>
+                <span>1×</span>
+              </button>
+              <button
+                onClick={() => handlePlayNpcAudio(true)}
+                title="Nghe chậm 0.8×"
+                className="btn-tactile flex h-9 items-center gap-1 rounded-full px-3 text-xs font-extrabold text-[#1F7A73]"
+              >
+                <span>🐢</span>
+                <span>0.8×</span>
+              </button>
+              {!revealed ? (
                 <button
                   onClick={() => {
                     SFX.play('page');
                     setRevealed(true);
                   }}
-                  disabled={revealed}
-                  className="min-h-[48px] rounded-xl border-2 border-ghibli-clay bg-[#FBE3EC] px-3 text-sm font-extrabold text-pink-800 transition hover:bg-[#F8D3E0] disabled:bg-[#F1E9DC] disabled:text-ghibli-ink-soft disabled:opacity-60"
+                  className="btn-tactile flex h-9 items-center gap-1 rounded-full bg-[#FFF3D6] px-3 text-xs font-extrabold text-[#9C5B00]"
                 >
-                  👁️ Hiện chữ
+                  <span>👁️</span>
+                  <span>Hiện chữ</span>
                 </button>
-                {revealed && (
-                  <button
-                    onClick={() => {
-                      SFX.play('tap');
-                      setTranslated((t) => !t);
-                    }}
-                    className="min-h-[48px] rounded-xl border-2 border-ghibli-clay bg-[#FDF0CF] px-3 text-sm font-extrabold text-[#8A5A00]"
-                  >
-                    🇻🇳 Dịch
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Blind Wave Bubbles OR Revealed Transcript */}
-            <div className="mt-3">
-              {!revealed ? (
-                <div
-                  onClick={() => handlePlayNpcAudio(false)}
-                  className="flex cursor-pointer items-center justify-center gap-3 rounded-2xl min-h-[48px] border-2 border-dashed border-ghibli-clay bg-ghibli-track/60 px-3 py-4 transition hover:bg-ghibli-track"
-                >
-                  <div className="flex items-center gap-1">
-                    {[1, 2, 3, 4, 5, 6, 7].map((bar) => (
-                      <span
-                        key={bar}
-                        className={`w-1.5 rounded-full bg-gradient-to-t from-ghibli-sun to-ghibli-sage transition-all ${
-                          npcSpeaking ? 'h-6' : 'h-3 opacity-60'
-                        }`}
-                      />
-                    ))}
-                  </div>
-                  <span className="text-sm font-bold text-ghibli-ink">
-                    Đang ẩn chữ (Blind Listening) · Chạm để nghe lại
-                  </span>
-                </div>
               ) : (
-                <div className="space-y-1.5">
-                  <p className="font-display text-base font-bold leading-relaxed text-ghibli-ink">
-                    “{turn.npc}”
-                  </p>
-                  {translated && (
-                    <p className="text-sm font-semibold italic text-[#8A5A00]">
-                      🇻🇳 {turn.npcVi}
-                    </p>
-                  )}
-                </div>
+                <button
+                  onClick={() => {
+                    SFX.play('tap');
+                    setTranslated((t) => !t);
+                  }}
+                  className="btn-tactile flex h-9 items-center gap-1 rounded-full bg-[#FFF3D6] px-3 text-xs font-extrabold text-[#9C5B00]"
+                >
+                  <span>🇻🇳</span>
+                  <span>Dịch</span>
+                </button>
               )}
             </div>
           </div>
 
-          {/* 2. CUE CARD / TASK CARD BY TURN MODE */}
-          <div className="flex-1 rounded-3xl ghibli-panel p-4">
-            <div className="mb-2 flex items-center justify-between">
-              <span className="rounded-full border-2 border-ghibli-clay bg-[#FBE3EC] px-3 py-1 text-xs font-black uppercase tracking-wider text-pink-800">
+          {/* Bubble Content: Blind Audio Wave OR Revealed Dialogue Text */}
+          <div className="mt-2.5">
+            {!revealed ? (
+              <button
+                onClick={() => handlePlayNpcAudio(false)}
+                className="flex w-full items-center justify-center gap-3 rounded-2xl border border-dashed border-[#D4B896] bg-[#FAF4E8] px-4 py-3 text-left transition hover:bg-[#F4E9D5]"
+              >
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3, 4, 5, 6, 7].map((bar) => (
+                    <span
+                      key={bar}
+                      className={`w-1.5 rounded-full bg-gradient-to-t from-[#F0A32A] to-[#43B0A8] transition-all ${
+                        npcSpeaking ? 'h-5' : 'h-2.5 opacity-60'
+                      }`}
+                    />
+                  ))}
+                </div>
+                <span className="text-xs font-extrabold text-ghibli-ink">
+                  Đang ẩn lời thoại để nhân đôi XP · Chạm để nghe lại
+                </span>
+              </button>
+            ) : (
+              <div className="space-y-1">
+                <p className="font-display text-base font-extrabold leading-relaxed text-ghibli-ink">
+                  “{turn.npc}”
+                </p>
+                {translated && (
+                  <p className="text-xs font-semibold italic text-[#9C5B00]">
+                    🇻🇳 {turn.npcVi}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* 2. CUE CARD / INTERACTIVE TASK CARD */}
+        <div className="cozy-card flex flex-1 flex-col justify-between rounded-3xl p-4">
+          <div>
+            {/* Mode Badge & Reflex Countdown */}
+            <div className="mb-2.5 flex items-center justify-between gap-2">
+              <span className="rounded-full bg-[#F3E8FB] px-3 py-1 text-xs font-black uppercase tracking-wider text-[#6535C4]">
                 {turn.mode === 'catch'
-                  ? '🎯 WORD-CATCHER + SPEAKING'
+                  ? '🎯 Bắt Từ Khoá & Đọc Câu'
                   : turn.mode === 'semi'
-                  ? '✍️ BÁN KỊCH BẢN (SEMI-SCRIPTED)'
+                  ? '✍️ Bán Kịch Bản (Semi-Scripted)'
                   : turn.mode === 'free'
-                  ? '🔥 ỨNG BIẾN TỰ DO (FREEFORM)'
+                  ? '🔥 Ứng Biến Tự Do (Freeform)'
                   : turn.mode === 'quiz'
-                  ? '⚡ PHẢN XẠ NGHE HIỂU (QUIZ)'
-                  : '🎙️ CUE CARD (SCRIPTED)'}
+                  ? '⚡ Phản Xạ Nghe Hiểu (Quiz)'
+                  : '🎙️ Kịch Bản MC (Cue Card)'}
               </span>
 
               {turn.mode === 'quiz' && reflexLeft !== null && (
                 <span
-                  className={`rounded-full px-3 py-0.5 text-xs font-black ${
+                  className={`rounded-full px-3 py-1 text-xs font-black ${
                     reflexLeft <= 5
-                      ? 'bg-[#B2421E] text-ghibli-ink'
-                      : 'bg-ghibli-sun text-ghibli-ink'
+                      ? 'bg-[#D94E2F] text-white'
+                      : 'bg-[#FFF0D4] text-[#9C5B00]'
                   }`}
                 >
                   ⏱️ Phản xạ: {reflexLeft}s
@@ -655,7 +678,6 @@ export const StageView: React.FC = () => {
             {/* MODE A: SCRIPTED OR CATCH */}
             {(turn.mode === 'scripted' || turn.mode === 'catch') && (
               <div className="space-y-3">
-                {/* Word-Catcher fill-in-the-blank preview */}
                 {turn.mode === 'catch' && micPhase === 'locked' ? (
                   <div>
                     <p className="font-display text-base font-extrabold leading-relaxed text-ghibli-ink">
@@ -671,10 +693,10 @@ export const StageView: React.FC = () => {
                               return (
                                 <span
                                   key={i}
-                                  className={`mx-1 inline-block rounded-lg border px-2.5 py-0.5 text-sm font-black ${
+                                  className={`mx-1 inline-block rounded-xl px-2.5 py-0.5 text-sm font-black ${
                                     filled
-                                      ? 'border-2 border-[#3F7A32] bg-[#E4F2DC] text-[#2F6128]'
-                                      : 'border-2 border-dashed border-ghibli-clay bg-ghibli-sky/60 text-ghibli-ink'
+                                      ? 'bg-[#E5F6DF] text-[#2C731D]'
+                                      : 'border border-dashed border-[#43B0A8] bg-[#E6F4F1] text-[#1F7A73]'
                                   }`}
                                 >
                                   {filled ? word : '____'}
@@ -697,12 +719,14 @@ export const StageView: React.FC = () => {
                             key={`${w}-${idx}`}
                             disabled={alreadyCaught || isWrong}
                             onClick={() => handleCatchWordClick(w)}
-                            className={`min-h-[48px] rounded-xl border-2 px-3.5 py-2 text-sm font-extrabold transition ${shakeWord === w ? 'animate-shake' : ''} ${
+                            className={`min-h-[44px] rounded-2xl px-4 py-2 text-sm font-extrabold transition ${
+                              shakeWord === w ? 'animate-shake' : ''
+                            } ${
                               alreadyCaught
-                                ? 'border-[#3F7A32] bg-[#E4F2DC] text-[#3F7A32] opacity-60'
+                                ? 'bg-[#E5F6DF] text-[#2C731D] opacity-60'
                                 : isWrong
-                                ? 'border-ghibli-coral bg-[#FCE4DA] text-[#B2421E] line-through opacity-60'
-                                : 'border-ghibli-clay bg-ghibli-cream text-ghibli-ink hover:scale-105 hover:bg-[#FBEBD0]'
+                                ? 'bg-[#FDECE7] text-[#B2351A] line-through opacity-60'
+                                : 'btn-tactile'
                             }`}
                           >
                             {w}
@@ -712,7 +736,6 @@ export const StageView: React.FC = () => {
                     </div>
                   </div>
                 ) : (
-                  // Scripted or Unlocked Catch: Show colored evaluated tokens or cue words
                   <div>
                     <div className="flex flex-wrap gap-1.5 font-display text-lg font-extrabold leading-relaxed">
                       {evalResult && evalResult.tokens.length > 0
@@ -725,12 +748,12 @@ export const StageView: React.FC = () => {
                                 })
                               }
                               title="Chạm để nghe phát âm từ này"
-                              className={`inline-flex min-h-[48px] items-center rounded-lg px-2 transition hover:scale-105 ${
+                              className={`inline-flex min-h-[38px] items-center rounded-xl px-2.5 py-0.5 transition hover:scale-105 ${
                                 tok.status === 'ok'
-                                  ? 'bg-[#E4F2DC] text-[#2F6128]'
+                                  ? 'bg-[#E5F6DF] text-[#2C731D]'
                                   : tok.status === 'near'
-                                  ? 'bg-[#FDF0CF] text-[#8A5A00] underline decoration-wavy'
-                                  : 'bg-[#FCE4DA] text-[#B2421E] underline decoration-wavy'
+                                  ? 'bg-[#FFF0D4] text-[#9C5B00] underline decoration-wavy'
+                                  : 'bg-[#FDECE7] text-[#B2351A] underline decoration-wavy'
                               }`}
                             >
                               {tok.word}
@@ -743,7 +766,7 @@ export const StageView: React.FC = () => {
                           ))}
                     </div>
                     {turn.cueVi && (
-                      <p className="mt-1.5 text-sm font-semibold text-ghibli-ink-soft">
+                      <p className="mt-1.5 text-xs font-semibold text-ghibli-ink-soft">
                         🇻🇳 {turn.cueVi}
                       </p>
                     )}
@@ -759,7 +782,7 @@ export const StageView: React.FC = () => {
                   {turn.frame}
                 </p>
                 {turn.cueVi && (
-                  <p className="text-sm font-semibold text-ghibli-ink-soft">
+                  <p className="text-xs font-semibold text-ghibli-ink-soft">
                     🇻🇳 {turn.cueVi}
                   </p>
                 )}
@@ -767,10 +790,10 @@ export const StageView: React.FC = () => {
                   {(turn.blankPool || []).map((group, gIdx) => (
                     <div
                       key={gIdx}
-                      className="rounded-xl border-2 border-ghibli-clay bg-ghibli-cream px-3 py-2 text-sm"
+                      className="rounded-2xl border border-[#DFC9AE] bg-[#FAF4E8] px-3 py-1.5 text-xs"
                     >
-                      <span className="font-black text-[#23706A]">Ô {gIdx + 1}: </span>
-                      <span className="font-semibold text-ghibli-ink">
+                      <span className="font-black text-[#1F7A73]">Ô {gIdx + 1}: </span>
+                      <span className="font-bold text-ghibli-ink">
                         {group.join(' / ')}
                       </span>
                     </div>
@@ -781,21 +804,21 @@ export const StageView: React.FC = () => {
 
             {/* MODE C: FREEFORM IMPROVISATION */}
             {turn.mode === 'free' && (
-              <div className="space-y-2.5">
+              <div className="space-y-2">
                 <p className="font-display text-base font-extrabold text-ghibli-ink">
                   🎯 Nhiệm vụ: {turn.task}
                 </p>
-                <p className="text-sm font-semibold text-[#8A5A00]">{turn.taskVi}</p>
+                <p className="text-xs font-semibold text-[#9C5B00]">{turn.taskVi}</p>
                 <div className="flex flex-wrap gap-1.5 pt-1">
                   {(turn.requiredKeywords || []).map((grp, i) => {
                     const hit = evalResult?.matchedKeywords?.includes(grp[0]);
                     return (
                       <span
                         key={i}
-                        className={`rounded-lg border-2 px-2.5 py-1 text-xs font-bold ${
+                        className={`rounded-full px-3 py-1 text-xs font-extrabold ${
                           hit
-                            ? 'border-[#3F7A32] bg-[#E4F2DC] text-[#2F6128]'
-                            : 'border-ghibli-clay/60 bg-[#FBE3EC] text-pink-800'
+                            ? 'bg-[#E5F6DF] text-[#2C731D]'
+                            : 'bg-[#FDECE7] text-[#B2351A]'
                         }`}
                       >
                         Bắt buộc: {grp.slice(0, 3).join(' / ')}
@@ -805,7 +828,7 @@ export const StageView: React.FC = () => {
                   {(turn.bonusKeywords || []).map((grp, i) => (
                     <span
                       key={i}
-                      className="rounded-lg border-2 border-ghibli-teal bg-[#DDF1EE] px-2.5 py-1 text-xs font-bold text-[#23706A]"
+                      className="rounded-full bg-[#E6F4F1] px-3 py-1 text-xs font-extrabold text-[#1F7A73]"
                     >
                       Thưởng: {grp.slice(0, 2).join(' / ')}
                     </span>
@@ -834,12 +857,14 @@ export const StageView: React.FC = () => {
                         key={idx}
                         disabled={micPhase === 'done' || isWrong}
                         onClick={() => handleQuizOptionClick(idx)}
-                        className={`min-h-[48px] w-full rounded-2xl border-2 p-3 text-left text-sm font-bold transition ${shakeQuizIdx === idx ? 'animate-shake' : ''} ${
+                        className={`min-h-[48px] w-full rounded-2xl p-3 text-left text-sm font-extrabold transition ${
+                          shakeQuizIdx === idx ? 'animate-shake' : ''
+                        } ${
                           isPicked
-                            ? 'border-[#3F7A32] bg-[#E4F2DC] text-[#2F6128] shadow-md'
+                            ? 'border-2 border-[#3F8D2B] bg-[#E5F6DF] text-[#2C731D] shadow-sm'
                             : isWrong
-                            ? 'border-ghibli-coral bg-[#FCE4DA] text-[#B2421E] opacity-60'
-                            : 'border-ghibli-clay bg-ghibli-cream text-ghibli-ink hover:bg-[#FBEBD0]'
+                            ? 'bg-[#FDECE7] text-[#B2351A] opacity-60'
+                            : 'btn-tactile'
                         }`}
                       >
                         {opt.t}
@@ -849,163 +874,175 @@ export const StageView: React.FC = () => {
                 </div>
               </div>
             )}
+          </div>
 
-            {/* Coach Tip */}
-            <div className="mt-3 rounded-2xl border-2 border-ghibli-track bg-[#FFF1D6] px-3 py-2 text-sm font-semibold text-ghibli-ink-soft">
-              💡 {turn.tip}
-            </div>
-
-            {/* Evaluation Result Banner */}
-            {(interimText || evalResult) && (
-              <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-2xl border-2 border-ghibli-track bg-[#FFF1D6] px-3.5 py-2">
+          {/* Coach Tip & Evaluation Feedback Strip */}
+          <div className="mt-3 space-y-2">
+            {(interimText || evalResult) ? (
+              <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-[#FFF6E4] px-3.5 py-2">
                 <div className="text-xs">
                   <span className="font-bold text-ghibli-ink-soft">Máy nghe được: </span>
-                  <span className="font-semibold italic text-[#23706A]">
+                  <span className="font-extrabold italic text-[#1F7A73]">
                     “{evalResult ? evalResult.transcript : interimText}”
                   </span>
                 </div>
                 {evalResult && (
-                  <div className="flex items-center gap-2">
-                    <span className="rounded-full border-2 border-ghibli-clay bg-ghibli-sun px-3 py-1 text-sm font-black text-ghibli-ink shadow-[0_2px_0_#6B4E3D]">
-                      {evalResult.score}% · {'★'.repeat(evalResult.stars)}
-                      {'☆'.repeat(3 - evalResult.stars)}
-                    </span>
-                  </div>
+                  <span className="rounded-full bg-[#FFC652] px-3 py-0.5 text-xs font-black text-ghibli-ink shadow-sm">
+                    {evalResult.score}% · {'★'.repeat(evalResult.stars)}
+                    {'☆'.repeat(3 - evalResult.stars)}
+                  </span>
                 )}
+              </div>
+            ) : (
+              <div className="rounded-2xl bg-[#FAF4E8] px-3.5 py-2 text-xs font-semibold text-ghibli-ink-soft">
+                💡 {turn.tip}
               </div>
             )}
           </div>
+        </div>
 
-          {/* 3. BOTTOM MICROPHONE & ACTION BAR */}
-          <div className="rounded-3xl ghibli-panel p-3">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              {/* Left: Sample Audio + Fallback Toggle */}
-              <div className="flex items-center gap-1.5">
-                {turn.mode !== 'quiz' && (
-                  <>
-                    <button
-                      onClick={() => handlePlaySampleCue(false)}
-                      className="min-h-[48px] rounded-xl border-2 border-ghibli-clay bg-ghibli-cream px-3 text-sm font-extrabold text-ghibli-ink transition hover:bg-[#FBEBD0]"
-                    >
-                      🔊 Mẫu 1×
-                    </button>
-                    <button
-                      onClick={() => handlePlaySampleCue(true)}
-                      className="min-h-[48px] rounded-xl border-2 border-ghibli-clay bg-ghibli-cream px-3 text-sm font-extrabold text-[#23706A] transition hover:bg-[#FBEBD0]"
-                    >
-                      🐢 0.8×
-                    </button>
-                    <button
-                      onClick={() => setShowFallbackBox((v) => !v)}
-                      className="min-h-[48px] rounded-xl border-2 border-ghibli-clay bg-[#FDF0CF] px-3 text-sm font-extrabold text-[#8A5A00] transition hover:bg-[#FBE3A8]"
-                    >
-                      ⌨️ Gõ thay mic
-                    </button>
-                  </>
-                )}
-              </div>
-
-              {/* Center: Primary Microphone Button (for non-quiz turns) */}
+        {/* 3. BOTTOM HERO MICROPHONE & ACTION DOCK */}
+        <div className="cozy-card rounded-3xl p-2.5 sm:p-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            {/* Left: Sample Audio & Keyboard Fallback */}
+            <div className="flex items-center gap-1.5">
               {turn.mode !== 'quiz' && (
-                <button
-                  onClick={handleMicPress}
-                  className={`flex min-h-[48px] items-center gap-2 rounded-2xl border-2 border-ghibli-clay px-6 py-2.5 font-display text-sm font-black shadow-[0_3px_0_#6B4E3D] transition hover:scale-105 ${
-                    micPhase === 'locked'
-                      ? 'cursor-not-allowed bg-[#F1E9DC] text-ghibli-ink-soft opacity-60'
-                      : micPhase === 'rec'
-                      ? 'bg-gradient-to-r from-[#D1502C] to-[#B2421E] text-white'
-                      : micPhase === 'arming'
-                      ? 'bg-ghibli-sun text-ghibli-ink'
-                      : 'bg-gradient-to-r from-ghibli-sage to-[#9FD68A] text-ghibli-ink'
-                  }`}
-                >
-                  <span>
-                    {micPhase === 'locked'
-                      ? '🔒 Bắt từ trước'
-                      : micPhase === 'arming'
-                      ? '⏳ Đang mở Mic...'
-                      : micPhase === 'rec'
-                      ? '⏹️ Dừng & Chấm điểm'
-                      : evalResult && evalResult.stars > 0
-                      ? '🎙️ Thu lại lấy 3★'
-                      : '🎙️ Chạm để Nói'}
-                  </span>
-                </button>
+                <>
+                  <button
+                    onClick={() => handlePlaySampleCue(false)}
+                    title="Nghe câu mẫu 1×"
+                    className="btn-tactile flex h-11 items-center gap-1 rounded-2xl px-3 text-xs font-extrabold"
+                  >
+                    <span>🔊</span>
+                    <span>Mẫu</span>
+                  </button>
+                  <button
+                    onClick={() => handlePlaySampleCue(true)}
+                    title="Nghe mẫu chậm 0.8×"
+                    className="btn-tactile flex h-11 items-center gap-1 rounded-2xl px-2.5 text-xs font-extrabold text-[#1F7A73]"
+                  >
+                    <span>🐢</span>
+                    <span>0.8×</span>
+                  </button>
+                  <button
+                    onClick={() => setShowFallbackBox((v) => !v)}
+                    title="Mở bàn phím hoặc nút chấm thử"
+                    className={`btn-tactile flex h-11 items-center gap-1 rounded-2xl px-3 text-xs font-extrabold ${
+                      showFallbackBox ? 'bg-[#FFF3D6] text-[#9C5B00]' : ''
+                    }`}
+                  >
+                    <span>⌨️</span>
+                    <span className="hidden sm:inline">Gõ</span>
+                  </button>
+                </>
               )}
-
-              {/* Right: Skip & Continue Buttons */}
-              <div className="flex items-center gap-2">
-                {(turnStars[turnIdx] || 0) < 1 && turn.mode !== 'quiz' && (
-                  <span className="hidden text-[11px] font-bold text-amber-700 sm:inline">
-                    Cần 1★ để tiếp tục, hoặc bấm Bỏ qua
-                  </span>
-                )}
-                <button
-                  onClick={() => handleNextTurn(true)}
-                  className="min-h-[48px] rounded-xl border-2 border-ghibli-clay bg-ghibli-cream px-3.5 text-sm font-bold text-ghibli-ink-soft transition hover:bg-[#FBEBD0]"
-                >
-                  Bỏ qua
-                </button>
-                <button
-                  disabled={(turnStars[turnIdx] || 0) < 1}
-                  onClick={() => handleNextTurn(false)}
-                  className="min-h-[48px] rounded-xl border-2 border-ghibli-clay bg-gradient-to-r from-ghibli-sage to-[#9FD68A] px-4 text-sm font-black text-ghibli-ink shadow-[0_3px_0_#6B4E3D] transition hover:scale-105 disabled:cursor-not-allowed disabled:bg-none disabled:bg-[#F1E9DC] disabled:text-ghibli-ink-soft disabled:shadow-none disabled:opacity-60"
-                >
-                  {turnIdx + 1 >= scene.turns.length ? 'Kết thúc 🎉' : 'Tiếp tục ➔'}
-                </button>
-              </div>
             </div>
 
-            {/* Fallback Simulator / Keyboard Box */}
-            {showFallbackBox && turn.mode !== 'quiz' && (
-              <div className="mt-3 flex flex-wrap items-center gap-2 border-t-2 border-ghibli-track pt-2.5">
-                <span className="text-xs font-bold text-ghibli-ink-soft">
-                  Dùng khi mic không hoạt động:
+            {/* Center: HERO MICROPHONE BUTTON */}
+            {turn.mode !== 'quiz' && (
+              <button
+                onClick={handleMicPress}
+                className={`flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-2xl px-5 py-3 font-display text-sm font-black transition sm:flex-initial sm:px-7 ${
+                  micPhase === 'locked'
+                    ? 'cursor-not-allowed bg-[#EFE6D5] text-ghibli-ink-soft opacity-65'
+                    : micPhase === 'rec'
+                    ? 'btn-tactile-coral animate-pulse'
+                    : micPhase === 'arming'
+                    ? 'btn-tactile-amber'
+                    : 'btn-tactile-sage'
+                }`}
+              >
+                <span className="text-base leading-none">
+                  {micPhase === 'locked'
+                    ? '🔒'
+                    : micPhase === 'arming'
+                    ? '⏳'
+                    : micPhase === 'rec'
+                    ? '⏹️'
+                    : '🎙️'}
                 </span>
-                <button
-                  onClick={() => handleSimulateGrade('perfect')}
-                  className="min-h-[48px] rounded-xl border-2 border-ghibli-clay bg-[#E4F2DC] px-3 text-sm font-black text-[#2F6128] hover:bg-[#D3EBC4]"
-                >
-                  ⚡ Thử: đúng (3★)
-                </button>
-                <button
-                  onClick={() => handleSimulateGrade('near')}
-                  className="min-h-[48px] rounded-xl border-2 border-ghibli-clay bg-[#FDF0CF] px-3 text-sm font-black text-[#8A5A00] hover:bg-[#FBE3A8]"
-                >
-                  ⚡ Thử: gần đúng (2★)
-                </button>
-                <button
-                  onClick={() => handleSimulateGrade('bad')}
-                  className="min-h-[48px] rounded-xl border-2 border-ghibli-clay bg-[#FCE4DA] px-3 text-sm font-black text-[#B2421E] hover:bg-[#F8D3C5]"
-                >
-                  ⚡ Thử: sai (0★)
-                </button>
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    if (manualText.trim()) {
-                      evaluateCandidatesAndAward([manualText]);
-                    }
-                  }}
-                  className="flex flex-1 items-center gap-1.5"
-                >
-                  <input
-                    type="text"
-                    value={manualText}
-                    onChange={(e) => setManualText(e.target.value)}
-                    placeholder="Hoặc gõ câu tiếng Anh vào đây..."
-                    className="min-h-[48px] min-w-[160px] flex-1 rounded-xl border-2 border-ghibli-clay bg-white px-3 py-2 text-base text-ghibli-ink placeholder-ghibli-ink-soft focus:border-ghibli-teal focus:outline-none"
-                  />
-                  <button
-                    type="submit"
-                    className="min-h-[48px] rounded-xl border-2 border-ghibli-clay bg-gradient-to-r from-ghibli-sage to-[#9FD68A] px-4 text-sm font-black text-ghibli-ink"
-                  >
-                    Chấm
-                  </button>
-                </form>
-              </div>
+                <span>
+                  {micPhase === 'locked'
+                    ? 'Bắt từ trước'
+                    : micPhase === 'arming'
+                    ? 'Đang mở Mic...'
+                    : micPhase === 'rec'
+                    ? 'Dừng & Chấm'
+                    : evalResult && evalResult.stars > 0
+                    ? 'Thu lại lấy 3★'
+                    : 'Chạm để Nói'}
+                </span>
+              </button>
             )}
+
+            {/* Right: Skip & Next Turn */}
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => handleNextTurn(true)}
+                className="btn-tactile h-11 rounded-2xl px-3 text-xs font-extrabold text-ghibli-ink-soft"
+              >
+                Bỏ qua
+              </button>
+              <button
+                disabled={(turnStars[turnIdx] || 0) < 1}
+                onClick={() => handleNextTurn(false)}
+                className={`h-11 rounded-2xl px-4 text-xs font-black transition ${
+                  (turnStars[turnIdx] || 0) >= 1
+                    ? 'btn-tactile-amber'
+                    : 'cursor-not-allowed bg-[#EFE6D5] text-ghibli-ink-soft opacity-55'
+                }`}
+              >
+                {turnIdx + 1 >= scene.turns.length ? 'Kết thúc 🎉' : 'Tiếp tục ➔'}
+              </button>
+            </div>
           </div>
+
+          {/* Fallback Simulator / Keyboard Box */}
+          {showFallbackBox && turn.mode !== 'quiz' && (
+            <div className="mt-2.5 flex flex-wrap items-center gap-2 border-t border-[#EFE5D4] pt-2.5">
+              <button
+                onClick={() => handleSimulateGrade('perfect')}
+                className="btn-tactile rounded-xl bg-[#E5F6DF] px-3 py-2 text-xs font-black text-[#2C731D]"
+              >
+                ⚡ Thử đúng (3★)
+              </button>
+              <button
+                onClick={() => handleSimulateGrade('near')}
+                className="btn-tactile rounded-xl bg-[#FFF0D4] px-3 py-2 text-xs font-black text-[#9C5B00]"
+              >
+                ⚡ Gần đúng (2★)
+              </button>
+              <button
+                onClick={() => handleSimulateGrade('bad')}
+                className="btn-tactile rounded-xl bg-[#FDECE7] px-3 py-2 text-xs font-black text-[#B2351A]"
+              >
+                ⚡ Thử sai (0★)
+              </button>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (manualText.trim()) {
+                    evaluateCandidatesAndAward([manualText]);
+                  }
+                }}
+                className="flex flex-1 items-center gap-1.5"
+              >
+                <input
+                  type="text"
+                  value={manualText}
+                  onChange={(e) => setManualText(e.target.value)}
+                  placeholder="Gõ câu tiếng Anh vào đây..."
+                  className="h-10 min-w-[140px] flex-1 rounded-xl border border-[#D4B896] bg-white px-3 text-sm text-ghibli-ink placeholder-ghibli-ink-soft focus:border-[#43B0A8] focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  className="btn-tactile-sage h-10 rounded-xl px-4 text-xs font-black"
+                >
+                  Chấm
+                </button>
+              </form>
+            </div>
+          )}
         </div>
       </div>
     </div>
