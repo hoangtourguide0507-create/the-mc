@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { NPCS, SCENES } from '../data/content';
+import { NPCS, SCENES, turnsForDay } from '../data/content';
 import { clamp } from '../core/clock';
 import { evaluateTurnCandidates } from '../core/evaluator';
 import { useGameStore } from '../core/store';
@@ -26,7 +26,12 @@ export const StageView: React.FC = () => {
   const unlockPhrase = useGameStore((s) => s.unlockPhrase);
   const recordPhraseStars = useGameStore((s) => s.recordPhraseStars);
 
-  const scene = SCENES[activeSceneId || 'coffee'] || SCENES.coffee;
+  const baseScene = SCENES[activeSceneId || 'coffee'] || SCENES.coffee;
+  // Lượt thoại đổi theo ngày trong game; nhiệm vụ và sổ tay vẫn dùng baseScene (chỉ số lượt ổn định).
+  const scene = useMemo(
+    () => ({ ...baseScene, turns: turnsForDay(baseScene, state.day) }),
+    [baseScene, state.day]
+  );
 
   const [turnIdx, setTurnIdx] = useState(0);
   const [turnStars, setTurnStars] = useState<number[]>(() =>

@@ -40,6 +40,9 @@ jobs:
       - name: Run difficulty tests
         run: npm run test:difficulty
 
+      - name: Run scene variant tests
+        run: npm run test:variants
+
       - name: Build (typecheck + Vite)
         run: npm run build
 

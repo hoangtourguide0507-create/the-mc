@@ -18,6 +18,7 @@ import { STREET_TALK_EXTRA_7 } from './streetTalkExtra7';
 import { STREET_TALK_EXTRA_8 } from './streetTalkExtra8';
 import { STREET_TALK_EXTRA_9 } from './streetTalkExtra9';
 import { STREET_TALK_EXTRA_10 } from './streetTalkExtra10';
+import { SCENE_VARIANTS } from './sceneVariants';
 
 export const APP_VERSION = '2026.11.08-3d2';
 
@@ -1044,7 +1045,7 @@ const rawScenes: Record<string, SceneData> = {
         npc: 'In-ear: The screen is back online! Wrap up smoothly and invite Chairwoman Victoria to the podium!',
         npcVi: 'In-ear: Màn hình hoạt động lại rồi! Hãy kết lại thật mượt và mời Chủ tịch Victoria lên bục phát biểu!',
         task: 'Cảm ơn lòng hảo tâm của quý vị (generosity / thank you) và trân trọng mời Chủ tịch Victoria (Victoria / Chairwoman) lên sân khấu.',
-        taskVi: 'Bắt buộc nhắc tới Victoria và lời mời/cảm ơn (welcome / invite / applause / thank). Without mencionar lỗi kỹ thuật (glitch/bug).',
+        taskVi: 'Bắt buộc nhắc tới Victoria và lời mời/cảm ơn (welcome / invite / applause / thank). Không nhắc đến lỗi kỹ thuật (glitch/bug).',
         requiredKeywords: [
           ['victoria', 'chairwoman'],
           ['welcome', 'invite', 'stage', 'podium', 'applause'],
@@ -1162,35 +1163,54 @@ const rawScenes: Record<string, SceneData> = {
 };
 
 // Preprocess catch turns just like the original engine: extract {word} into catchAnswers and strip braces from cue
+function prepareTurns(turns: TurnData[]): TurnData[] {
+  return turns.map((t) => {
+    if (t.cue && t.cue.includes('{')) {
+      const answers: string[] = [];
+      const cleanCue = t.cue.replace(/\{([^}]+)\}/g, (_, word) => {
+        answers.push(word);
+        return word;
+      });
+      return {
+        ...t,
+        mode: 'catch',
+        cueRaw: t.cue,
+        cue: cleanCue,
+        catchAnswers: answers,
+      };
+    }
+    return {
+      ...t,
+      mode: t.mode || 'scripted',
+    };
+  });
+}
+
 function prepareScenes(scenes: Record<string, SceneData>): Record<string, SceneData> {
   const out: Record<string, SceneData> = {};
   for (const [id, scene] of Object.entries(scenes)) {
-    const turns: TurnData[] = scene.turns.map((t) => {
-      if (t.cue && t.cue.includes('{')) {
-        const answers: string[] = [];
-        const cleanCue = t.cue.replace(/\{([^}]+)\}/g, (_, word) => {
-          answers.push(word);
-          return word;
-        });
-        return {
-          ...t,
-          mode: 'catch',
-          cueRaw: t.cue,
-          cue: cleanCue,
-          catchAnswers: answers,
-        };
-      }
-      return {
-        ...t,
-        mode: t.mode || 'scripted',
-      };
-    });
-    out[id] = { ...scene, turns };
+    out[id] = {
+      ...scene,
+      turns: prepareTurns(scene.turns),
+      variants: (SCENE_VARIANTS[id] || []).map(prepareTurns),
+    };
   }
   return out;
 }
 
 export const SCENES: Record<string, SceneData> = prepareScenes(rawScenes);
+
+/**
+ * Chọn bộ lượt thoại cho ngày hiện tại. Ngày 1 dùng kịch bản gốc; các ngày sau luân phiên
+ * qua `variants`. Bỏ qua biến thể nếu số lượt không khớp (để không làm hỏng tiến trình).
+ */
+export function turnsForDay(scene: SceneData, day: number): TurnData[] {
+  const lists = [scene.turns, ...(scene.variants || [])].filter(
+    (list) => list.length === scene.turns.length
+  );
+  const d = Number.isFinite(day) && day >= 1 ? Math.floor(day) : 1;
+  return lists[(d - 1) % lists.length];
+}
 
 const STREET_TALK_BASE: StreetTalkItem[] = [
   {
