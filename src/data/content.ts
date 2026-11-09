@@ -99,7 +99,7 @@ export const SHOP: ShopItem[] = [
  * Để trống = dùng nhân vật anime chibi dựng bằng code.
  */
 export const VRM_MODELS: Record<string, string> = {
-  // mc: 'vrm/mc.vrm',
+  mc: 'vrm/mc.vrm',
   // leo: 'vrm/leo.vrm',
   // alex: 'vrm/alex.vrm',
   // emma: 'vrm/emma.vrm',
