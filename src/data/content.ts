@@ -19,6 +19,7 @@ import { STREET_TALK_EXTRA_8 } from './streetTalkExtra8';
 import { STREET_TALK_EXTRA_9 } from './streetTalkExtra9';
 import { STREET_TALK_EXTRA_10 } from './streetTalkExtra10';
 import { SCENE_VARIANTS } from './sceneVariants';
+import { DAILY_GENERATORS } from './dailyGen';
 
 export const APP_VERSION = '2026.11.08-3d2';
 
@@ -1205,10 +1206,12 @@ export const SCENES: Record<string, SceneData> = prepareScenes(rawScenes);
  * qua `variants`. Bỏ qua biến thể nếu số lượt không khớp (để không làm hỏng tiến trình).
  */
 export function turnsForDay(scene: SceneData, day: number): TurnData[] {
+  const d = Number.isFinite(day) && day >= 1 ? Math.floor(day) : 1;
+  const gen = DAILY_GENERATORS[scene.id];
+  if (gen && d >= 2) return prepareTurns(gen(d));
   const lists = [scene.turns, ...(scene.variants || [])].filter(
     (list) => list.length === scene.turns.length
   );
-  const d = Number.isFinite(day) && day >= 1 ? Math.floor(day) : 1;
   return lists[(d - 1) % lists.length];
 }
 
