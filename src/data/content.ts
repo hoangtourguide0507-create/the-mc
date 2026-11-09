@@ -18,8 +18,8 @@ import { STREET_TALK_EXTRA_7 } from './streetTalkExtra7';
 import { STREET_TALK_EXTRA_8 } from './streetTalkExtra8';
 import { STREET_TALK_EXTRA_9 } from './streetTalkExtra9';
 import { STREET_TALK_EXTRA_10 } from './streetTalkExtra10';
-import { SCENE_VARIANTS } from './sceneVariants';
 import { DAILY_GENERATORS } from './dailyGen';
+import { SHOW_GENERATORS } from './showGen';
 
 export const APP_VERSION = '2026.11.08-3d2';
 
@@ -1190,11 +1190,7 @@ function prepareTurns(turns: TurnData[]): TurnData[] {
 function prepareScenes(scenes: Record<string, SceneData>): Record<string, SceneData> {
   const out: Record<string, SceneData> = {};
   for (const [id, scene] of Object.entries(scenes)) {
-    out[id] = {
-      ...scene,
-      turns: prepareTurns(scene.turns),
-      variants: (SCENE_VARIANTS[id] || []).map(prepareTurns),
-    };
+    out[id] = { ...scene, turns: prepareTurns(scene.turns) };
   }
   return out;
 }
@@ -1202,17 +1198,14 @@ function prepareScenes(scenes: Record<string, SceneData>): Record<string, SceneD
 export const SCENES: Record<string, SceneData> = prepareScenes(rawScenes);
 
 /**
- * Chọn bộ lượt thoại cho ngày hiện tại. Ngày 1 dùng kịch bản gốc; các ngày sau luân phiên
- * qua `variants`. Bỏ qua biến thể nếu số lượt không khớp (để không làm hỏng tiến trình).
+ * Chọn bộ lượt thoại cho ngày hiện tại. Ngày 1 dùng kịch bản gốc (nhiệm vụ và sổ tay dựa vào đó);
+ * từ ngày 2 mỗi cảnh sinh bộ lượt riêng theo ngày (dailyGen.ts và showGen.ts).
  */
 export function turnsForDay(scene: SceneData, day: number): TurnData[] {
   const d = Number.isFinite(day) && day >= 1 ? Math.floor(day) : 1;
-  const gen = DAILY_GENERATORS[scene.id];
+  const gen = DAILY_GENERATORS[scene.id] || SHOW_GENERATORS[scene.id];
   if (gen && d >= 2) return prepareTurns(gen(d));
-  const lists = [scene.turns, ...(scene.variants || [])].filter(
-    (list) => list.length === scene.turns.length
-  );
-  return lists[(d - 1) % lists.length];
+  return scene.turns;
 }
 
 const STREET_TALK_BASE: StreetTalkItem[] = [

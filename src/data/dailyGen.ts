@@ -11,7 +11,7 @@ import type { TurnData } from '../types/game';
 
 type Pair = readonly [en: string, vi: string];
 
-const hash = (s: string): number => {
+export const hash = (s: string): number => {
   let h = 2166136261;
   for (let i = 0; i < s.length; i++) {
     h ^= s.charCodeAt(i);
@@ -26,12 +26,12 @@ const hash = (s: string): number => {
   return h >>> 0;
 };
 
-function pickOf<T>(arr: readonly T[], scene: string, day: number, name: string): T {
+export function pickOf<T>(arr: readonly T[], scene: string, day: number, name: string): T {
   return arr[hash(`${scene}|${day}|${name}`) % arr.length];
 }
 
 /** Điền lần lượt các ô ___ bằng một mục được chọn từ mỗi ô. */
-function fillFrame(frame: string, pools: readonly (readonly string[])[], scene: string, day: number, tag: string): { filled: string; picks: string[] } {
+export function fillFrame(frame: string, pools: readonly (readonly string[])[], scene: string, day: number, tag: string): { filled: string; picks: string[] } {
   const picks: string[] = [];
   let filled = frame;
   pools.forEach((pool, i) => {
@@ -386,10 +386,10 @@ function marketTurns(day: number): TurnData[] {
   ];
 }
 
-/** Các cảnh hằng ngày có bộ sinh. Ngày 1 không đi qua đây. */
+/** Các cảnh hằng ngày có bộ sinh. Ngày 1 không đi qua đây. Cảnh show nằm trong showGen.ts. */
 export const DAILY_GENERATORS: Record<string, (day: number) => TurnData[]> = {
   coffee: coffeeTurns,
   market: marketTurns,
 };
 
-export { fillFrame, hash };
+

@@ -21,7 +21,7 @@ const C = await import(pathToFileURL(outfile).href);
 
 const lower = (s = '') => s.toLowerCase();
 const includesAny = (text, words) => words.some((w) => lower(text).includes(lower(w)));
-const DAILY = ['coffee', 'market'];
+const ALL = ['coffee', 'market', 'backstage', 'wedding', 'beach', 'gala', 'interview'];
 let checked = 0;
 
 // Kiểm tra một bộ lượt: cùng số lượt, cùng mode theo vị trí, và các trường khớp nhau
@@ -65,23 +65,20 @@ function validateTurns(list, base, where) {
   });
 }
 
-// 1) Biến thể tĩnh (cảnh show)
-for (const [id, scene] of Object.entries(C.SCENES)) {
-  (scene.variants || []).forEach((list, vi) => validateTurns(list, scene.turns, `${id} variant ${vi + 2}`));
-}
-
-// 2) Bộ sinh hằng ngày: kiểm tra nhiều ngày, mọi tổ hợp phải hợp lệ
+// Bộ sinh cho mọi cảnh: kiểm tra 400 ngày, mọi tổ hợp phải hợp lệ
 const DAYS = 400;
-for (const id of DAILY) {
+for (const id of ALL) {
   const scene = C.SCENES[id];
+  assert.ok(scene, `thiếu cảnh ${id}`);
   const seen = new Set();
   for (let day = 2; day <= DAYS; day++) {
     const turns = C.turnsForDay(scene, day);
     validateTurns(turns, scene.turns, `${id} ngày ${day}`);
     seen.add(JSON.stringify(turns.map((t) => [t.npc, t.cue ?? t.frame ?? t.question])));
   }
-  // Hàng trăm tổ hợp khác nhau: ít nhất 300 bộ khác nhau trong 399 ngày
-  assert.ok(seen.size >= 300, `${id}: chỉ có ${seen.size} bộ khác nhau trong ${DAYS - 1} ngày`);
+  // Cảnh hằng ngày cần hàng trăm bộ khác nhau; cảnh show cần ít nhất 150 (tổ hợp ít hơn)
+  const min = ['coffee', 'market'].includes(id) ? 300 : 150;
+  assert.ok(seen.size >= min, `${id}: chỉ có ${seen.size} bộ khác nhau (cần ≥ ${min}) trong ${DAYS - 1} ngày`);
   console.log(`  ${id}: ${seen.size} bộ lượt khác nhau trong ${DAYS - 1} ngày`);
 }
 
@@ -94,11 +91,8 @@ assert.deepEqual(C.turnsForDay(coffee, 7), C.turnsForDay(coffee, 7), 'cùng mộ
 assert.notDeepEqual(C.turnsForDay(coffee, 2), C.turnsForDay(coffee, 3), 'ngày kế tiếp phải khác');
 
 // 4) Biến thể sai số lượt bị bỏ qua; cảnh không có biến thể dùng kịch bản gốc
-const broken = { ...C.SCENES.backstage, variants: [C.SCENES.backstage.turns.slice(1)] };
-assert.equal(C.turnsForDay(broken, 2), broken.turns, 'biến thể sai số lượt phải bị bỏ qua');
-const noVariants = { ...C.SCENES.backstage, variants: undefined };
-assert.equal(C.turnsForDay(noVariants, 9), noVariants.turns, 'cảnh không có biến thể dùng kịch bản gốc');
-const showDay2 = C.turnsForDay(C.SCENES.backstage, 2);
-assert.equal(showDay2.length, C.SCENES.backstage.turns.length);
+// Cảnh không có bộ sinh (giả lập) dùng kịch bản gốc
+const plain = { ...C.SCENES.coffee, id: 'unknown-scene' };
+assert.equal(C.turnsForDay(plain, 9), plain.turns, 'cảnh không có bộ sinh dùng kịch bản gốc');
 
 console.log(`variants.test: ${checked} lượt đã kiểm tra, mọi phép chọn theo ngày đều đúng.`);

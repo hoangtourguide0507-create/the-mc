@@ -123,8 +123,6 @@ export interface SceneData {
   reward: SceneReward;
   duration: number;
   turns: TurnData[];
-  /** Phương án lượt thoại thay thế; `turnsForDay()` chọn theo ngày. Cùng số lượt với `turns`. */
-  variants?: TurnData[][];
 }
 
 export interface ScheduleSlot {
