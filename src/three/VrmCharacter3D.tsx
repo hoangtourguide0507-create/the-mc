@@ -15,6 +15,24 @@ const damp = (a: number, b: number, k: number, dt: number) => a + (b - a) * (1 -
 
 const VISEME_KEYS = ['aa', 'ee', 'oh', 'ih', 'ou'] as const;
 
+/** Chiều cao đứng của VRM trong thế giới game. Lớn hơn nhánh GLB (1,25) để nhân vật không bị nhỏ trong sảnh và sân khấu. */
+const VRM_TARGET_HEIGHT = 2.0;
+
+/** Co giãn VRM về VRM_TARGET_HEIGHT và đặt bàn chân chạm y = 0, bất kể mô hình gốc cao bao nhiêu */
+function normaliseVrm(vrm: VRM) {
+  vrm.scene.scale.setScalar(1);
+  vrm.scene.position.set(0, 0, 0);
+  vrm.scene.updateMatrixWorld(true);
+  const raw = new THREE.Box3().setFromObject(vrm.scene);
+  const height = raw.getSize(new THREE.Vector3()).y;
+  if (height <= 0) return;
+  const s = VRM_TARGET_HEIGHT / height;
+  vrm.scene.scale.setScalar(s);
+  vrm.scene.updateMatrixWorld(true);
+  const scaled = new THREE.Box3().setFromObject(vrm.scene);
+  vrm.scene.position.y -= scaled.min.y;
+}
+
 function disposeVrm(vrm: VRM) {
   vrm.scene.removeFromParent();
   VRMUtils.deepDispose(vrm.scene);
@@ -76,6 +94,7 @@ export const VrmCharacter3D: React.FC<{
   useEffect(() => {
     if (!vrm) return;
     VRMUtils.rotateVRM0(vrm); // VRM 0.x quay mặt về +Z như VRM 1.0
+    normaliseVrm(vrm);
     vrm.scene.traverse((o) => {
       o.frustumCulled = false;
       if ((o as THREE.Mesh).isMesh) o.castShadow = true;
