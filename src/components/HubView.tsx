@@ -19,6 +19,7 @@ export const HubView: React.FC = () => {
   const toast = useGameStore((s) => s.toast);
   const setQuestOpen = useGameStore((s) => s.setQuestOpen);
   const setHelpOpen = useGameStore((s) => s.setHelpOpen);
+  const setPronOpen = useGameStore((s) => s.setPronOpen);
   const hint = nextHint(state);
   const quest = currentQuest(state);
   const questProg = quest ? questProgress(quest, state) : null;
@@ -92,6 +93,16 @@ export const HubView: React.FC = () => {
               ❓
             </button>
 
+            {/* Bắt lỗi phát âm */}
+            <button
+              onClick={() => setPronOpen(true)}
+              title="Bắt lỗi phát âm"
+              aria-label="Bắt lỗi phát âm"
+              className="flex h-12 w-12 items-center justify-center rounded-full border ghibli-panel text-lg text-ghibli-ink transition"
+            >
+              🗣️
+            </button>
+
             {/* Streak Pill */}
             <div
               title={`Kỷ lục: ${state.streak.best} ngày`}
@@ -152,7 +163,7 @@ export const HubView: React.FC = () => {
               {ownedUpgrades.map((up) => (
                 <span
                   key={up.id}
- className="rounded-full border border-amber-400/50 ghibli-panel px-2.5 py-0.5 text-[11px] font-bold text-amber-700 shadow"
+ className="rounded-full border border-amber-400/50 ghibli-panel px-2.5 py-0.5 text-xs font-bold text-amber-700 shadow"
                 >
                   {up.icon} {up.name}
                 </span>
@@ -167,13 +178,13 @@ export const HubView: React.FC = () => {
             <div className="font-display text-base font-black text-cyan-700">
               {state.learned.length + 5}
             </div>
-            <div className="text-[11px] font-semibold text-ghibli-ink-soft">Cụm từ đã mở</div>
+            <div className="text-xs font-semibold text-ghibli-ink-soft">Cụm từ đã mở</div>
           </div>
           <div>
             <div className="font-display text-base font-black text-pink-700">
               {state.stats.shows}
             </div>
-            <div className="text-[11px] font-semibold text-ghibli-ink-soft">Show đã dẫn</div>
+            <div className="text-xs font-semibold text-ghibli-ink-soft">Show đã dẫn</div>
           </div>
           <div>
             <div className="font-display text-base font-black text-purple-700">
@@ -181,7 +192,7 @@ export const HubView: React.FC = () => {
                 ? '⭐ ' + fmtRep(state.rep)
                 : `${Math.max(0, chaNeed(state.charisma.lv) - state.charisma.pts)} điểm`}
             </div>
-            <div className="text-[11px] font-semibold text-ghibli-ink-soft">
+            <div className="text-xs font-semibold text-ghibli-ink-soft">
               {state.charisma.lv >= MAX_LV
                 ? 'Ngôi sao MC · Danh tiếng'
                 : `Tới Lv.${state.charisma.lv + 1} · ${levelTitle(state.charisma.lv + 1)}`}
@@ -233,7 +244,7 @@ export const HubView: React.FC = () => {
               📜
             </span>
             <div className="min-w-0">
-              <div className="text-[11px] font-black uppercase tracking-wider text-emerald-700">
+              <div className="text-xs font-black uppercase tracking-wider text-emerald-700">
                 Nhiệm vụ hiện tại
               </div>
               <div className="truncate font-display text-sm font-black text-ghibli-ink">
@@ -273,13 +284,13 @@ export const HubView: React.FC = () => {
                         <div className="font-display text-sm font-black text-ghibli-ink">
                           {sc.title}
                         </div>
-                        <div className="text-[11px] font-bold text-emerald-700">
+                        <div className="text-xs font-bold text-emerald-700">
                           +{sc.reward.energy} ⚡ · +{sc.reward.charisma} Charisma
                         </div>
                       </div>
                     </div>
                   </div>
-                  <div className="mt-2.5 flex items-center justify-between border-t border-ghibli-track pt-2 text-[11px]">
+                  <div className="mt-2.5 flex items-center justify-between border-t border-ghibli-track pt-2 text-xs">
                     <span
                       className={`font-bold ${
                         st.state === 'open' ? 'text-cyan-700' : 'text-ghibli-ink-soft'
@@ -308,14 +319,14 @@ export const HubView: React.FC = () => {
               <div className="font-display text-sm font-black text-ghibli-ink">
                 Sổ Tay Từ Vựng
               </div>
-              <div className="text-[11px] font-semibold text-cyan-700">
+              <div className="text-xs font-semibold text-cyan-700">
                 {state.weak.length > 0
                   ? `${state.weak.length} từ cần luyện lại`
                   : `${state.learned.length + 5} mẫu câu MC`}
               </div>
             </div>
             {state.weak.length > 0 && (
-              <span className="absolute right-3 top-3 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 text-[11px] font-black text-white shadow">
+              <span className="absolute right-3 top-3 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 text-xs font-black text-white shadow">
                 {state.weak.length}
               </span>
             )}
@@ -332,7 +343,7 @@ export const HubView: React.FC = () => {
               <div className="font-display text-sm font-black text-ghibli-ink">
                 Cửa Hàng MC
               </div>
-              <div className="text-[11px] font-semibold text-amber-700">
+              <div className="text-xs font-semibold text-amber-700">
                 Nạp ⚡ & Trang bị 3D (${state.cash})
               </div>
             </div>
@@ -345,7 +356,7 @@ export const HubView: React.FC = () => {
             <h2 className="font-display text-sm font-black uppercase tracking-wider text-pink-700">
               🎬 Lịch Nhận Show Hôm Nay (Vuốt Ngang)
             </h2>
-            <span className="text-[11px] font-semibold text-ghibli-ink-soft">
+            <span className="text-xs font-semibold text-ghibli-ink-soft">
               Mở cửa trước 60 phút
             </span>
           </div>
@@ -377,7 +388,7 @@ export const HubView: React.FC = () => {
                   <div>
                     <div className="flex items-center justify-between gap-2">
                       <span
-                        className={`rounded-full border px-2.5 py-0.5 text-[11px] font-extrabold ${sc.tagCls}`}
+                        className={`rounded-full border px-2.5 py-0.5 text-xs font-extrabold ${sc.tagCls}`}
                       >
                         {sc.tag}
                       </span>
@@ -403,7 +414,7 @@ export const HubView: React.FC = () => {
                         <h3 className="font-display text-base font-black leading-snug text-ghibli-ink">
                           {sc.title}
                         </h3>
-                        <span className="text-[11px] font-bold text-ghibli-ink-soft">
+                        <span className="text-xs font-bold text-ghibli-ink-soft">
                           {sc.level} · Cần Lv.{sc.reqLv}
                           {sc.minRep ? ` · ⭐${sc.minRep.toFixed(1)}` : ''}
                         </span>
@@ -424,7 +435,7 @@ export const HubView: React.FC = () => {
                       <span className="text-rose-700">−{sc.energy} ⚡</span>
                     </div>
 
- <div className="flex items-center justify-between rounded-xl ghibli-panel px-2.5 py-1.5 text-[11px] font-bold">
+ <div className="flex items-center justify-between rounded-xl ghibli-panel px-2.5 py-1.5 text-xs font-bold">
                       <span
                         className={
                           st.state === 'open'
@@ -450,7 +461,7 @@ export const HubView: React.FC = () => {
                             : `Cần Danh tiếng ⭐ ${(sc.minRep || 0).toFixed(1)}`}
                         </div>
                         {lockedRep && (
-                          <div className="mt-0.5 text-[11px] font-bold text-ghibli-ink-soft">
+                          <div className="mt-0.5 text-xs font-bold text-ghibli-ink-soft">
                             Hiện tại: ⭐ {fmtRep(state.rep)}
                           </div>
                         )}

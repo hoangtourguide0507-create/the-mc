@@ -62,7 +62,7 @@ export const TourOverlay: React.FC = () => {
  className="fixed inset-x-3 z-[61] mx-auto max-w-md rounded-2xl border border-amber-300/60 ghibli-panel p-4 shadow-2xl"
         style={tipPos}
       >
-        <p className="text-[11px] font-black uppercase tracking-wider text-amber-700">
+        <p className="text-xs font-black uppercase tracking-wider text-amber-700">
           Hướng dẫn · {n}/{TOUR_STEPS.length}
         </p>
         <p className="mt-1 text-sm font-semibold leading-relaxed text-ghibli-ink">{step.text}</p>

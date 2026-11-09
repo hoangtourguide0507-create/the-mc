@@ -69,7 +69,7 @@ export const HUD: React.FC = () => {
       .map((f) => (
         <span
           key={f.id}
-          className={`pointer-events-none absolute -bottom-5 right-2 z-50 rounded-full px-1.5 py-0.5 text-[11px] font-black shadow-lg ${
+          className={`pointer-events-none absolute -bottom-5 right-2 z-50 rounded-full px-1.5 py-0.5 text-xs font-black shadow-lg ${
             f.delta > 0
               ? 'bg-emerald-400 text-slate-950'
               : 'bg-rose-500 text-white'
@@ -104,7 +104,7 @@ export const HUD: React.FC = () => {
                 style={{ width: `${chaPct}%` }}
               />
             </div>
-            <div className="mt-0.5 flex items-center justify-between text-[11px] font-bold text-cyan-800">
+            <div className="mt-0.5 flex items-center justify-between text-xs font-bold text-cyan-800">
               <span>🗣️ {animXp} XP</span>
             </div>
             {renderFloats('charisma')}
@@ -120,7 +120,7 @@ export const HUD: React.FC = () => {
               </span>
               <span className="font-display text-amber-700">${animCash}</span>
             </div>
-            <div className="mt-1 flex items-center justify-between text-[11px] font-bold text-ghibli-ink-soft">
+            <div className="mt-1 flex items-center justify-between text-xs font-bold text-ghibli-ink-soft">
               <span title="Danh tiếng: trung bình sao các show gần đây">
                 ⭐ <span className="text-amber-700">{fmtRep(state.rep)}</span>
               </span>

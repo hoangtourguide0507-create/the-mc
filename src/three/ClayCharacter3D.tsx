@@ -633,7 +633,7 @@ const NameTag: React.FC<{ y: number; text: string }> = ({ y, text }) => (
       className={
         isGhibli
           ? 'pointer-events-none whitespace-nowrap rounded-full border-2 border-ghibli-clay bg-ghibli-cream px-2.5 py-0.5 text-xs font-bold text-ghibli-ink shadow-[0_2px_0_#6B4E3D]'
-          : 'pointer-events-none whitespace-nowrap rounded-full border border-white/25 bg-[#120A30]/85 px-2.5 py-0.5 text-[11px] font-bold text-white shadow-lg'
+          : 'pointer-events-none whitespace-nowrap rounded-full border border-white/25 bg-ghibli-cream/95 px-2.5 py-0.5 text-xs font-bold text-ghibli-ink shadow-lg'
       }
     >
       {text}

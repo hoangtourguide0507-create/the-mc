@@ -936,7 +936,7 @@ export const StageView: React.FC = () => {
               {/* Right: Skip & Continue Buttons */}
               <div className="flex items-center gap-2">
                 {(turnStars[turnIdx] || 0) < 1 && turn.mode !== 'quiz' && (
-                  <span className="hidden text-[11px] font-bold text-amber-700 sm:inline">
+                  <span className="hidden text-xs font-bold text-amber-700 sm:inline">
                     Cần 1★ để tiếp tục, hoặc bấm Bỏ qua
                   </span>
                 )}

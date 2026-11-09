@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark;
-  background-color: #120A30;
+  color-scheme: light;
+  background-color: #BFE6F2;
 }
 
 /* Khung kiểu giấy kem Ghibli: nền đặc, không blur, viền nâu ấm.
@@ -26,7 +26,7 @@ body,
   width: 100%;
   height: 100%;
   height: 100dvh; /* iOS Safari: tránh bị cắt đáy khi thanh địa chỉ ẩn/hiện */
-  background-color: #120A30;
+  background-color: #BFE6F2;
   overflow: hidden;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
@@ -39,10 +39,10 @@ body,
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(18, 10, 48, 0.4);
+  background: rgba(234, 223, 203, 0.7);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 79, 216, 0.35);
+  background: rgba(107, 78, 61, 0.35);
   border-radius: 9999px;
 }

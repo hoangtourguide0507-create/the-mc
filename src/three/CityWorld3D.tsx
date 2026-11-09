@@ -274,9 +274,16 @@ export const CityWorld3D: React.FC = () => {
       }
     }
     const used = useGameStore.getState().streetTalkDoneIds;
-    const matchLoc = STREET_TALK.find((it) => !used[it.id] && it.loc === closestLoc && it.when.includes(curPeriod));
-    const matchGen = STREET_TALK.find((it) => !used[it.id] && it.loc === null && it.when.includes(curPeriod));
-    const chosen = matchLoc || matchGen || STREET_TALK.find((it) => !used[it.id]) || STREET_TALK[0];
+    // Chọn ngẫu nhiên trong các tình huống phù hợp (đúng địa điểm, đúng buổi, chưa làm hôm nay)
+    const pickRandom = (list: typeof STREET_TALK) => list[Math.floor(Math.random() * list.length)];
+    const unused = STREET_TALK.filter((it) => !used[it.id]);
+    const matchLoc = unused.filter((it) => it.loc === closestLoc && it.when.includes(curPeriod));
+    const matchGen = unused.filter((it) => it.loc === null && it.when.includes(curPeriod));
+    const chosen =
+      (matchLoc.length ? pickRandom(matchLoc) : null) ||
+      (matchGen.length ? pickRandom(matchGen) : null) ||
+      (unused.length ? pickRandom(unused) : null) ||
+      STREET_TALK[0];
     passer.talkedToday = true;
     openStreetTalk(passer.name, passer.lookIdx, chosen);
   };

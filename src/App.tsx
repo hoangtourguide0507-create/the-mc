@@ -16,6 +16,7 @@ import { useGameStore } from './core/store';
 import { CityWorld3D } from './three/CityWorld3D';
 import { QuestSheet } from './components/QuestSheet';
 import { HelpSheet } from './components/HelpSheet';
+import { PronunciationSheet } from './components/PronunciationSheet';
 import { TourOverlay } from './components/TourOverlay';
 
 export const App: React.FC = () => {
@@ -57,7 +58,7 @@ export const App: React.FC = () => {
   }, [saveNow, startDayFromWelcome]);
 
   return (
-    <div className="relative h-[100dvh] w-screen select-none overflow-hidden bg-[#120A30] font-sans text-white">
+    <div className="relative h-[100dvh] w-screen select-none overflow-hidden bg-gradient-to-b from-ghibli-sky via-[#FFF1D6] to-ghibli-cream font-sans text-ghibli-ink">
       {/* Top Always-On HUD */}
       <HUD />
 
@@ -76,6 +77,7 @@ export const App: React.FC = () => {
       <StreetTalkModal />
       <QuestSheet />
       <HelpSheet />
+      <PronunciationSheet />
       <TourOverlay />
       <GlobalOverlays />
     </div>

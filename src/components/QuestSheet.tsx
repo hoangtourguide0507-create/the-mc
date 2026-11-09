@@ -37,7 +37,7 @@ export const QuestSheet: React.FC = () => {
                 <div className="mb-2 flex items-center justify-between">
                   <h3 className="font-display text-sm font-black text-pink-700">{ch.title}</h3>
                   <span
-                    className={`rounded-full px-2.5 py-0.5 text-[11px] font-black ${
+                    className={`rounded-full px-2.5 py-0.5 text-xs font-black ${
  chDone ? 'bg-emerald-500/25 text-emerald-700' : 'ghibli-panel text-ghibli-ink-soft'
                     }`}
                   >
@@ -60,7 +60,7 @@ export const QuestSheet: React.FC = () => {
                             {done ? '✅ ' : questMet(q, state) ? '🎉 ' : ''}
                             {q.title}
                           </span>
-                          <span className="whitespace-nowrap text-[11px] font-black text-amber-700">
+                          <span className="whitespace-nowrap text-xs font-black text-amber-700">
                             +{q.reward.xp} XP · +{q.reward.charisma} Cha
                           </span>
                         </div>

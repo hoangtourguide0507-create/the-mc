@@ -851,7 +851,7 @@ export const StreetTalkModal: React.FC = () => {
             </div>
 
             {recording && interim && (
- <p className="rounded-xl ghibli-panel p-2 text-[11px] italic text-ghibli-ink-soft">{interim}</p>
+ <p className="rounded-xl ghibli-panel p-2 text-xs italic text-ghibli-ink-soft">{interim}</p>
             )}
 
             {showTyped && !speakDone && (
@@ -874,7 +874,7 @@ export const StreetTalkModal: React.FC = () => {
 
             {speakResult && (
  <div className="rounded-2xl border ghibli-panel p-3">
-                <div className="flex items-center justify-between text-[11px] font-bold">
+                <div className="flex items-center justify-between text-xs font-bold">
                   <span className="text-cyan-700">Điểm: {speakResult.score}</span>
                   <span className="text-amber-700">{'⭐'.repeat(speakResult.stars) || '—'}</span>
                 </div>
@@ -894,19 +894,19 @@ export const StreetTalkModal: React.FC = () => {
                     </span>
                   ))}
                 </p>
-                <p className="mt-1 text-[11px] text-ghibli-ink-soft">Bạn nói: “{speakResult.transcript}”</p>
+                <p className="mt-1 text-xs text-ghibli-ink-soft">Bạn nói: “{speakResult.transcript}”</p>
               </div>
             )}
 
             {!speakDone && speakAttempts > 0 && (
-              <p className="text-[11px] font-bold text-amber-700">
+              <p className="text-xs font-bold text-amber-700">
                 Chưa đạt ({SPEAK_MAX_ATTEMPTS - speakAttempts} lượt còn lại). Thử lại nhé!
               </p>
             )}
 
             {speakDone && (
               <div className="rounded-2xl border border-emerald-400/40 bg-emerald-500/15 p-3">
-                <p className="text-[11px] font-bold text-emerald-700">Câu mẫu:</p>
+                <p className="text-xs font-bold text-emerald-700">Câu mẫu:</p>
                 <p className="mt-1 text-xs font-bold text-ghibli-ink">{target}</p>
               </div>
             )}
@@ -933,12 +933,12 @@ export const StreetTalkModal: React.FC = () => {
                 >
                   <div className="font-bold">{opt.en}</div>
                   {answered && (
-                    <div className="mt-1 text-[11px] text-amber-700">
+                    <div className="mt-1 text-xs text-amber-700">
                       🇻🇳 {opt.vi}
                     </div>
                   )}
                   {answered && isSelected && !opt.ok && opt.why && (
-                    <div className="mt-1 text-[11px] font-bold text-rose-700">
+                    <div className="mt-1 text-xs font-bold text-rose-700">
                       💡 {opt.why}
                     </div>
                   )}
