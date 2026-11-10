@@ -3,7 +3,8 @@ import { NPCS, SCENES, scenarioForDay } from '../data/content';
 import { SCENE_OBJECTIVES } from '../data/objectives';
 import { viSupport } from '../core/support';
 import { clamp } from '../core/clock';
-import { evaluateTurnCandidates } from '../core/evaluator';
+import { evaluateScripted, evaluateTurnCandidates } from '../core/evaluator';
+import { applyChunkAttempt, focusChunk, mergeAttempts } from '../core/retry';
 import { useGameStore } from '../core/store';
 import { STAGE_TOP_PAD } from './HUD';
 import {
@@ -54,6 +55,18 @@ export const StageView: React.FC = () => {
   const [micPhase, setMicPhase] = useState<StageMicPhase>('idle');
   const [interimText, setInterimText] = useState('');
   const [evalResult, setEvalResult] = useState<EvalResult | null>(null);
+  // Cụm ngắn còn chứa từ chưa đúng (lượt đọc theo thẻ / bắt từ). Người học luyện riêng cụm này
+  // thay vì đọc lại cả câu; evalResult là kết quả cộng dồn của mọi lần đọc trong lượt.
+  const [chunkRec, setChunkRec] = useState(false);
+  const practiceChunk = useMemo(
+    () => (evalResult && evalResult.tokens.length > 0 ? focusChunk(evalResult.tokens) : null),
+    [evalResult]
+  );
+  const chunkPanelRef = useRef<HTMLDivElement | null>(null);
+  // Cuộn tới khung luyện cụm khi nó xuất hiện hoặc đổi sang cụm khác, để người học thấy ngay việc cần làm
+  useEffect(() => {
+    if (practiceChunk) chunkPanelRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }, [practiceChunk?.start, practiceChunk?.text]);
   const [mistakesCount, setMistakesCount] = useState(0);
   const [caughtIndices, setCaughtIndices] = useState<number[]>([]);
   const [wrongCatchWords, setWrongCatchWords] = useState<string[]>([]);
@@ -122,6 +135,7 @@ export const StageView: React.FC = () => {
     setTranslated(false);
     setNpcMood('idle');
     setEvalResult(null);
+    setChunkRec(false);
     setInterimText('');
     setMistakesCount(0);
     setCaughtIndices([]);
@@ -286,7 +300,60 @@ export const StageView: React.FC = () => {
   const evaluateCandidatesAndAward = (candidates: string[]) => {
     setMicPhase('analyzing');
     const res = evaluateTurnCandidates(turn, candidates);
-    awardTurn(res, false);
+    // Đọc theo thẻ / bắt từ: cộng dồn với các lần đọc trước, từ đã đúng một lần thì giữ là đúng
+    const cumulative = turn.mode === 'scripted' || turn.mode === 'catch';
+    awardTurn(cumulative ? mergeAttempts(evalResult, res) : res, false);
+  };
+
+  // Nghe lần lượt các từ còn sai trong cụm (giọng mẫu)
+  const handlePlayChunkWords = async () => {
+    if (!practiceChunk) return;
+    SFX.play('tap');
+    const myAttempt = attemptRef.current;
+    for (const w of practiceChunk.weak) {
+      if (attemptRef.current !== myAttempt) return;
+      await Voice.speak(w.toLowerCase(), { npcId: 'coach', slow: true });
+    }
+  };
+
+  // Thu âm riêng cụm còn sai rồi ghi kết quả vào câu
+  const handleChunkMic = async () => {
+    if (!practiceChunk || !evalResult) return;
+    if (chunkRec) {
+      SpeechEngine.stop();
+      return;
+    }
+    const chunk = practiceChunk;
+    const base = evalResult;
+    const myAttempt = ++attemptRef.current;
+    Voice.stop();
+    setChunkRec(true);
+    setInterimText('');
+    const res = await SpeechEngine.listen({
+      onInterim: (txt) => {
+        if (attemptRef.current === myAttempt) setInterimText(txt);
+      },
+    });
+    setChunkRec(false);
+    if (attemptRef.current !== myAttempt || res.reason === 'aborted') return;
+    if (res.reason === 'error' || (!res.transcript && res.reason === 'no-speech')) {
+      setShowFallbackBox(true);
+      toast('Không nghe rõ tiếng — hãy đọc lại cụm này, hoặc dùng ô Gõ thay mic.', 'warn', 2800);
+      return;
+    }
+    const candidates = res.alternatives.length > 0 ? res.alternatives : [res.transcript];
+    let best: EvalResult | null = null;
+    for (const c of candidates) {
+      const r = evaluateScripted(chunk.text, c);
+      if (!best || r.score > best.score) best = r;
+    }
+    if (!best) return;
+    const merged = applyChunkAttempt(base, chunk, best);
+    const stillWeak = focusChunk(merged.tokens);
+    awardTurn({ ...merged, transcript: best.transcript }, false);
+    if (!stillWeak) toast('✅ Đã đúng hết các từ trong câu!', 'success', 2200);
+    else if (stillWeak.start !== chunk.start || stillWeak.weak.length < chunk.weak.length)
+      toast('👍 Cụm này tốt hơn rồi. Luyện tiếp cụm còn lại nhé.', 'success', 2200);
   };
 
   // Word-Catcher chip click
@@ -361,6 +428,12 @@ export const StageView: React.FC = () => {
     if (micPhase === 'locked') {
       SFX.play('error');
       toast('Hãy chạm chọn đúng các thẻ từ còn trống trước khi mở Micro!', 'warn');
+      return;
+    }
+
+    if (chunkRec) {
+      // Đang thu riêng một cụm: nút mic chính chỉ dừng lượt thu đó
+      SpeechEngine.stop();
       return;
     }
 
@@ -766,6 +839,35 @@ export const StageView: React.FC = () => {
                             </span>
                           ))}
                     </div>
+                    {practiceChunk && (
+                      <div ref={chunkPanelRef} className="mt-2.5 rounded-2xl border-2 border-[#C9A24A] bg-[#FFF8E1] p-3">
+                        <div className="text-xs font-black text-[#6B4E00]">
+                          🎯 Chỉ cần luyện lại cụm này. Các từ xanh đã được tính, không phải đọc lại.
+                        </div>
+                        <div className="mt-1 font-display text-xl font-black text-ghibli-ink">
+                          “{practiceChunk.text}”
+                        </div>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          <button
+                            onClick={handlePlayChunkWords}
+                            className="min-h-[48px] rounded-xl border-2 border-ghibli-clay bg-ghibli-cream px-3 text-sm font-extrabold text-ghibli-ink transition hover:bg-[#FBEBD0]"
+                          >
+                            🔊 Nghe từ: {practiceChunk.weak.join(', ')}
+                          </button>
+                          <button
+                            onClick={handleChunkMic}
+                            disabled={micPhase === 'rec' || micPhase === 'arming'}
+                            className={`min-h-[48px] flex-1 rounded-xl border-2 border-ghibli-clay px-4 text-sm font-black shadow-[0_3px_0_#6B4E3D] transition active:scale-[0.98] disabled:opacity-50 ${
+                              chunkRec
+                                ? 'bg-gradient-to-r from-[#D1502C] to-[#B2421E] text-white'
+                                : 'bg-gradient-to-r from-ghibli-sun to-[#F7C35C] text-ghibli-ink'
+                            }`}
+                          >
+                            {chunkRec ? '⏹️ Dừng & chấm cụm' : '🎙️ Đọc riêng cụm này'}
+                          </button>
+                        </div>
+                      </div>
+                    )}
                     {turn.cueVi && support.cueVi && (
                       <p className="mt-1.5 text-sm font-semibold text-ghibli-ink-soft">
                         🇻🇳 {turn.cueVi}
@@ -969,7 +1071,9 @@ export const StageView: React.FC = () => {
                       : micPhase === 'rec'
                       ? '⏹️ Dừng & Chấm điểm'
                       : evalResult && evalResult.stars > 0
-                      ? '🎙️ Thu lại lấy 3★'
+                      ? evalResult.stars >= 3
+                        ? '🎙️ Đọc lại cả câu'
+                        : '🎙️ Đọc lại cả câu lấy 3★'
                       : '🎙️ Chạm để Nói'}
                   </span>
                 </button>

@@ -55,6 +55,9 @@ jobs:
       - name: Run grammar tests
         run: npm run test:grammar
 
+      - name: Run cumulative scoring tests
+        run: npm run test:retry
+
       - name: Run scenario tests
         run: npm run test:scenarios
 

@@ -18,6 +18,7 @@
     "test:grammar": "node tests/grammar.test.mjs",
     "test:voicelines": "node tests/voicelines.test.mjs",
     "test:scenarios": "node tests/scenarios.test.mjs",
+    "test:retry": "node tests/retry.test.mjs",
     "voices:kokoro": "python3 tools/render-kokoro.py"
   },
   "dependencies": {

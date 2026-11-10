@@ -444,7 +444,7 @@ export function alignTokens(
   return { sims, extraWords };
 }
 
-function scoreToStars(score: number): 0 | 1 | 2 | 3 {
+export function scoreToStars(score: number): 0 | 1 | 2 | 3 {
   if (score >= 90) return 3;
   if (score >= 75) return 2;
   if (score >= 55) return 1;
