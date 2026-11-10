@@ -16,6 +16,7 @@ import argparse
 import hashlib
 import json
 import os
+import shutil
 import subprocess
 import sys
 import time
@@ -142,6 +143,8 @@ def main():
     chars = sum(len(t[0]['text']) for t in todo)
     print('Kokoro: %d clip đã có, %d câu đã có giọng ElevenLabs, %d câu cần render (%d ký tự).'
           % (len(clips), covered, len(todo), chars), flush=True)
+    if todo and not args.dry_run and not shutil.which('ffmpeg'):
+        sys.exit('Thiếu ffmpeg trong PATH (cần để nén mp3).')
     if args.dry_run:
         for item, spec, _, _ in todo[:15]:
             print('  [%s/%s → %s] %s' % (item['phase'], item['role'], spec['voice'], item['text'][:70]))

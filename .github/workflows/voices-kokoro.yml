@@ -42,8 +42,10 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install Kokoro
-        run: pip install kokoro-onnx==0.6.1
+      - name: Install Kokoro and ffmpeg
+        run: |
+          pip install kokoro-onnx==0.6.1
+          command -v ffmpeg || (sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg)
 
       - name: Cache Kokoro model
         uses: actions/cache@v4
