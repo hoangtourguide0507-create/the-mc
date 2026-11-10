@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render giọng Kokoro (miễn phí, chạy trên CPU) cho mọi câu game đọc mà chưa có clip ElevenLabs.
+"""Render giọng Kokoro (miễn phí, chạy trên CPU) cho MỌI câu game đọc.
 
   pip install kokoro-onnx            # cần thêm ffmpeg trong PATH
   python3 tools/render-kokoro.py                  # render các câu còn thiếu
@@ -8,8 +8,8 @@
   python3 tools/render-kokoro.py --prune          # xóa clip không còn dùng
 
 Chọn giọng trong tools/voices.kokoro.json. Kết quả: public/audio/kokoro/<hash>.mp3 và
-public/audio/manifest.kokoro.json. Game ưu tiên clip ElevenLabs (manifest.json); câu nào
-không có thì dùng clip Kokoro; không có cả hai mới dùng giọng trình duyệt.
+public/audio/manifest.kokoro.json. Quy tắc "một vai, một giọng": mỗi vai dùng Kokoro cho mọi câu,
+trừ khi ElevenLabs đã phủ đủ 100% câu của vai đó (completeRoles trong manifest.json).
 Hash của clip gồm giọng, tốc độ, ngôn ngữ và nội dung, nên chỉ render lại khi một trong số đó đổi.
 """
 import argparse
@@ -26,7 +26,6 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 AUDIO_DIR = os.path.join(ROOT, 'public', 'audio')
 CLIP_DIR = os.path.join(AUDIO_DIR, 'kokoro')
 MANIFEST = os.path.join(AUDIO_DIR, 'manifest.kokoro.json')
-EL_MANIFEST = os.path.join(AUDIO_DIR, 'manifest.json')
 CACHE_DIR = os.environ.get('KOKORO_CACHE', os.path.join(ROOT, '.cache', 'kokoro'))
 
 
@@ -119,14 +118,8 @@ def main():
     phases = [p for p in args.phases.split(',') if p] or cfg['phases']
     rank = {p: i for i, p in enumerate(phases)}
 
-    try:
-        with open(EL_MANIFEST, encoding='utf-8') as f:
-            el_keys = set(json.load(f).get('clips', {}))
-    except (OSError, ValueError):
-        el_keys = set()
-
     os.makedirs(CLIP_DIR, exist_ok=True)
-    clips, keep, todo, covered = {}, set(), [], 0
+    clips, keep, todo = {}, set(), []
     for item in load_lines():
         spec = spec_for(item, cfg)
         name = clip_name(item, spec, cfg)
@@ -134,15 +127,12 @@ def main():
         if os.path.exists(path) and os.path.getsize(path) > 0:
             clips[item['key']] = name
             keep.add(name)
-        elif item['key'] in el_keys:
-            covered += 1  # đã có giọng ElevenLabs, không cần Kokoro
         elif item['phase'] in rank:
             todo.append((item, spec, name, path))
     todo.sort(key=lambda t: rank[t[0]['phase']])
 
     chars = sum(len(t[0]['text']) for t in todo)
-    print('Kokoro: %d clip đã có, %d câu đã có giọng ElevenLabs, %d câu cần render (%d ký tự).'
-          % (len(clips), covered, len(todo), chars), flush=True)
+    print('Kokoro: %d clip đã có, %d câu cần render (%d ký tự).' % (len(clips), len(todo), chars), flush=True)
     if todo and not args.dry_run and not shutil.which('ffmpeg'):
         sys.exit('Thiếu ffmpeg trong PATH (cần để nén mp3).')
     if args.dry_run:

@@ -11,6 +11,9 @@ on:
       - tools/voices.config.json
       - tools/render-voices.mjs
   workflow_dispatch:
+  # Mỗi tuần thử một lần: khi credit miễn phí được làm mới thì render tiếp vai đang dở.
+  schedule:
+    - cron: '23 20 * * 0'
 
 permissions:
   contents: write

@@ -26,54 +26,65 @@ export function roleFor(npcId: string, speaker?: 'emma' | 'liam'): string {
 const AUDIO_BASE = `${import.meta.env.BASE_URL}audio/`;
 
 type ClipIndex = Map<string, Map<string, string>>;
+interface ClipSources {
+  eleven: ClipIndex;
+  /** Vai đã có clip ElevenLabs cho mọi câu; chỉ các vai này mới dùng giọng ElevenLabs. */
+  elevenRoles: Set<string>;
+  kokoro: ClipIndex;
+}
 
 /**
- * Hai nguồn clip: manifest.json (ElevenLabs, ưu tiên) và manifest.kokoro.json (Kokoro,
- * phủ mọi câu còn lại). Chỉ khi cả hai đều không có câu đó mới dùng giọng trình duyệt.
+ * "Một vai, một giọng": mỗi vai chỉ dùng một bộ giọng cho mọi câu của mình.
+ * Vai nằm trong completeRoles của manifest.json dùng ElevenLabs; mọi vai khác dùng Kokoro
+ * (manifest.kokoro.json). Không trộn hai bộ trong cùng một vai. Giọng trình duyệt chỉ là
+ * phương án cuối khi câu chưa được render.
  */
 class ClipLibrary {
-  private index: Promise<ClipIndex[]> | null = null;
+  private index: Promise<ClipSources> | null = null;
 
-  private fetchIndex(name: string): Promise<ClipIndex> {
+  private fetchManifest(name: string): Promise<{ clips?: Record<string, string>; completeRoles?: string[] }> {
     return fetch(`${AUDIO_BASE}${name}`, { cache: 'no-cache' })
-      .then((r) => (r.ok ? r.json() : { clips: {} }))
-      .catch(() => ({ clips: {} }))
-      .then((m: { clips?: Record<string, string> }) => {
-        const map: ClipIndex = new Map();
-        for (const [key, file] of Object.entries(m.clips || {})) {
-          const cut = key.indexOf('|');
-          const role = key.slice(0, cut);
-          const text = key.slice(cut + 1);
-          if (!map.has(text)) map.set(text, new Map());
-          map.get(text)!.set(role, file);
-        }
-        return map;
-      });
+      .then((r) => (r.ok ? r.json() : {}))
+      .catch(() => ({}));
   }
 
-  load(): Promise<ClipIndex[]> {
+  private toIndex(clips: Record<string, string> | undefined): ClipIndex {
+    const map: ClipIndex = new Map();
+    for (const [key, file] of Object.entries(clips || {})) {
+      const cut = key.indexOf('|');
+      const role = key.slice(0, cut);
+      const text = key.slice(cut + 1);
+      if (!map.has(text)) map.set(text, new Map());
+      map.get(text)!.set(role, file);
+    }
+    return map;
+  }
+
+  load(): Promise<ClipSources> {
     if (!this.index) {
-      this.index = Promise.all([this.fetchIndex('manifest.json'), this.fetchIndex('manifest.kokoro.json')]);
+      this.index = Promise.all([this.fetchManifest('manifest.json'), this.fetchManifest('manifest.kokoro.json')]).then(
+        ([el, kk]) => ({
+          eleven: this.toIndex(el.clips),
+          elevenRoles: new Set(el.completeRoles || []),
+          kokoro: this.toIndex(kk.clips),
+        })
+      );
     }
     return this.index;
   }
 
-  /**
-   * Clip URL for this role and text. Order: the role's own clip (ElevenLabs, then Kokoro),
-   * then the same text in any other role's voice.
-   */
+  /** Clip URL for this role and text, or null when the line has not been rendered yet. */
   async find(role: string, text: string): Promise<string | null> {
     const key = normText(text);
-    const sources = await this.load();
-    for (const src of sources) {
-      const file = src.get(key)?.get(role);
+    const src = await this.load();
+    if (src.elevenRoles.has(role)) {
+      const file = src.eleven.get(key)?.get(role);
       if (file) return `${AUDIO_BASE}${file}`;
     }
-    for (const src of sources) {
-      const file = src.get(key)?.values().next().value;
-      if (file) return `${AUDIO_BASE}${file}`;
-    }
-    return null;
+    const byRole = src.kokoro.get(key);
+    // Từ đơn (chạm để nghe) chỉ có bản của coach, nên cho phép mượn clip Kokoro của vai khác.
+    const file = byRole?.get(role) ?? byRole?.values().next().value;
+    return file ? `${AUDIO_BASE}${file}` : null;
   }
 }
 

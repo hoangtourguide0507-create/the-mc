@@ -11,8 +11,9 @@
  * A clip's hash covers voice, model, settings and text, so it is rendered again only
  * when one of those changes. Lines whose role has no voiceId are skipped (the game
  * falls back to the Kokoro clip, then the browser voice, for them).
- * When a role's voice changes, the old clip stays in use until the new one is rendered,
- * so running out of credits never removes a voice that already works.
+ * "Một vai, một giọng": the game uses a role's ElevenLabs voice only when every line of that
+ * role has a clip (manifest.completeRoles); until then the role speaks with Kokoro for all
+ * its lines. Roles are rendered one at a time, the one closest to completion first.
  */
 import { createHash } from 'node:crypto';
 import { mkdir, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
@@ -77,44 +78,54 @@ async function main() {
   };
 
   await mkdir(CLIP_DIR, { recursive: true });
-  const manifest = { version: 1, clips: {} };
-  let previous = {};
-  try {
-    previous = JSON.parse(await readFile(MANIFEST, 'utf8')).clips || {};
-  } catch {
-    // no manifest yet
-  }
+  const manifest = { version: 1, completeRoles: [], clips: {} };
   const keep = new Set();
   const todo = [];
   let uncast = 0;
+  /** Per cast role: lines in total and characters still to render. */
+  const roleStats = {};
 
   for (const item of all) {
     const role = cfg.roles[item.role];
-    if (!role?.voiceId) {
+    if (!role?.voiceId || phaseRank(item.phase) === Infinity) {
       uncast++;
       continue;
     }
+    const stat = (roleStats[item.role] ??= { lines: 0, missing: 0, missingChars: 0 });
+    stat.lines++;
     const { file, settings } = clipName(item, role, cfg);
     if (await exists(path.join(AUDIO_DIR, file))) {
       manifest.clips[item.key] = file;
       keep.add(file);
     } else {
-      // Clip for the current casting is missing: keep the previous clip (older voice) meanwhile.
-      const old = previous[item.key];
-      if (old && (await exists(path.join(AUDIO_DIR, old)))) {
-        manifest.clips[item.key] = old;
-        keep.add(old);
-      }
-      if (phaseRank(item.phase) !== Infinity) todo.push({ ...item, file, settings, voiceId: role.voiceId });
+      stat.missing++;
+      stat.missingChars += item.text.length;
+      todo.push({ ...item, file, settings, voiceId: role.voiceId });
     }
   }
-  todo.sort((a, b) => phaseRank(a.phase) - phaseRank(b.phase));
+  // One role at a time, the role closest to full coverage first: the game only switches a
+  // role to its ElevenLabs voice once every one of its lines has a clip ("một vai, một giọng").
+  todo.sort(
+    (a, b) =>
+      roleStats[a.role].missingChars - roleStats[b.role].missingChars ||
+      a.role.localeCompare(b.role) ||
+      phaseRank(a.phase) - phaseRank(b.phase)
+  );
+  const finishManifest = () => {
+    const missing = {};
+    for (const [role, st] of Object.entries(roleStats)) missing[role] = st.lines;
+    for (const key of Object.keys(manifest.clips)) missing[key.slice(0, key.indexOf('|'))]--;
+    manifest.completeRoles = Object.keys(missing).filter((r) => missing[r] === 0).sort();
+  };
 
   const pending = todo.reduce((n, t) => n + t.text.length, 0);
   console.log(
     `Lines: ${all.length} total, ${Object.keys(manifest.clips).length} with a clip, ` +
-      `${todo.length} to render (~${pending} credits), ${uncast} skipped (role has no voiceId).`
+      `${todo.length} to render (~${pending} credits), ${uncast} left to Kokoro (role has no voiceId or phase not listed).`
   );
+  for (const [role, st] of Object.entries(roleStats).sort((a, b) => a[1].missingChars - b[1].missingChars)) {
+    console.log(`  ${role}: ${st.lines - st.missing}/${st.lines} lines, ~${st.missingChars} credits to go`);
+  }
 
   if (DRY) {
     for (const t of todo.slice(0, 20)) console.log(`  [${t.phase}/${t.role}] ${t.text}`);
@@ -136,7 +147,6 @@ async function main() {
     try {
       const { buf, cost } = await tts(t.text, t.voiceId, cfg, t.settings);
       await writeFile(path.join(AUDIO_DIR, t.file), buf);
-      keep.delete(manifest.clips[t.key]);
       manifest.clips[t.key] = t.file;
       keep.add(t.file);
       spent += cost;
@@ -155,7 +165,9 @@ async function main() {
   }
 
   const sorted = Object.fromEntries(Object.entries(manifest.clips).sort(([a], [b]) => a.localeCompare(b)));
-  await writeFile(MANIFEST, JSON.stringify({ version: 1, clips: sorted }, null, 1) + '\n');
+  finishManifest();
+  await writeFile(MANIFEST, JSON.stringify({ version: 1, completeRoles: manifest.completeRoles, clips: sorted }, null, 1) + '\n');
+  console.log(`Roles fully voiced by ElevenLabs: ${manifest.completeRoles.join(', ') || '(none yet)'}.`);
   console.log(`Rendered ${done} clips this run, ~${spent} credits. Manifest has ${Object.keys(sorted).length} clips.`);
 }
 

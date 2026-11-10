@@ -1,12 +1,14 @@
 {
-  "_help": "Chọn giọng ElevenLabs cho từng vai. voiceId rỗng = vai đó tạm dùng giọng trình duyệt (không tốn credit). Đổi voiceId thì các câu của vai đó được render lại ở lần chạy sau. Vai nào chưa có clip ElevenLabs thì game dùng clip Kokoro (tools/voices.kokoro.json). Lưu ý: ElevenLabs chỉ có giọng Úc nam (Charlie) trong bộ giọng mặc định, nên Ivy vẫn dùng giọng Mỹ; cô dâu Emma giữ giọng Sarah vì chưa có giọng Anh nữ trẻ phù hợp.",
+  "_help": "Chọn giọng ElevenLabs cho từng NPC. voiceId rỗng = vai đó luôn dùng giọng Kokoro (coach và passer có hàng nghìn câu nên để Kokoro). Đổi voiceId thì toàn bộ câu của vai đó phải render lại rồi vai mới chuyển giọng. ElevenLabs chỉ có giọng Úc nam (Charlie) trong bộ giọng mặc định, nên Ivy vẫn dùng giọng Mỹ.",
   "model": "eleven_multilingual_v2",
   "outputFormat": "mp3_44100_64",
   "maxCharsPerRun": 5200,
   "phases": [
-    "scenes"
+    "scenes",
+    "generated",
+    "pronunciation"
   ],
-  "_phasesHelp": "Thứ tự ưu tiên khi render: scenes (thoại show ngày 1), generated (thoại sinh theo ngày), pronunciation, streettalk, phrasebook, words. Thêm phase khi còn credit.",
+  "_phasesHelp": "Các nhóm câu ElevenLabs sẽ render cho NPC: scenes (thoại show ngày 1), generated (thoại sinh theo ngày), pronunciation. Một vai chỉ chuyển sang giọng ElevenLabs khi MỌI câu của vai đó trong các nhóm này đã có clip; trước đó vai dùng giọng Kokoro cho tất cả. Mỗi lần chạy render lần lượt từng vai, vai gần xong nhất trước.",
   "defaultSettings": {
     "stability": 0.45,
     "similarity_boost": 0.8,
@@ -71,14 +73,14 @@
     "coach": {
       "accent": "en-US",
       "brief": "Giọng mẫu cho người chơi. Rõ ràng, kiên nhẫn, phát âm chuẩn, nhịp đều và dễ nghe.",
-      "voiceName": "Jessica",
-      "voiceId": "cgSgspJ2msm6clMCkdW9"
+      "voiceName": "(Kokoro)",
+      "voiceId": ""
     },
     "passer": {
       "accent": "en-US",
       "brief": "Người qua đường hay hỏi chuyện. Thân thiện, tò mò, hơi lém lỉnh.",
-      "voiceName": "Will",
-      "voiceId": "bIHbv24MWmeRgasZH58o"
+      "voiceName": "(Kokoro)",
+      "voiceId": ""
     },
     "grandpa": {
       "accent": "en-US",
