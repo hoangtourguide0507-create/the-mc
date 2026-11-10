@@ -74,7 +74,8 @@ for (const id of ALL) {
   assert.ok(scene, `thiếu cảnh ${id}`);
   const seen = new Set();
   for (let day = 2; day <= DAYS; day++) {
-    const turns = C.turnsForDay(scene, day);
+    // Bộ sinh ghép mẫu (giữ nguyên khung của kịch bản gốc). Các bộ tình huống mới có test riêng: tests/scenarios.test.mjs
+    const turns = C.generatedTurnsForDay(scene, day);
     validateTurns(turns, scene.turns, `${id} ngày ${day}`);
     seen.add(JSON.stringify(turns.map((t) => [t.npc, t.cue ?? t.frame ?? t.question])));
   }

@@ -1,0 +1,298 @@
+import { fill, grab, improv, pick, say, type Scenario } from './helpers';
+
+// Đêm gala từ thiện, Chủ tịch Victoria (B2). 5 lượt mỗi bộ.
+const VIC = { who: 'victoria' } as const;
+const INEAR = { who: 'alex', channel: 'inear' } as const;
+const GRANDPA = { who: 'grandpa' } as const;
+
+export const GALA_SCENARIOS: Scenario[] = [
+  {
+    id: 'gala-auction',
+    title: 'Dẫn phiên đấu giá',
+    turns: [
+      say(
+        ['Thien An, our auctioneer is unwell. I need you to run the live auction tonight.', 'Thiên Ân, người điều khiển đấu giá bị ốm. Tôi cần bạn dẫn phiên đấu giá trực tiếp tối nay.'],
+        ['I would be honored, Chairwoman. Could you walk me through the first item?', 'Đó là vinh dự của tôi, thưa Chủ tịch. Bà có thể giới thiệu qua vật phẩm đầu tiên không?'],
+        '"Walk me through" là hướng dẫn tôi từng bước.',
+        VIC,
+      ),
+      grab(
+        ['The first item is an original oil painting, donated by a local artist. Bidding starts at two thousand dollars.', 'Vật phẩm đầu tiên là một bức tranh sơn dầu nguyên bản, do một họa sĩ địa phương hiến tặng. Giá khởi điểm hai nghìn đô.'],
+        ['Our first item is an original oil {painting}, and bidding starts at two {thousand} dollars.', 'Vật phẩm đầu tiên là một bức tranh sơn dầu nguyên bản, giá khởi điểm hai nghìn đô.'],
+        ['photograph', 'hundred', 'sculpture', 'million'],
+        'Bắt loại vật phẩm và đơn vị của giá khởi điểm.',
+        VIC,
+      ),
+      pick(
+        ['In-ear: table nine just bid three thousand. Acknowledge them, then ask for three thousand five hundred.', 'In-ear: bàn số chín vừa trả ba nghìn. Ghi nhận họ, rồi mời mức ba nghìn năm trăm.'],
+        'Bạn nói gì tiếp theo?',
+        ['Three thousand from table nine, thank you! Do I hear three thousand five hundred?', 'Ba nghìn từ bàn số chín, xin cảm ơn! Có ai trả ba nghìn năm trăm không?'],
+        ['Sold to table nine for nine thousand dollars!', 'Table three, please pay five hundred dollars now.'],
+        '"Do I hear ...?" là câu mời giá kinh điển của người điều khiển đấu giá.',
+        { ...INEAR, reflex: 15 },
+      ),
+      fill(
+        ['The room has gone quiet at five thousand. How do you close the bidding?', 'Cả phòng im lặng ở mức năm nghìn. Bạn chốt phiên thế nào?'],
+        ['Going once, going twice... ___ to the generous guest at table ___!', 'Lần thứ nhất, lần thứ hai... ___ cho vị khách hào phóng ở bàn số ___!'],
+        [['sold', 'gone'], ['nine', 'four', 'twelve', 'seven']],
+        '"Going once, going twice, sold!" là câu chốt đấu giá. Ngắt nghỉ rõ giữa ba nhịp.',
+        VIC,
+      ),
+      say(
+        ['Young man, I did not hear the final price. How much did the painting go for?', 'Cậu trẻ này, tôi không nghe được giá cuối. Bức tranh được bao nhiêu vậy?'],
+        ['It went for five thousand dollars, sir. Every dollar goes to the children\'s hospital.', 'Được năm nghìn đô thưa bác. Từng đồng đều chuyển tới bệnh viện nhi.'],
+        '"Go for" trong đấu giá nghĩa là được bán với giá.',
+        GRANDPA,
+      ),
+    ],
+  },
+  {
+    id: 'gala-late-keynote',
+    title: 'Diễn giả chính đến trễ',
+    turns: [
+      pick(
+        ['In-ear: the keynote speaker\'s flight was delayed. She lands in forty minutes. Move dinner forward and do not announce the delay.', 'In-ear: chuyến bay của diễn giả chính bị hoãn. Bốn mươi phút nữa bà ấy hạ cánh. Đẩy bữa tối lên trước và đừng thông báo việc trễ.'],
+        'Bạn nên nói gì với khán phòng?',
+        ['Ladies and gentlemen, dinner is served. Please enjoy your first course.', 'Kính thưa quý vị, bữa tối đã sẵn sàng. Xin mời thưởng thức món khai vị.'],
+        ['Our speaker is late, so we will wait forty minutes.', 'The speaker has cancelled, so the evening is over.'],
+        '"Dinner is served" là câu mời tiệc trang trọng.',
+        { ...INEAR, reflex: 15 },
+      ),
+      say(
+        ['Thien An, the donors expected the speech before dinner. Some of them look confused.', 'Thiên Ân, các nhà tài trợ tưởng bài phát biểu diễn ra trước bữa tối. Vài người trông bối rối.'],
+        ['I understand, Chairwoman. I will present it as a special surprise after the main course.', 'Tôi hiểu, thưa Chủ tịch. Tôi sẽ giới thiệu nó như một bất ngờ đặc biệt sau món chính.'],
+        '"Present it as" là trình bày nó như là. Biến thay đổi thành điểm nhấn.',
+        VIC,
+      ),
+      grab(
+        ['Good. Meanwhile, please mention that we have already raised eighty thousand dollars toward our goal of one hundred thousand.', 'Tốt. Trong lúc đó, xin nhắc rằng chúng ta đã quyên được tám mươi nghìn đô trên mục tiêu một trăm nghìn.'],
+        ['I am delighted to share that we have already raised {eighty} thousand dollars toward our {goal}.', 'Tôi rất vui được chia sẻ rằng chúng ta đã quyên được tám mươi nghìn đô hướng tới mục tiêu.'],
+        ['eighteen', 'dinner', 'sixty', 'budget'],
+        'Phân biệt "eighty" (80) và "eighteen" (18).',
+        VIC,
+      ),
+      fill(
+        ['Splendid. And how will you keep the energy up during dinner?', 'Tuyệt vời. Và bạn sẽ giữ không khí trong bữa tối bằng cách nào?'],
+        ['I will invite the ___ to play, and then I will ___ a few donors at their tables.', 'Tôi sẽ mời ___ biểu diễn, rồi sẽ ___ vài nhà tài trợ tại bàn.'],
+        [['string quartet', 'jazz band', 'pianist'], ['interview', 'thank', 'greet']],
+        'Nêu hai hành động nối bằng "and then".',
+        VIC,
+      ),
+      improv(
+        ['In-ear: she has arrived and she is at the side of the stage. Introduce her now.', 'In-ear: bà ấy tới rồi, đang đứng cạnh sân khấu. Giới thiệu ngay.'],
+        ['Giới thiệu diễn giả chính như một điểm nhấn đặc biệt của buổi tối.', 'Bắt buộc có lời giới thiệu (welcome / introduce / please) và nhắc diễn giả (keynote / speaker / guest).'],
+        [['welcome', 'introduce', 'please'], ['keynote', 'speaker', 'guest']],
+        [['honor', 'delighted', 'special'], ['applause', 'stage']],
+        'And now, a very special moment: please welcome our keynote speaker to the stage!',
+        'Tạo cao trào: dừng sau "And now", rồi tăng nhịp tới cuối câu.',
+        INEAR,
+      ),
+    ],
+  },
+  {
+    id: 'gala-award',
+    title: 'Trao giải thưởng cống hiến',
+    turns: [
+      say(
+        ['Next is the Lifetime Service Award. The winner does not know yet, so do not reveal the name early.', 'Tiếp theo là Giải thưởng Cống hiến Trọn đời. Người nhận chưa biết, nên đừng lộ tên sớm.'],
+        ['Understood. I will build the suspense and reveal the name at the very end.', 'Tôi hiểu. Tôi sẽ tạo sự hồi hộp và công bố tên ở phút cuối cùng.'],
+        '"Build the suspense" là tạo sự hồi hộp. "At the very end" là ở ngay cuối.',
+        VIC,
+      ),
+      grab(
+        ['He has volunteered for thirty years and trained more than two hundred young nurses.', 'Ông ấy đã tình nguyện suốt ba mươi năm và đào tạo hơn hai trăm điều dưỡng trẻ.'],
+        ['Tonight\'s winner has volunteered for {thirty} years and trained over two hundred young {nurses}.', 'Người nhận giải tối nay đã tình nguyện ba mươi năm và đào tạo hơn hai trăm điều dưỡng trẻ.'],
+        ['thirteen', 'doctors', 'twenty', 'teachers'],
+        'Phân biệt "thirty" (30) và "thirteen" (13). Bắt nghề của những người được đào tạo.',
+        VIC,
+      ),
+      pick(
+        ['In-ear: when you say the name, pause for applause. Wait until he reaches the stairs before you speak again.', 'In-ear: khi đọc tên, dừng lại chờ vỗ tay. Đợi ông ấy tới cầu thang rồi mới nói tiếp.'],
+        'Sau khi đọc tên, bạn làm gì?',
+        ['I pause for the applause and wait until he reaches the stairs.', 'Mình dừng lại chờ vỗ tay và đợi ông ấy tới cầu thang.'],
+        ['I keep talking loudly over the applause.', 'I run down and carry him to the stage.'],
+        'Im lặng đúng lúc cũng là kỹ năng của MC.',
+        { ...INEAR, reflex: 15 },
+      ),
+      say(
+        ['Me? There must be some mistake. I only did what anyone would do.', 'Tôi ư? Chắc có nhầm lẫn gì rồi. Tôi chỉ làm điều ai cũng sẽ làm.'],
+        ['There is no mistake, sir. This room is standing for you tonight.', 'Không nhầm đâu thưa bác. Cả khán phòng đang đứng dậy vì bác tối nay.'],
+        'Câu ngắn, chân thành. Nhấn "for you".',
+        GRANDPA,
+      ),
+      improv(
+        ['He is too moved to speak. Close the award moment gracefully and move on to dessert.', 'Ông ấy xúc động quá không nói được. Khép lại phần trao giải thật khéo và chuyển sang món tráng miệng.'],
+        ['Cảm ơn người nhận giải và mời khách dùng tráng miệng.', 'Bắt buộc có lời tri ân (thank / congratulations / honor) và chuyển tiếp sang tráng miệng (dessert / enjoy / served).'],
+        [['thank', 'congratulations', 'honor'], ['dessert', 'enjoy', 'served']],
+        [['inspiration', 'service', 'grateful'], ['applause', 'once more']],
+        'Congratulations once more, and thank you for a lifetime of service. Ladies and gentlemen, dessert is now served.',
+        'Chuyển tiếp mượt: một câu tri ân, một nhịp nghỉ, rồi mời tráng miệng.',
+        VIC,
+      ),
+    ],
+  },
+  {
+    id: 'gala-vip-seating',
+    title: 'Sự cố chỗ ngồi khách VIP',
+    turns: [
+      say(
+        ['Thien An, a major donor is standing at the door. Someone is sitting in his seat at table one.', 'Thiên Ân, một nhà tài trợ lớn đang đứng ở cửa. Có người ngồi vào ghế của ông ấy ở bàn số một.'],
+        ['I will handle it quietly, Chairwoman. Is there another seat at a front table?', 'Tôi sẽ xử lý thật kín đáo, thưa Chủ tịch. Bàn phía trước còn ghế nào khác không?'],
+        '"Handle it quietly" là xử lý kín đáo, không gây chú ý.',
+        VIC,
+      ),
+      grab(
+        ['Yes, table two has one empty chair, next to the mayor. Please escort him there personally.', 'Có, bàn số hai còn một ghế trống, cạnh ngài thị trưởng. Bạn đích thân đưa ông ấy tới đó nhé.'],
+        ['Certainly. I will escort him to table {two}, next to the {mayor}.', 'Chắc chắn rồi. Tôi sẽ đưa ông ấy tới bàn số hai, cạnh ngài thị trưởng.'],
+        ['one', 'minister', 'ten', 'chairwoman'],
+        '"Escort" là đích thân đưa ai tới nơi. Bắt số bàn và người ngồi cạnh.',
+        VIC,
+      ),
+      say(
+        ['Young man, I was told table one. Is there a problem with my seat?', 'Cậu trẻ, người ta bảo tôi ngồi bàn số một. Chỗ của tôi có vấn đề gì à?'],
+        ['Not at all, sir. We have reserved a special place for you beside the mayor.', 'Hoàn toàn không thưa ông. Chúng tôi đã dành cho ông một vị trí đặc biệt bên cạnh ngài thị trưởng.'],
+        '"Not at all" phủ nhận lịch sự. Không nhắc tới sự nhầm lẫn.',
+        GRANDPA,
+      ),
+      pick(
+        ['In-ear: the lights go down in two minutes. Is the donor seated? Answer yes or no, then stand by.', 'In-ear: hai phút nữa giảm đèn. Nhà tài trợ đã ngồi chưa? Trả lời có hoặc không, rồi chờ lệnh.'],
+        'Câu trả lời nào đúng kiểu in-ear?',
+        ['Yes, he is seated. Standing by.', 'Rồi, ông ấy đã ngồi. Đang chờ lệnh.'],
+        ['Well, it is a long story. First he came to the door...', 'I think the lights are too bright tonight.'],
+        '"Standing by" là sẵn sàng chờ lệnh. Trả lời in-ear phải thật ngắn.',
+        { ...INEAR, reflex: 15 },
+      ),
+      fill(
+        ['Thank you for saving the moment. How should I thank the donor from the stage later?', 'Cảm ơn bạn đã cứu vãn tình hình. Lát nữa tôi nên cảm ơn nhà tài trợ từ sân khấu thế nào?'],
+        ['You could thank him for his ___ support and invite the room to ___ him.', 'Bà có thể cảm ơn ông ấy vì sự ủng hộ ___ và mời cả phòng ___ ông ấy.'],
+        [['generous', 'loyal', 'long-standing', 'incredible'], ['applaud', 'thank', 'honor']],
+        '"Generous support" là sự ủng hộ hào phóng, cụm từ quen thuộc ở gala từ thiện.',
+        VIC,
+      ),
+    ],
+  },
+  {
+    id: 'gala-fire-alarm',
+    title: 'Chuông báo cháy giả',
+    turns: [
+      pick(
+        ['In-ear: that alarm is a false alarm from the kitchen. Nobody needs to leave. Calm the room immediately.', 'In-ear: chuông đó là báo động giả từ bếp. Không ai cần rời đi. Trấn an khán phòng ngay.'],
+        'Bạn nói gì với khán phòng?',
+        ['Ladies and gentlemen, please remain seated. This is a false alarm, and there is no danger.', 'Kính thưa quý vị, xin ngồi yên tại chỗ. Đây là báo động giả, không có gì nguy hiểm.'],
+        ['Everyone run to the exits as fast as you can!', 'Please ignore me and continue eating.'],
+        '"Remain seated" trang trọng hơn "stay sitting". "False alarm" là báo động giả.',
+        { ...INEAR, reflex: 12 },
+      ),
+      say(
+        ['Thien An, some guests are already standing up. Please reassure them again, slowly.', 'Thiên Ân, vài khách đã đứng dậy rồi. Xin trấn an họ lần nữa, thật chậm.'],
+        ['Of course. Dear guests, the building is completely safe. Please take your seats.', 'Tất nhiên. Kính thưa quý khách, tòa nhà hoàn toàn an toàn. Xin mời an tọa.'],
+        'Nói chậm hơn bình thường một nửa. Giọng trầm tạo cảm giác an toàn.',
+        VIC,
+      ),
+      grab(
+        ['The fire officer has confirmed it. The alarm will stop in one minute, and the exits remain open as usual.', 'Nhân viên phòng cháy đã xác nhận. Một phút nữa chuông sẽ tắt, và các lối thoát vẫn mở như thường lệ.'],
+        ['The fire {officer} has confirmed that all is well, and the {exits} remain open as usual.', 'Nhân viên phòng cháy đã xác nhận mọi thứ ổn, và các lối thoát vẫn mở như thường lệ.'],
+        ['doctor', 'doors', 'manager', 'windows'],
+        'Bắt người xác nhận và thứ vẫn đang mở.',
+        VIC,
+      ),
+      say(
+        ['Young man, in my experience it is best to laugh after a scare. Tell them a joke!', 'Cậu trẻ, theo kinh nghiệm của tôi, sau cơn hoảng thì nên cười. Kể chuyện cười đi!'],
+        ['Good advice, sir. I will say the chef just wanted our attention.', 'Lời khuyên hay thưa bác. Cháu sẽ nói là bếp trưởng chỉ muốn gây chú ý thôi.'],
+        'Một câu đùa nhẹ giúp khán phòng thả lỏng sau sự cố.',
+        GRANDPA,
+      ),
+      improv(
+        ['The alarm has stopped. Bring the room back with warmth and a little humor.', 'Chuông đã tắt. Đưa khán phòng trở lại bằng sự ấm áp và chút hài hước.'],
+        ['Cảm ơn khách đã bình tĩnh và tiếp tục chương trình.', 'Bắt buộc có lời cảm ơn (thank / patience / calm) và tiếp tục chương trình (continue / back / program / evening).'],
+        [['thank', 'patience', 'calm'], ['continue', 'back', 'program', 'evening']],
+        [['chef', 'exciting', 'smile'], ['ladies and gentlemen']],
+        'Thank you for staying so calm, ladies and gentlemen! It seems our chef wanted some attention. Now, let us continue our wonderful evening.',
+        'Mỉm cười khi nói câu đùa, rồi trở lại giọng trang trọng.',
+        INEAR,
+      ),
+    ],
+  },
+  {
+    id: 'gala-sponsor-thanks',
+    title: 'Cảm ơn nhà tài trợ',
+    turns: [
+      say(
+        ['Thien An, we have three sponsors tonight. Please thank each of them by name, in the correct order.', 'Thiên Ân, tối nay có ba nhà tài trợ. Xin cảm ơn từng đơn vị bằng tên, đúng thứ tự.'],
+        ['Certainly, Chairwoman. Could you confirm the order for me, please?', 'Chắc chắn rồi thưa Chủ tịch. Bà xác nhận giúp tôi thứ tự được không?'],
+        '"Could you confirm ...?" để kiểm tra lại thông tin quan trọng.',
+        VIC,
+      ),
+      grab(
+        ['Platinum is Greenleaf Energy, gold is Harbor Bank, and silver is Bluebird Airlines.', 'Hạng bạch kim là Greenleaf Energy, hạng vàng là Harbor Bank, và hạng bạc là Bluebird Airlines.'],
+        ['Platinum is Greenleaf Energy, {gold} is Harbor Bank, and {silver} is Bluebird Airlines.', 'Bạch kim là Greenleaf Energy, vàng là Harbor Bank, và bạc là Bluebird Airlines.'],
+        ['bronze', 'diamond', 'platinum', 'copper'],
+        'Bắt đúng hạng của hai nhà tài trợ sau.',
+        VIC,
+      ),
+      pick(
+        ['In-ear: Harbor Bank\'s director had to leave early. Thank the company, but do not invite him to stand.', 'In-ear: giám đốc Harbor Bank phải về sớm. Cảm ơn công ty, nhưng đừng mời ông ấy đứng dậy.'],
+        'Bạn xử lý phần Harbor Bank thế nào?',
+        ['Our sincere thanks go to Harbor Bank, our gold sponsor.', 'Xin gửi lời cảm ơn chân thành tới Harbor Bank, nhà tài trợ vàng.'],
+        ['Will the director of Harbor Bank please stand up?', 'Harbor Bank left early, so we will not thank them.'],
+        'Cảm ơn công ty mà không gọi cá nhân: "Our thanks go to ...".',
+        { ...INEAR, reflex: 15 },
+      ),
+      fill(
+        ['Well handled. And what will you say about why sponsors matter?', 'Xử lý khéo lắm. Và bạn sẽ nói gì về ý nghĩa của các nhà tài trợ?'],
+        ['Without their ___, tonight would simply not be ___.', 'Nếu không có sự ___ của họ, đêm nay đơn giản là không thể ___.'],
+        [['generosity', 'support', 'kindness', 'commitment'], ['possible']],
+        '"Without ..., ... would not be possible" là cấu trúc tri ân trang trọng.',
+        VIC,
+      ),
+      say(
+        ['Young man, my old company was a sponsor twenty years ago. Does anyone remember?', 'Cậu trẻ, công ty cũ của tôi từng tài trợ hai mươi năm trước. Còn ai nhớ không?'],
+        ['We certainly do, sir. Supporters like you built this foundation.', 'Chắc chắn là có thưa bác. Những người ủng hộ như bác đã gây dựng nên quỹ này.'],
+        '"Supporters like you" là những người ủng hộ như bác. Tôn vinh người lớn tuổi.',
+        GRANDPA,
+      ),
+    ],
+  },
+  {
+    id: 'gala-closing-appeal',
+    title: 'Kêu gọi quyên góp cuối đêm',
+    turns: [
+      grab(
+        ['We are only six thousand dollars short of our goal. I want one final appeal before the last song.', 'Chúng ta chỉ còn thiếu sáu nghìn đô là đạt mục tiêu. Tôi muốn một lời kêu gọi cuối trước bài hát kết.'],
+        ['So we are {six} thousand dollars short, and you want one final {appeal}.', 'Vậy chúng ta thiếu sáu nghìn đô, và bà muốn một lời kêu gọi cuối.'],
+        ['sixty', 'song', 'sixteen', 'dance'],
+        '"Short of" là còn thiếu. "Appeal" là lời kêu gọi.',
+        VIC,
+      ),
+      say(
+        ['Yes. But please, no pressure. These people have already been very generous.', 'Đúng. Nhưng xin đừng gây áp lực. Những vị khách này đã rất hào phóng rồi.'],
+        ['I agree. I will thank them first and then mention how close we are.', 'Tôi đồng ý. Tôi sẽ cảm ơn họ trước rồi mới nhắc chúng ta đã gần đích thế nào.'],
+        'Cảm ơn trước, kêu gọi sau: nguyên tắc vàng khi gây quỹ.',
+        VIC,
+      ),
+      pick(
+        ['In-ear: guests can donate by scanning the code on the table card. The screen will show the total live.', 'In-ear: khách có thể quyên góp bằng cách quét mã trên thẻ bàn. Màn hình sẽ hiện tổng số trực tiếp.'],
+        'Khách quyên góp bằng cách nào?',
+        ['Simply scan the code on your table card, and watch our total grow on the screen.', 'Chỉ cần quét mã trên thẻ bàn, và theo dõi tổng số tăng trên màn hình.'],
+        ['Please put your cash on the stage.', 'Please call the bank tomorrow morning.'],
+        '"Scan the code" là quét mã. Hướng dẫn phải ngắn và cụ thể.',
+        { ...INEAR, reflex: 15 },
+      ),
+      say(
+        ['Young man, put me down for the last thousand. I want to see that number reached.', 'Cậu trẻ, ghi tôi cho một nghìn cuối cùng. Tôi muốn thấy con số đó đạt được.'],
+        ['That is incredibly kind, sir. May I announce your gift to the room?', 'Bác thật quá tử tế. Cháu xin phép công bố món quà của bác trước khán phòng nhé?'],
+        'Luôn xin phép trước khi nêu tên người quyên góp: "May I announce ...?".',
+        GRANDPA,
+      ),
+      improv(
+        ['We have reached the goal! Announce it and close the evening.', 'Chúng ta đạt mục tiêu rồi! Công bố và khép lại buổi tối.'],
+        ['Công bố đã đạt mục tiêu, cảm ơn khách và chúc buổi tối tốt lành.', 'Bắt buộc có tin đạt mục tiêu (goal / reached / raised) và lời cảm ơn/chúc (thank / good night / generosity).'],
+        [['goal', 'reached', 'raised'], ['thank', 'good night', 'generosity']],
+        [['together', 'children', 'difference'], ['ladies and gentlemen', 'wonderful']],
+        'Ladies and gentlemen, together we have reached our goal! Thank you for your generosity, and good night.',
+        'Lên giọng ở "we have reached our goal", rồi hạ ấm ở lời chúc.',
+        VIC,
+      ),
+    ],
+  },
+];

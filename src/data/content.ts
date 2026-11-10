@@ -20,6 +20,7 @@ import { STREET_TALK_EXTRA_9 } from './streetTalkExtra9';
 import { STREET_TALK_EXTRA_10 } from './streetTalkExtra10';
 import { DAILY_GENERATORS } from './dailyGen';
 import { SHOW_GENERATORS } from './showGen';
+import { SCENARIOS, type Scenario } from './scenarios';
 
 export const APP_VERSION = '2026.11.08-3d2';
 
@@ -1197,15 +1198,49 @@ function prepareScenes(scenes: Record<string, SceneData>): Record<string, SceneD
 
 export const SCENES: Record<string, SceneData> = prepareScenes(rawScenes);
 
-/**
- * Chọn bộ lượt thoại cho ngày hiện tại. Ngày 1 dùng kịch bản gốc (nhiệm vụ và sổ tay dựa vào đó);
- * từ ngày 2 mỗi cảnh sinh bộ lượt riêng theo ngày (dailyGen.ts và showGen.ts).
- */
-export function turnsForDay(scene: SceneData, day: number): TurnData[] {
-  const d = Number.isFinite(day) && day >= 1 ? Math.floor(day) : 1;
+const PREPARED_SCENARIOS: Record<string, Scenario[]> = Object.fromEntries(
+  Object.entries(SCENARIOS).map(([id, list]) => [id, list.map((sc) => ({ ...sc, turns: prepareTurns(sc.turns) }))])
+);
+
+/** Bộ lượt sinh bằng cách ghép mẫu câu (dailyGen.ts, showGen.ts): cùng tình huống gốc, đổi chi tiết. */
+export function generatedTurnsForDay(scene: SceneData, day: number): TurnData[] {
   const gen = DAILY_GENERATORS[scene.id] || SHOW_GENERATORS[scene.id];
-  if (gen && d >= 2) return prepareTurns(gen(d));
-  return scene.turns;
+  return gen ? prepareTurns(gen(day)) : scene.turns;
+}
+
+export interface DayScript {
+  /** id của bộ tình huống, hoặc null khi dùng kịch bản gốc hay bộ sinh. */
+  scenarioId: string | null;
+  /** Tên tình huống (tiếng Việt) để hiện trên màn show. */
+  title: string | null;
+  turns: TurnData[];
+}
+
+/**
+ * Chọn kịch bản cho ngày hiện tại.
+ * - Ngày 1: kịch bản gốc (nhiệm vụ và sổ tay dựa vào đó).
+ * - Từ ngày 2: xoay vòng qua các bộ tình huống của cảnh (src/data/scenarios), cuối mỗi vòng là
+ *   một ngày "tình huống gốc" với chi tiết sinh mới. Vòng dài N ngày nên một tình huống
+ *   chỉ quay lại sau N ngày (cảnh ít nhất cũng 7 ngày).
+ * Bộ tình huống có số lượt khác kịch bản gốc bị bỏ qua, vì nhiệm vụ đánh số theo vị trí lượt.
+ */
+export function scenarioForDay(scene: SceneData, day: number): DayScript {
+  const d = Number.isFinite(day) && day >= 1 ? Math.floor(day) : 1;
+  if (d < 2) return { scenarioId: null, title: null, turns: scene.turns };
+  const list = (PREPARED_SCENARIOS[scene.id] || []).filter((sc) => sc.turns.length === scene.turns.length);
+  const hasGen = Boolean(DAILY_GENERATORS[scene.id] || SHOW_GENERATORS[scene.id]);
+  const cycle = list.length + (hasGen ? 1 : 0);
+  if (cycle === 0) return { scenarioId: null, title: null, turns: scene.turns };
+  const slot = (d - 2) % cycle;
+  if (slot < list.length) {
+    const sc = list[slot];
+    return { scenarioId: sc.id, title: sc.title, turns: sc.turns };
+  }
+  return { scenarioId: null, title: null, turns: generatedTurnsForDay(scene, d) };
+}
+
+export function turnsForDay(scene: SceneData, day: number): TurnData[] {
+  return scenarioForDay(scene, day).turns;
 }
 
 const STREET_TALK_BASE: StreetTalkItem[] = [

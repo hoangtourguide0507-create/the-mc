@@ -35,6 +35,7 @@ Lưu ý: hai file đó còn ghi Vite 5, trong khi repo đang dùng Vite 8 (`pack
 - Ba màn hình 3D được `React.lazy` trong `App.tsx`; đừng import tĩnh `three` vào `App.tsx` hay `main.tsx`.
 - Nút tương tác phải có `min-h-[44px]` (vùng chạm tối thiểu) nếu chữ nhỏ.
 - Thêm test cho mọi thay đổi logic trong `src/core/`. Logic chấm điểm nằm ở `evaluator.ts`, mở khoá nội dung nằm ở `difficulty.ts` và `quests.ts`.
+- Nội dung theo ngày: ngày 1 dùng kịch bản gốc trong `content.ts`; từ ngày 2 mỗi cảnh xoay vòng qua các **bộ tình huống** trong `src/data/scenarios/<cảnh>.ts` (50 bộ, mỗi bộ là một tình huống khác hẳn), cuối vòng là một ngày bộ sinh (`dailyGen.ts`, `showGen.ts`). Chọn bộ ở `scenarioForDay` trong `content.ts`. Viết bộ mới bằng các hàm `say`, `grab`, `fill`, `pick`, `improv` trong `scenarios/helpers.ts`. Ràng buộc (`npm run test:scenarios`): số lượt bằng kịch bản gốc của cảnh (nhiệm vụ đánh số theo vị trí lượt), từ cần bắt phải có trong câu NPC, câu mẫu phải đạt 3★ với `evaluator.ts`, mỗi bộ có ít nhất 3 kiểu bài.
 - Dữ liệu nội dung: `src/data/content.ts` (scene, shop, lịch, thế giới), `src/data/streetTalkExtra*.ts` (tình huống trò chuyện trên đường), `src/data/pronunciation.ts` (luyện phát âm), `src/data/quests.ts`.
 
 ## Hằng số trò chơi quan trọng (`src/core/clock.ts`)

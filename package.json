@@ -17,6 +17,7 @@
     "test:pronladder": "node tests/pronladder.test.mjs",
     "test:grammar": "node tests/grammar.test.mjs",
     "test:voicelines": "node tests/voicelines.test.mjs",
+    "test:scenarios": "node tests/scenarios.test.mjs",
     "voices:kokoro": "python3 tools/render-kokoro.py"
   },
   "dependencies": {

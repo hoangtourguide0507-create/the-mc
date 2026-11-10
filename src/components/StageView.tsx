@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { NPCS, SCENES, turnsForDay } from '../data/content';
+import { NPCS, SCENES, scenarioForDay } from '../data/content';
 import { SCENE_OBJECTIVES } from '../data/objectives';
 import { viSupport } from '../core/support';
 import { clamp } from '../core/clock';
@@ -30,10 +30,8 @@ export const StageView: React.FC = () => {
 
   const baseScene = SCENES[activeSceneId || 'coffee'] || SCENES.coffee;
   // Lượt thoại đổi theo ngày trong game; nhiệm vụ và sổ tay vẫn dùng baseScene (chỉ số lượt ổn định).
-  const scene = useMemo(
-    () => ({ ...baseScene, turns: turnsForDay(baseScene, state.day) }),
-    [baseScene, state.day]
-  );
+  const dayScript = useMemo(() => scenarioForDay(baseScene, state.day), [baseScene, state.day]);
+  const scene = useMemo(() => ({ ...baseScene, turns: dayScript.turns }), [baseScene, dayScript]);
 
   const [turnIdx, setTurnIdx] = useState(0);
   const [turnStars, setTurnStars] = useState<number[]>(() =>
@@ -490,8 +488,15 @@ export const StageView: React.FC = () => {
             ✕ Rời
           </button>
           <div className="min-w-0 flex-1">
-            <div className="truncate text-xs font-black uppercase tracking-wider text-pink-700">
-              {scene.title}
+            <div className="truncate text-xs font-black tracking-wide text-pink-700">
+              {dayScript.title ? (
+                <>
+                  <span className="text-ghibli-ink">{dayScript.title}</span>
+                  <span className="hidden uppercase sm:inline"> · {scene.title}</span>
+                </>
+              ) : (
+                <span className="uppercase">{scene.title}</span>
+              )}
             </div>
             <div className="flex items-center gap-2">
               <div className="h-2.5 min-w-0 flex-1 overflow-hidden rounded-full bg-ghibli-track sm:max-w-[11rem]">
