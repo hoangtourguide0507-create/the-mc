@@ -295,12 +295,15 @@ export const StageView: React.FC = () => {
   const handleCatchWordClick = (word: string) => {
     if (micPhase !== 'locked') return;
     const answers = turn.catchAnswers || [];
-    const nextIdx = caughtIndices.length;
-    const expected = answers[nextIdx];
+    // Nhận từ đúng theo bất kỳ thứ tự nào: tìm ô trống đầu tiên còn thiếu đúng từ này.
+    // (Trước đây chỉ nhận đúng thứ tự ô; chạm từ của ô sau trước sẽ bị tính sai và khóa luôn từ đó.)
+    const hitIdx = answers.findIndex(
+      (a, i) => !caughtIndices.includes(i) && a.toLowerCase() === word.toLowerCase()
+    );
 
-    if (expected && word.toLowerCase() === expected.toLowerCase()) {
+    if (hitIdx >= 0) {
       SFX.play('pop');
-      const nextCaught = [...caughtIndices, nextIdx];
+      const nextCaught = [...caughtIndices, hitIdx];
       setCaughtIndices(nextCaught);
       if (nextCaught.length >= answers.length) {
         SFX.play('ting');
@@ -701,10 +704,13 @@ export const StageView: React.FC = () => {
 
                     <div className="mt-3 flex flex-wrap gap-2">
                       {catchPool.map((w, idx) => {
-                        const alreadyCaught = (turn.catchAnswers || [])
-                          .slice(0, caughtIndices.length)
-                          .some((a) => a.toLowerCase() === w.toLowerCase());
-                        const isWrong = wrongCatchWords.includes(w);
+                        const answers = turn.catchAnswers || [];
+                        const same = (a: string) => a.toLowerCase() === w.toLowerCase();
+                        // Đã dùng hết: mọi ô cần từ này đều đã điền
+                        const alreadyCaught =
+                          answers.some(same) && answers.every((a, i) => !same(a) || caughtIndices.includes(i));
+                        // Chỉ khóa từ gây nhiễu thật sự; từ là đáp án thì không bao giờ bị khóa vì chọn sai lượt
+                        const isWrong = wrongCatchWords.includes(w) && !answers.some(same);
                         return (
                           <button
                             key={`${w}-${idx}`}
