@@ -10,16 +10,15 @@
  * Output: public/audio/clips/<hash>.mp3 and public/audio/manifest.json.
  * A clip's hash covers voice, model, settings and text, so it is rendered again only
  * when one of those changes. Lines whose role has no voiceId are skipped (the game
- * falls back to the browser voice for them).
+ * falls back to the Kokoro clip, then the browser voice, for them).
+ * When a role's voice changes, the old clip stays in use until the new one is rendered,
+ * so running out of credits never removes a voice that already works.
  */
-import { build } from 'esbuild';
 import { createHash } from 'node:crypto';
 import { mkdir, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
-import os from 'node:os';
 import path from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { collect, loadContent, root } from './voice-lines.mjs';
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const AUDIO_DIR = path.join(root, 'public', 'audio');
 const CLIP_DIR = path.join(AUDIO_DIR, 'clips');
 const MANIFEST = path.join(AUDIO_DIR, 'manifest.json');
@@ -27,71 +26,6 @@ const args = new Set(process.argv.slice(2));
 const DRY = args.has('--dry-run');
 const PRUNE = args.has('--prune');
 const API_KEY = process.env.ELEVENLABS_API_KEY || '';
-
-/** Must match normText() in src/audio/audioSystem.ts. */
-export function normText(s) {
-  return String(s)
-    .replace(/[‘’]/g, "'")
-    .replace(/[“”]/g, '"')
-    .replace(/[–—]/g, '-')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .toLowerCase();
-}
-
-async function loadContent() {
-  const outfile = path.join(os.tmpdir(), `mc-content-${process.pid}.mjs`);
-  await build({
-    entryPoints: [path.join(root, 'src', 'data', 'content.ts')],
-    bundle: true,
-    format: 'esm',
-    platform: 'node',
-    outfile,
-    logLevel: 'silent',
-  });
-  try {
-    return await import(pathToFileURL(outfile).href);
-  } finally {
-    await rm(outfile, { force: true });
-  }
-}
-
-/** Every line the game can speak, tagged with the role whose voice says it. */
-function collect(C) {
-  const items = [];
-  const seen = new Set();
-  const add = (phase, role, text) => {
-    if (typeof text !== 'string' || !text.trim()) return;
-    const key = `${role}|${normText(text)}`;
-    if (seen.has(key)) return;
-    seen.add(key);
-    items.push({ phase, role, text: text.trim(), key });
-  };
-
-  const playerLines = [];
-  for (const scene of Object.values(C.SCENES)) {
-    for (const t of scene.turns || []) {
-      const npc = t.who || scene.npc;
-      const role = npc === 'couple' ? `couple:${t.speaker || 'emma'}` : npc;
-      add('scenes', role, t.npc);
-      add('scenes', 'coach', t.cue);
-      add('scenes', 'coach', t.sample);
-      playerLines.push(t.cue || '', t.sample || '');
-    }
-  }
-  for (const it of C.STREET_TALK || []) {
-    add('streettalk', 'passer', it.prompt?.en);
-    for (const o of it.options || []) if (o.ok) add('streettalk', 'coach', o.en);
-  }
-  for (const p of C.STARTER || []) add('phrasebook', 'coach', p.en);
-
-  const words = new Set();
-  for (const line of playerLines) {
-    for (const w of line.toLowerCase().match(/[a-z]+(?:'[a-z]+)?/g) || []) words.add(w);
-  }
-  for (const w of words) add('words', 'coach', w);
-  return items;
-}
 
 function clipName(item, role, cfg) {
   const settings = { ...cfg.defaultSettings, ...(role.settings || {}) };
@@ -144,6 +78,12 @@ async function main() {
 
   await mkdir(CLIP_DIR, { recursive: true });
   const manifest = { version: 1, clips: {} };
+  let previous = {};
+  try {
+    previous = JSON.parse(await readFile(MANIFEST, 'utf8')).clips || {};
+  } catch {
+    // no manifest yet
+  }
   const keep = new Set();
   const todo = [];
   let uncast = 0;
@@ -158,15 +98,21 @@ async function main() {
     if (await exists(path.join(AUDIO_DIR, file))) {
       manifest.clips[item.key] = file;
       keep.add(file);
-    } else if (phaseRank(item.phase) !== Infinity) {
-      todo.push({ ...item, file, settings, voiceId: role.voiceId });
+    } else {
+      // Clip for the current casting is missing: keep the previous clip (older voice) meanwhile.
+      const old = previous[item.key];
+      if (old && (await exists(path.join(AUDIO_DIR, old)))) {
+        manifest.clips[item.key] = old;
+        keep.add(old);
+      }
+      if (phaseRank(item.phase) !== Infinity) todo.push({ ...item, file, settings, voiceId: role.voiceId });
     }
   }
   todo.sort((a, b) => phaseRank(a.phase) - phaseRank(b.phase));
 
   const pending = todo.reduce((n, t) => n + t.text.length, 0);
   console.log(
-    `Lines: ${all.length} total, ${Object.keys(manifest.clips).length} already rendered, ` +
+    `Lines: ${all.length} total, ${Object.keys(manifest.clips).length} with a clip, ` +
       `${todo.length} to render (~${pending} credits), ${uncast} skipped (role has no voiceId).`
   );
 
@@ -190,6 +136,7 @@ async function main() {
     try {
       const { buf, cost } = await tts(t.text, t.voiceId, cfg, t.settings);
       await writeFile(path.join(AUDIO_DIR, t.file), buf);
+      keep.delete(manifest.clips[t.key]);
       manifest.clips[t.key] = t.file;
       keep.add(t.file);
       spent += cost;

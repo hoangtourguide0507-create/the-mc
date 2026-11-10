@@ -15,7 +15,9 @@
     "test:srs": "node tests/srs.test.mjs",
     "test:progress": "node tests/progress.test.mjs",
     "test:pronladder": "node tests/pronladder.test.mjs",
-    "test:grammar": "node tests/grammar.test.mjs"
+    "test:grammar": "node tests/grammar.test.mjs",
+    "test:voicelines": "node tests/voicelines.test.mjs",
+    "voices:kokoro": "python3 tools/render-kokoro.py"
   },
   "dependencies": {
     "@huggingface/transformers": "^4.3.2",

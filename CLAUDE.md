@@ -9,7 +9,7 @@ Lưu ý: hai file đó còn ghi Vite 5, trong khi repo đang dùng Vite 8 (`pack
 
 ## Lệnh thường dùng
 - `npm ci` (cài đặt đúng theo lockfile), `npm run dev`, `npm run build` (gồm `tsc -b` và `vite build`).
-- Test, chạy từng cái hoặc cả bốn:
+- Test, chạy từng cái (danh sách đầy đủ ở `package.json` và `pages.yml`):
   - `npm run test:logic` (Python, `tests/test_core_logic.py`)
   - `npm run test:quests`
   - `npm run test:evaluator`
@@ -20,7 +20,9 @@ Lưu ý: hai file đó còn ghi Vite 5, trong khi repo đang dùng Vite 8 (`pack
 ## Quy trình đưa code lên
 - **Không push trực tiếp lên `main` khi chưa được người dùng đồng ý rõ ràng.** Mọi thay đổi làm trên nhánh riêng (`fix/...`, `feat/...`, `docs/...`), rồi push nhánh và báo người dùng.
 - Push lên `main` sẽ kích hoạt `.github/workflows/pages.yml`: chạy các test, build, rồi deploy lên GitHub Pages (`https://hoangtourguide0507-create.github.io/the-mc/`). Trang chỉ đổi khi `main` đổi.
-- Push lên `main` mà có thay đổi trong `src/data/content.ts`, `tools/voices.config.json` hoặc `tools/render-voices.mjs` sẽ kích hoạt `voices.yml`: render giọng ElevenLabs cho các câu chưa có mp3, commit file mới, rồi deploy lại. Cần secret `ELEVENLABS_API_KEY`.
+- Giọng NPC có ba tầng, game chọn theo thứ tự: clip ElevenLabs (`public/audio/manifest.json`), clip Kokoro (`public/audio/manifest.kokoro.json`), cuối cùng mới là giọng trình duyệt. Danh sách câu cần đọc nằm ở `tools/voice-lines.mjs` (dùng chung cho cả hai bộ render; `npm run test:voicelines` kiểm tra mọi vai đều có giọng).
+- Push lên `main` mà có thay đổi trong `src/data/**`, `tools/voices.config.json`, `tools/render-voices.mjs` hoặc `tools/voice-lines.mjs` sẽ kích hoạt `voices.yml`: render giọng ElevenLabs cho các câu thuộc `phases` chưa có mp3, commit file mới, rồi deploy lại. Cần secret `ELEVENLABS_API_KEY`. Gói miễn phí có 10.000 credit mỗi tháng; hết credit thì clip cũ vẫn được giữ.
+- Push lên `main` (hoặc nhánh `feat/voices-*`) mà có thay đổi trong `src/data/**`, `tools/voices.kokoro.json`, `tools/render-kokoro.py` hoặc `tools/voice-lines.mjs` sẽ kích hoạt `voices-kokoro.yml`: render bằng Kokoro (miễn phí, chạy CPU, không cần khóa API) mọi câu chưa có clip. Chạy tại máy: `pip install kokoro-onnx` rồi `npm run voices:kokoro` (cần `ffmpeg`). Kokoro chỉ có giọng Mỹ và Anh, không có giọng Úc.
 - Mỗi commit kết thúc bằng dòng `Co-Authored-By:` và `Claude-Session:` theo quy ước của phiên làm việc.
 
 ## Lỗi đã gặp và cách xử lý
@@ -29,6 +31,8 @@ Lưu ý: hai file đó còn ghi Vite 5, trong khi repo đang dùng Vite 8 (`pack
 
 ## Quy tắc khi sửa code
 - **React hooks phải nằm trước mọi câu lệnh `return null` sớm** trong component. Hộp thoại dùng hook `useDialog` (`src/components/useDialog.ts`) để có Esc, bấm nền và thuộc tính trợ năng.
+- Màn hình show (`StageView.tsx`): thanh mic ghim ở đáy và nằm ngoài vùng cuộn; HUD thu thành một dải mỏng (`STAGE_TOP_PAD` trong `HUD.tsx`). Đừng đặt nội dung cuộn chung với thanh mic.
+- Ba màn hình 3D được `React.lazy` trong `App.tsx`; đừng import tĩnh `three` vào `App.tsx` hay `main.tsx`.
 - Nút tương tác phải có `min-h-[44px]` (vùng chạm tối thiểu) nếu chữ nhỏ.
 - Thêm test cho mọi thay đổi logic trong `src/core/`. Logic chấm điểm nằm ở `evaluator.ts`, mở khoá nội dung nằm ở `difficulty.ts` và `quests.ts`.
 - Dữ liệu nội dung: `src/data/content.ts` (scene, shop, lịch, thế giới), `src/data/streetTalkExtra*.ts` (tình huống trò chuyện trên đường), `src/data/pronunciation.ts` (luyện phát âm), `src/data/quests.ts`.

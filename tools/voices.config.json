@@ -1,12 +1,12 @@
 {
-  "_help": "Chọn giọng ElevenLabs cho từng vai. voiceId rỗng = vai đó tạm dùng giọng trình duyệt (không tốn credit). Đổi voiceId thì các câu của vai đó được render lại ở lần chạy sau.",
+  "_help": "Chọn giọng ElevenLabs cho từng vai. voiceId rỗng = vai đó tạm dùng giọng trình duyệt (không tốn credit). Đổi voiceId thì các câu của vai đó được render lại ở lần chạy sau. Vai nào chưa có clip ElevenLabs thì game dùng clip Kokoro (tools/voices.kokoro.json). Lưu ý: ElevenLabs chỉ có giọng Úc nam (Charlie) trong bộ giọng mặc định, nên Ivy vẫn dùng giọng Mỹ; cô dâu Emma giữ giọng Sarah vì chưa có giọng Anh nữ trẻ phù hợp.",
   "model": "eleven_multilingual_v2",
   "outputFormat": "mp3_44100_64",
   "maxCharsPerRun": 5200,
   "phases": [
     "scenes"
   ],
-  "_phasesHelp": "Thứ tự ưu tiên khi render: scenes (thoại show), streettalk, phrasebook, words. Thêm phase khi còn credit.",
+  "_phasesHelp": "Thứ tự ưu tiên khi render: scenes (thoại show ngày 1), generated (thoại sinh theo ngày), pronunciation, streettalk, phrasebook, words. Thêm phase khi còn credit.",
   "defaultSettings": {
     "stability": 0.45,
     "similarity_boost": 0.8,
@@ -15,10 +15,10 @@
   },
   "roles": {
     "leo": {
-      "accent": "en-US",
+      "accent": "en-AU",
       "brief": "Barista trẻ, 22 tuổi. Sôi nổi, hay pha trò, nói nhanh khi phấn khích. Thích khoe ly cà phê mới.",
-      "voiceName": "Chris",
-      "voiceId": "iP95p4xoKVk53GoZ742B"
+      "voiceName": "Charlie",
+      "voiceId": "IKne3meq5aSn9XLyUdCD"
     },
     "ivy": {
       "accent": "en-US",
@@ -27,10 +27,10 @@
       "voiceId": "FGY2WhTYpPnrIDTdsKH5"
     },
     "victoria": {
-      "accent": "en-US",
+      "accent": "en-GB",
       "brief": "Chủ tịch gala, ~55 tuổi. Sang trọng, nghiêm, rõ từng chữ. Khó tính với sai sót nhưng lịch sự tuyệt đối.",
-      "voiceName": "Matilda",
-      "voiceId": "XrExE9yKIg1WjnnlVkGX"
+      "voiceName": "Alice",
+      "voiceId": "Xb7hH8MSUJpSbSDYk0k2"
     },
     "couple:emma": {
       "accent": "en-US",
@@ -39,10 +39,10 @@
       "voiceId": "EXAVITQu4vr4xnSDxMaL"
     },
     "couple:liam": {
-      "accent": "en-US",
+      "accent": "en-GB",
       "brief": "Chú rể ~30. Trầm ấm, thân thiện, hơi hồi hộp nhưng hay đùa để giảm căng thẳng.",
-      "voiceName": "Eric",
-      "voiceId": "cjVigY5qzO86Huf0OWal"
+      "voiceName": "George",
+      "voiceId": "JBFqnCBsd6RMkjVDRZzb"
     },
     "alex": {
       "accent": "en-US",
@@ -83,26 +83,26 @@
     "grandpa": {
       "accent": "en-US",
       "brief": "Ông nội cô dâu, ~75 tuổi. Trầm, ấm, hay kể chuyện xưa.",
-      "voiceName": "Adam",
-      "voiceId": "pNInz6obpgDQGcFmaJgB"
+      "voiceName": "Bill",
+      "voiceId": "pqHfZKP75CvOlQylNhV4"
     },
     "grandma": {
       "accent": "en-US",
       "brief": "Bà nội cô dâu, ~72 tuổi. Nhẹ nhàng, lễ phép, hay hỏi han.",
-      "voiceName": "Jessica",
-      "voiceId": "cgSgspJ2msm6clMCkdW9"
+      "voiceName": "Matilda",
+      "voiceId": "XrExE9yKIg1WjnnlVkGX"
     },
     "boy": {
       "accent": "en-US",
       "brief": "Bé trai ~7 tuổi cầm nhẫn. Hồn nhiên, nói nhanh, hay hào hứng.",
-      "voiceName": "Brian",
-      "voiceId": "nPczCjzI2devNBz1zQrb"
+      "voiceName": "Will",
+      "voiceId": "bIHbv24MWmeRgasZH58o"
     },
     "girl": {
       "accent": "en-US",
       "brief": "Bé gái ~5 tuổi rải hoa. Ngọt ngào, rụt rè rồi vui vẻ.",
-      "voiceName": "Roger",
-      "voiceId": "CwhRBWXzGAHq8TQ4Fs17"
+      "voiceName": "Jessica",
+      "voiceId": "cgSgspJ2msm6clMCkdW9"
     }
   }
 }

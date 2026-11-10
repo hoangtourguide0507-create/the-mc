@@ -3,10 +3,11 @@ import { AudioBusState, VisemeType, VoiceConfig } from '../types/game';
 import { clamp } from '../core/clock';
 
 // ---------------------------------------------------------------------------
-// Pre-rendered voice clips (public/audio/manifest.json, made by tools/render-voices.mjs)
+// Pre-rendered voice clips: public/audio/manifest.json (tools/render-voices.mjs, ElevenLabs)
+// and public/audio/manifest.kokoro.json (tools/render-kokoro.py, Kokoro)
 // ---------------------------------------------------------------------------
 
-/** Must match normText() in tools/render-voices.mjs. */
+/** Must match normText() in tools/voice-lines.mjs. */
 export function normText(s: string): string {
   return String(s)
     .replace(/[‘’]/g, "'")
@@ -24,35 +25,55 @@ export function roleFor(npcId: string, speaker?: 'emma' | 'liam'): string {
 
 const AUDIO_BASE = `${import.meta.env.BASE_URL}audio/`;
 
-class ClipLibrary {
-  private index: Promise<Map<string, Map<string, string>>> | null = null;
+type ClipIndex = Map<string, Map<string, string>>;
 
-  load(): Promise<Map<string, Map<string, string>>> {
+/**
+ * Hai nguồn clip: manifest.json (ElevenLabs, ưu tiên) và manifest.kokoro.json (Kokoro,
+ * phủ mọi câu còn lại). Chỉ khi cả hai đều không có câu đó mới dùng giọng trình duyệt.
+ */
+class ClipLibrary {
+  private index: Promise<ClipIndex[]> | null = null;
+
+  private fetchIndex(name: string): Promise<ClipIndex> {
+    return fetch(`${AUDIO_BASE}${name}`, { cache: 'no-cache' })
+      .then((r) => (r.ok ? r.json() : { clips: {} }))
+      .catch(() => ({ clips: {} }))
+      .then((m: { clips?: Record<string, string> }) => {
+        const map: ClipIndex = new Map();
+        for (const [key, file] of Object.entries(m.clips || {})) {
+          const cut = key.indexOf('|');
+          const role = key.slice(0, cut);
+          const text = key.slice(cut + 1);
+          if (!map.has(text)) map.set(text, new Map());
+          map.get(text)!.set(role, file);
+        }
+        return map;
+      });
+  }
+
+  load(): Promise<ClipIndex[]> {
     if (!this.index) {
-      this.index = fetch(`${AUDIO_BASE}manifest.json`, { cache: 'no-cache' })
-        .then((r) => (r.ok ? r.json() : { clips: {} }))
-        .catch(() => ({ clips: {} }))
-        .then((m: { clips?: Record<string, string> }) => {
-          const map = new Map<string, Map<string, string>>();
-          for (const [key, file] of Object.entries(m.clips || {})) {
-            const cut = key.indexOf('|');
-            const role = key.slice(0, cut);
-            const text = key.slice(cut + 1);
-            if (!map.has(text)) map.set(text, new Map());
-            map.get(text)!.set(role, file);
-          }
-          return map;
-        });
+      this.index = Promise.all([this.fetchIndex('manifest.json'), this.fetchIndex('manifest.kokoro.json')]);
     }
     return this.index;
   }
 
-  /** Clip URL for this role and text; falls back to the same text in any role's voice. */
+  /**
+   * Clip URL for this role and text. Order: the role's own clip (ElevenLabs, then Kokoro),
+   * then the same text in any other role's voice.
+   */
   async find(role: string, text: string): Promise<string | null> {
-    const byRole = (await this.load()).get(normText(text));
-    if (!byRole) return null;
-    const file = byRole.get(role) ?? byRole.values().next().value;
-    return file ? `${AUDIO_BASE}${file}` : null;
+    const key = normText(text);
+    const sources = await this.load();
+    for (const src of sources) {
+      const file = src.get(key)?.get(role);
+      if (file) return `${AUDIO_BASE}${file}`;
+    }
+    for (const src of sources) {
+      const file = src.get(key)?.values().next().value;
+      if (file) return `${AUDIO_BASE}${file}`;
+    }
+    return null;
   }
 }
 

@@ -55,6 +55,9 @@ jobs:
       - name: Run grammar tests
         run: npm run test:grammar
 
+      - name: Run voice line tests
+        run: npm run test:voicelines
+
       - name: Build (typecheck + Vite)
         run: npm run build
 

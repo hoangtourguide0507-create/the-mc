@@ -1,6 +1,6 @@
 import React from 'react';
 import { GIG_ORDER, SCENES, SHOP, WORLD_LOCS } from '../data/content';
-import { dayKey, fmtTime, getPeriodMeta, sceneStatus, yesterdayKey } from '../core/clock';
+import { fmtTime, getPeriodMeta, sceneStatus } from '../core/clock';
 import { chaNeed, useGameStore } from '../core/store';
 import { fmtRep, levelTitle, MAX_LV } from '../core/career';
 import { HUD_BOTTOM_PAD, HUD_PAD } from './HUD';
@@ -25,13 +25,6 @@ export const HubView: React.FC = () => {
   const questProg = quest ? questProgress(quest, state) : null;
 
   const periodMeta = getPeriodMeta(state.clock);
-  const today = dayKey();
-  const yesterday = yesterdayKey();
-  const streakAlive =
-    state.streak.last === today || state.streak.last === yesterday;
-  const streakCount = streakAlive ? state.streak.count : 0;
-  const touchedToday = state.streak.last === today;
-
   const canSleep = state.clock >= 1080 || state.energy < 30;
   const ownedUpgrades = SHOP.filter(
     (item) => item.type === 'upgrade' && state.items[item.id]
@@ -102,19 +95,6 @@ export const HubView: React.FC = () => {
             >
               🗣️
             </button>
-
-            {/* Streak Pill */}
-            <div
-              title={`Kỷ lục: ${state.streak.best} ngày`}
-              className={`flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-black ${
-                touchedToday
-                  ? 'border-orange-400/50 bg-orange-500/20 text-orange-300'
- : ' ghibli-panel text-ghibli-ink-soft grayscale'
-              }`}
-            >
-              <span>🔥</span>
-              <span>{streakCount}</span>
-            </div>
 
             {/* Mute Toggle */}
             <button

@@ -6,7 +6,8 @@ on:
   push:
     branches: [main]
     paths:
-      - src/data/content.ts
+      - src/data/**
+      - tools/voice-lines.mjs
       - tools/voices.config.json
       - tools/render-voices.mjs
   workflow_dispatch:

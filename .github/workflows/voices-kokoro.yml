@@ -1,0 +1,78 @@
+name: Render NPC voices (Kokoro, free)
+
+# Renders every spoken line that has no ElevenLabs clip with the open Kokoro model (CPU, no API key),
+# commits the mp3 files, then redeploys Pages. Only missing clips are rendered.
+on:
+  push:
+    # 'feat/voices-*' lets a voice branch render its clips before it is merged; Pages only redeploys from main.
+    branches: [main, 'feat/voices-*']
+    paths:
+      - src/data/**
+      - tools/voices.kokoro.json
+      - tools/render-kokoro.py
+      - tools/voice-lines.mjs
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: voices-kokoro
+  cancel-in-progress: false
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+        env:
+          npm_config_onnxruntime_node_install_cuda: skip
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Kokoro
+        run: pip install kokoro-onnx==0.6.1
+
+      - name: Cache Kokoro model
+        uses: actions/cache@v4
+        with:
+          path: .cache/kokoro
+          key: kokoro-v1.0
+
+      - name: Render missing clips
+        run: python3 tools/render-kokoro.py --prune --minutes 300
+
+      - name: Commit audio
+        id: commit
+        run: |
+          git add public/audio/kokoro public/audio/manifest.kokoro.json
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No audio changes."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+            git commit -m "Render Kokoro voice clips"
+            git pull --rebase origin "$GITHUB_REF_NAME"
+            git push
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Pushes made with GITHUB_TOKEN do not trigger other workflows, so start Pages explicitly.
+      - name: Redeploy Pages
+        if: steps.commit.outputs.changed == 'true' && github.ref_name == 'main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run pages.yml --ref main

@@ -4,8 +4,10 @@ import { fmtRep, levelTitle, MAX_LV } from '../core/career';
 
 /** Khoảng đệm trên: chỉ còn một hàng thẻ cấp độ và tiền (tính cả tai thỏ iPhone) */
 export const HUD_PAD = 'calc(max(0.5rem, env(safe-area-inset-top)) + 84px)';
-/** Khoảng đệm dưới: dành chỗ cho thanh năng lượng nằm ở đáy màn hình */
-export const HUD_BOTTOM_PAD = 'calc(env(safe-area-inset-bottom) + 64px)';
+/** Khoảng đệm dưới: dành chỗ cho thanh năng lượng một dòng nằm ở đáy màn hình */
+export const HUD_BOTTOM_PAD = 'calc(max(0.5rem, env(safe-area-inset-bottom)) + 44px)';
+/** Trên sân khấu HUD thu thành một dải mỏng ở trên và không có thanh đáy (nhường chỗ cho nút mic) */
+export const STAGE_TOP_PAD = 'calc(max(0.375rem, env(safe-area-inset-top)) + 40px)';
 
 function useAnimatedNumber(target: number, duration = 800): number {
   const [display, setDisplay] = useState(target);
@@ -42,6 +44,7 @@ function useAnimatedNumber(target: number, duration = 800): number {
 
 export const HUD: React.FC = () => {
   const state = useGameStore((s) => s.state);
+  const view = useGameStore((s) => s.view);
   const floatingGains = useGameStore((s) => s.floatingGains);
 
   const animEnergy = useAnimatedNumber(state.energy);
@@ -77,6 +80,43 @@ export const HUD: React.FC = () => {
           {f.delta > 0 ? `+${f.delta}` : f.delta}
         </span>
       ));
+
+  // Sân khấu: một dải mỏng gồm cấp độ, năng lượng và tiền, để màn hình dành cho bài nói
+  if (view === 'stage') {
+    return (
+      <header
+        className="pointer-events-none fixed inset-x-0 top-0 z-40 px-3 sm:px-6"
+        style={{ paddingTop: 'max(0.375rem, env(safe-area-inset-top))' }}
+      >
+        <div className="pointer-events-auto mx-auto flex h-9 max-w-6xl items-center gap-3 rounded-full ghibli-panel px-3.5 text-sm font-extrabold">
+          <div className="relative flex min-w-0 flex-1 items-center gap-2 overflow-visible">
+            <span className="shrink-0 text-purple-700">✨ Lv.{state.charisma.lv}</span>
+            <div
+              className="h-2 min-w-[40px] flex-1 overflow-hidden rounded-full bg-ghibli-track"
+              title={isMax ? 'Cấp tối đa' : `${state.charisma.pts}/${needCha} điểm Charisma`}
+            >
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-300"
+                style={{ width: `${chaPct}%` }}
+              />
+            </div>
+            {renderFloats('charisma')}
+            {renderFloats('xp')}
+          </div>
+          <div className="relative flex shrink-0 items-center gap-1 overflow-visible text-emerald-700" title="Năng lượng">
+            <span>⚡</span>
+            <span className="font-display text-ghibli-ink">{animEnergy}</span>
+            {renderFloats('energy')}
+          </div>
+          <div className="relative flex shrink-0 items-center gap-1 overflow-visible text-amber-700" title="Cát-xê">
+            <span>💵</span>
+            <span className="font-display">${animCash}</span>
+            {renderFloats('cash')}
+          </div>
+        </div>
+      </header>
+    );
+  }
 
   return (
     <>
@@ -136,23 +176,21 @@ export const HUD: React.FC = () => {
         className="pointer-events-none fixed inset-x-0 bottom-0 z-40 px-2.5 sm:px-6"
         style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}
       >
-        <div className="pointer-events-auto relative mx-auto max-w-6xl overflow-visible rounded-2xl ghibli-panel px-3 py-2">
-          <div className="flex items-center justify-between gap-3 text-sm font-extrabold">
-            <span className="flex items-center gap-1.5 text-emerald-700">
-              <span>⚡</span>
-              <span>Năng lượng</span>
-            </span>
-            <span className="font-display text-base text-ghibli-ink">
-              {animEnergy}
-              <span className="text-xs text-ghibli-ink-soft">/{state.maxEnergy}</span>
-            </span>
-          </div>
-          <div className="mt-1.5 h-3 w-full overflow-hidden rounded-full bg-ghibli-track">
+        <div className="pointer-events-auto relative mx-auto flex h-9 max-w-6xl items-center gap-2.5 overflow-visible rounded-full ghibli-panel px-3.5 text-sm font-extrabold">
+          <span className="flex shrink-0 items-center gap-1 text-emerald-700">
+            <span>⚡</span>
+            <span>Năng lượng</span>
+          </span>
+          <div className="h-2.5 min-w-0 flex-1 overflow-hidden rounded-full bg-ghibli-track">
             <div
               className={`h-full rounded-full bg-gradient-to-r transition-all duration-300 ${energyBarColor}`}
               style={{ width: `${energyPct}%` }}
             />
           </div>
+          <span className="shrink-0 font-display text-ghibli-ink">
+            {animEnergy}
+            <span className="text-xs text-ghibli-ink-soft">/{state.maxEnergy}</span>
+          </span>
           {renderFloats('energy')}
         </div>
       </footer>

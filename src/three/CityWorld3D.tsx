@@ -45,6 +45,9 @@ const BTN_PRIMARY =
   'min-h-[48px] rounded-2xl border-2 border-ghibli-clay bg-gradient-to-b from-[#B9E29C] to-[#9FD68A] px-3 text-sm font-black text-ghibli-ink shadow-[0_3px_0_#6B4E3D] transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60';
 const BTN_SUN =
   'min-h-[48px] rounded-2xl border-2 border-ghibli-clay bg-gradient-to-b from-[#FBD27A] to-[#F7C35C] px-3 text-sm font-black text-ghibli-ink shadow-[0_3px_0_#6B4E3D] transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60';
+/** Nút nhanh trên bản đồ: biểu tượng kèm nhãn nhỏ bên dưới (điện thoại) hoặc bên cạnh (iPad) */
+const BTN_STACK = '!px-1.5 sm:!px-3 flex min-w-[52px] flex-col items-center justify-center gap-0 leading-none sm:flex-row sm:gap-1';
+const BTN_STACK_LABEL = 'mt-0.5 whitespace-nowrap text-[10px] font-black sm:mt-0 sm:text-xs';
 const BTN_CHIP =
   'min-h-[48px] rounded-2xl border-2 border-ghibli-clay bg-ghibli-cream px-3 text-sm font-extrabold text-ghibli-ink shadow-[0_3px_0_#6B4E3D] transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60';
 const TEXT_SOFT = 'text-ghibli-ink-soft';
@@ -508,25 +511,28 @@ export const CityWorld3D: React.FC = () => {
               {fmtTime(state.clock)} · {periodMeta.label}
               <span className={TEXT_SOFT}> · Ngày {state.day}</span>
             </div>
-            <div className={`truncate text-xs font-semibold ${ACCENT_TEXT}`}>
+            <div className={`line-clamp-2 text-xs font-semibold leading-tight ${ACCENT_TEXT}`}>
               {district.icon} {district.name} · {locationBannerText}
             </div>
           </div>
         </div>
         <div className="pointer-events-auto flex shrink-0 flex-col items-end gap-1.5 sm:flex-row sm:items-center">
           <div className="flex gap-1">
-            <button onClick={() => handleSelectBuilding('home')} className={BTN_CHIP}>
-              🏠<span className="ml-1 hidden sm:inline">Về Nhà</span>
+            <button onClick={() => handleSelectBuilding('home')} className={`${BTN_CHIP} ${BTN_STACK}`}>
+              <span>🏠</span>
+              <span className={BTN_STACK_LABEL}>Về nhà</span>
             </button>
-            <button onClick={() => goTo('hub')} className={BTN_CHIP}>
-              🎙️<span className="ml-1 hidden sm:inline">Phòng MC</span>
+            <button onClick={() => goTo('hub')} className={`${BTN_CHIP} ${BTN_STACK}`}>
+              <span>🎙️</span>
+              <span className={BTN_STACK_LABEL}>Phòng MC</span>
             </button>
             <button
               onClick={() => setShowMap((v) => !v)}
               aria-label="Bản đồ nhỏ"
-              className={showMap ? BTN_SUN : BTN_CHIP}
+              className={`${showMap ? BTN_SUN : BTN_CHIP} ${BTN_STACK}`}
             >
-              🗺️
+              <span>🗺️</span>
+              <span className={BTN_STACK_LABEL}>Bản đồ</span>
             </button>
           </div>
           {showMap && <MiniMap grid={grid} mc={mcTile} onPick={handleSelectBuilding} hotAt={activeShowAt} />}
@@ -538,7 +544,7 @@ export const CityWorld3D: React.FC = () => {
           onClick={() => setFollow(true)}
           aria-label="Định tâm về MC"
           className="ghibli-panel pointer-events-auto absolute right-4 z-30 flex h-12 w-12 items-center justify-center rounded-full text-2xl transition active:scale-95"
-          style={{ bottom: 'calc(max(12px, env(safe-area-inset-bottom)) + 76px)' }}
+          style={{ bottom: 'calc(max(12px, env(safe-area-inset-bottom)) + 60px)' }}
         >
           🎯
         </button>
@@ -547,7 +553,7 @@ export const CityWorld3D: React.FC = () => {
       {/* Đáy màn hình: thẻ cửa địa điểm + show kế tiếp, xếp chồng không đè nhau */}
       <div
         className="pointer-events-none absolute inset-x-0 bottom-0 z-30 flex flex-col items-center gap-2 px-3 sm:items-end sm:px-6"
-        style={{ paddingBottom: 'calc(max(12px, env(safe-area-inset-bottom)) + 64px)' }}
+        style={{ paddingBottom: 'calc(max(12px, env(safe-area-inset-bottom)) + 48px)' }}
       >
         {activeDoorLocId && WORLD_LOCS[activeDoorLocId] && (
           <DoorCard
@@ -568,7 +574,7 @@ export const CityWorld3D: React.FC = () => {
             <span className="text-lg">{nextShowInfo.scene.icon}</span>
             <div className="min-w-0 flex-1">
               <div className={`text-xs uppercase tracking-wider ${ACCENT_TEXT}`}>Show kế tiếp · {fmtTime(nextShowInfo.startMin)}</div>
-              <div className="truncate font-display text-sm font-black text-ghibli-ink">
+              <div className="line-clamp-2 font-display text-sm font-black leading-tight text-ghibli-ink">
                 {nextShowInfo.scene.title} · {nextShowInfo.status.label}
               </div>
             </div>

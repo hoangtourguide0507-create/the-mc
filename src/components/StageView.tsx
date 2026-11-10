@@ -5,7 +5,7 @@ import { viSupport } from '../core/support';
 import { clamp } from '../core/clock';
 import { evaluateTurnCandidates } from '../core/evaluator';
 import { useGameStore } from '../core/store';
-import { HUD_BOTTOM_PAD, HUD_PAD } from './HUD';
+import { STAGE_TOP_PAD } from './HUD';
 import {
   EvalResult,
   NpcMood,
@@ -473,35 +473,38 @@ export const StageView: React.FC = () => {
   const progressPct = Math.round(((turnIdx + 1) / scene.turns.length) * 100);
 
   return (
-    <div className="mx-auto flex h-full max-w-6xl flex-col gap-3 overflow-y-auto px-3 pb-6 sm:px-6" style={{ paddingTop: HUD_PAD, paddingBottom: HUD_BOTTOM_PAD }}>
-      {/* Top Stage Header Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl ghibli-panel px-3.5 py-2">
-        <div className="flex items-center gap-2.5">
+    <div
+      className="mx-auto flex h-full max-w-6xl flex-col gap-2 overflow-hidden px-3 sm:gap-3 sm:px-6"
+      style={{ paddingTop: STAGE_TOP_PAD, paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}
+    >
+      {/* Thanh tiêu đề: nút rời, tên hoạt động, tiến độ lượt, sao */}
+      <div className="flex shrink-0 items-center justify-between gap-2 rounded-2xl ghibli-panel px-2.5 py-1.5">
+        <div className="flex min-w-0 flex-1 items-center gap-2.5">
           <button
             onClick={handleLeaveStage}
-            className="min-h-[48px] rounded-xl border-2 border-ghibli-clay bg-ghibli-cream px-3 text-sm font-extrabold text-ghibli-ink transition hover:bg-[#FCE4DA] hover:text-[#B2421E]"
+            className="min-h-[44px] shrink-0 rounded-xl border-2 border-ghibli-clay bg-ghibli-cream px-3 text-sm font-extrabold text-ghibli-ink transition hover:bg-[#FCE4DA] hover:text-[#B2421E]"
           >
             ✕ Rời
           </button>
-          <div>
-            <div className="text-xs font-black uppercase tracking-wider text-pink-700">
-              ACTIVITY: {scene.title}
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-xs font-black uppercase tracking-wider text-pink-700">
+              {scene.title}
             </div>
             <div className="flex items-center gap-2">
-              <div className="h-2.5 w-28 overflow-hidden rounded-full bg-ghibli-track sm:w-44">
+              <div className="h-2.5 min-w-0 flex-1 overflow-hidden rounded-full bg-ghibli-track sm:max-w-[11rem]">
                 <div
                   className="h-full rounded-full bg-gradient-to-r from-ghibli-sun to-ghibli-sage transition-all duration-300"
                   style={{ width: `${progressPct}%` }}
                 />
               </div>
-              <span className="text-sm font-black text-ghibli-ink">
+              <span className="shrink-0 text-sm font-black text-ghibli-ink">
                 Lượt {turnIdx + 1}/{scene.turns.length}
               </span>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-1 text-sm">
+        <div className="flex shrink-0 items-center gap-0.5 text-sm">
           {[1, 2, 3].map((s) => (
             <span
               key={s}
@@ -514,9 +517,9 @@ export const StageView: React.FC = () => {
       </div>
 
       {/* Main Content Split: 3D Stage Viewport (Left on iPad) + Interactive Listening & Cue Cards (Right on iPad) */}
-      <div className="grid flex-1 grid-cols-1 gap-3.5 md:grid-cols-12 md:overflow-hidden">
+      <div className="flex min-h-0 flex-1 flex-col gap-2 md:grid md:grid-cols-12 md:gap-3.5">
         {/* 3D STAGE VIEWPORT */}
-        <div className="relative h-36 w-full sm:h-72 md:col-span-5 md:h-full">
+        <div className="relative h-[22dvh] min-h-[120px] w-full shrink-0 sm:h-64 md:col-span-5 md:h-full">
           <Stage3D
             scene={scene}
             npcId={currentNpcId}
@@ -544,17 +547,19 @@ export const StageView: React.FC = () => {
         </div>
 
         {/* RIGHT PANEL: INTERACTIVE LISTENING + CUE CARD + MICROPHONE CONTROLS */}
-        <div className="flex flex-col justify-between gap-3 md:col-span-7 md:h-full md:overflow-y-auto md:pr-1">
+        <div className="flex min-h-0 flex-1 flex-col gap-2 md:col-span-7 md:h-full md:gap-3">
+          {/* Vùng cuộn: thẻ nghe và thẻ bài nói. Thanh mic nằm ngoài vùng này nên luôn nhìn thấy. */}
+          <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pb-1 md:gap-3 md:pr-1">
           {/* 1. INTERACTIVE LISTENING CARD */}
-          <div className="rounded-3xl ghibli-panel p-3.5">
+          <div className="shrink-0 rounded-3xl ghibli-panel p-3">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b-2 border-ghibli-track pb-2.5">
               <div className="flex items-center gap-2">
                 <span className="rounded-lg bg-ghibli-sky px-2 py-1 text-xs font-black text-ghibli-ink">
-                  🎧 INTERACTIVE LISTENING
+                  🎧 Nghe NPC
                 </span>
                 {!revealed && (
                   <span className="rounded-full bg-[#E4F2DC] px-2 py-1 text-xs font-extrabold text-[#3F7A32]">
-                    Blind ×2 XP
+                    Ẩn chữ ×2 XP
                   </span>
                 )}
               </div>
@@ -601,7 +606,7 @@ export const StageView: React.FC = () => {
               {!revealed ? (
                 <div
                   onClick={() => handlePlayNpcAudio(false)}
-                  className="flex cursor-pointer items-center justify-center gap-3 rounded-2xl min-h-[48px] border-2 border-dashed border-ghibli-clay bg-ghibli-track/60 px-3 py-4 transition hover:bg-ghibli-track"
+                  className="flex cursor-pointer items-center justify-center gap-3 rounded-2xl min-h-[48px] border-2 border-dashed border-ghibli-clay bg-ghibli-track/60 px-3 py-2 transition sm:py-4 hover:bg-ghibli-track"
                 >
                   <div className="flex items-center gap-1">
                     {[1, 2, 3, 4, 5, 6, 7].map((bar) => (
@@ -614,7 +619,7 @@ export const StageView: React.FC = () => {
                     ))}
                   </div>
                   <span className="text-sm font-bold text-ghibli-ink">
-                    Đang ẩn chữ (Blind Listening) · Chạm để nghe lại
+                    Đang ẩn chữ · Chạm để nghe lại
                   </span>
                 </div>
               ) : (
@@ -633,18 +638,18 @@ export const StageView: React.FC = () => {
           </div>
 
           {/* 2. CUE CARD / TASK CARD BY TURN MODE */}
-          <div className="flex-1 rounded-3xl ghibli-panel p-4">
+          <div className="flex-1 rounded-3xl ghibli-panel p-3.5 sm:p-4">
             <div className="mb-2 flex items-center justify-between">
-              <span className="rounded-full border-2 border-ghibli-clay bg-[#FBE3EC] px-3 py-1 text-xs font-black uppercase tracking-wider text-pink-800">
+              <span className="rounded-full border-2 border-ghibli-clay bg-[#FBE3EC] px-3 py-1 text-xs font-black tracking-wide text-pink-800">
                 {turn.mode === 'catch'
-                  ? '🎯 WORD-CATCHER + SPEAKING'
+                  ? '🎯 Bắt từ rồi nói'
                   : turn.mode === 'semi'
-                  ? '✍️ BÁN KỊCH BẢN (SEMI-SCRIPTED)'
+                  ? '✍️ Điền ô rồi nói'
                   : turn.mode === 'free'
-                  ? '🔥 ỨNG BIẾN TỰ DO (FREEFORM)'
+                  ? '🔥 Ứng biến tự do'
                   : turn.mode === 'quiz'
-                  ? '⚡ PHẢN XẠ NGHE HIỂU (QUIZ)'
-                  : '🎙️ CUE CARD (SCRIPTED)'}
+                  ? '⚡ Phản xạ nghe hiểu'
+                  : '🎙️ Đọc theo thẻ nhắc'}
               </span>
 
               {turn.mode === 'quiz' && reflexLeft !== null && (
@@ -898,30 +903,34 @@ export const StageView: React.FC = () => {
             )}
           </div>
 
-          {/* 3. BOTTOM MICROPHONE & ACTION BAR */}
-          <div className="rounded-3xl ghibli-panel p-3">
+          </div>
+
+          {/* 3. THANH MIC & HÀNH ĐỘNG: ghim ở đáy, không cuộn theo nội dung */}
+          <div className="shrink-0 rounded-3xl ghibli-panel p-2.5 sm:p-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
               {/* Left: Sample Audio + Fallback Toggle */}
-              <div className="flex items-center gap-1.5">
+              <div className="order-2 flex items-center gap-1.5 sm:order-none">
                 {turn.mode !== 'quiz' && (
                   <>
                     <button
                       onClick={() => handlePlaySampleCue(false)}
-                      className="min-h-[48px] rounded-xl border-2 border-ghibli-clay bg-ghibli-cream px-3 text-sm font-extrabold text-ghibli-ink transition hover:bg-[#FBEBD0]"
+                      className="min-h-[48px] rounded-xl border-2 border-ghibli-clay bg-ghibli-cream px-2.5 text-sm sm:px-3 font-extrabold text-ghibli-ink transition hover:bg-[#FBEBD0]"
                     >
-                      🔊 Mẫu 1×
+                      🔊 Mẫu
                     </button>
                     <button
                       onClick={() => handlePlaySampleCue(true)}
-                      className="min-h-[48px] rounded-xl border-2 border-ghibli-clay bg-ghibli-cream px-3 text-sm font-extrabold text-[#23706A] transition hover:bg-[#FBEBD0]"
+                      aria-label="Nghe câu mẫu chậm 0.8×"
+                      className="min-h-[48px] min-w-[44px] rounded-xl border-2 border-ghibli-clay bg-ghibli-cream px-2.5 text-sm font-extrabold text-[#23706A] transition hover:bg-[#FBEBD0] sm:px-3"
                     >
-                      🐢 0.8×
+                      🐢<span className="ml-1 hidden sm:inline">0.8×</span>
                     </button>
                     <button
                       onClick={() => setShowFallbackBox((v) => !v)}
-                      className="min-h-[48px] rounded-xl border-2 border-ghibli-clay bg-[#FDF0CF] px-3 text-sm font-extrabold text-[#8A5A00] transition hover:bg-[#FBE3A8]"
+                      aria-label="Gõ thay mic"
+                      className="min-h-[48px] min-w-[44px] rounded-xl border-2 border-ghibli-clay bg-[#FDF0CF] px-2.5 text-sm sm:px-3 font-extrabold text-[#8A5A00] transition hover:bg-[#FBE3A8]"
                     >
-                      ⌨️ Gõ thay mic
+                      ⌨️<span className="ml-1 hidden sm:inline">Gõ thay mic</span>
                     </button>
                   </>
                 )}
@@ -931,7 +940,7 @@ export const StageView: React.FC = () => {
               {turn.mode !== 'quiz' && (
                 <button
                   onClick={handleMicPress}
-                  className={`flex min-h-[48px] items-center gap-2 rounded-2xl border-2 border-ghibli-clay px-6 py-2.5 font-display text-sm font-black shadow-[0_3px_0_#6B4E3D] transition hover:scale-105 ${
+                  className={`order-1 flex min-h-[56px] w-full items-center justify-center gap-2 rounded-2xl border-2 border-ghibli-clay px-6 py-2.5 font-display text-lg font-black shadow-[0_3px_0_#6B4E3D] transition active:scale-[0.98] sm:order-none sm:min-h-[48px] sm:w-auto sm:text-sm sm:hover:scale-105 ${
                     micPhase === 'locked'
                       ? 'cursor-not-allowed bg-[#F1E9DC] text-ghibli-ink-soft opacity-60'
                       : micPhase === 'rec'
@@ -956,7 +965,7 @@ export const StageView: React.FC = () => {
               )}
 
               {/* Right: Skip & Continue Buttons */}
-              <div className="flex items-center gap-2">
+              <div className="order-3 flex items-center gap-1.5 sm:order-none sm:gap-2">
                 {(turnStars[turnIdx] || 0) < 1 && turn.mode !== 'quiz' && (
                   <span className="hidden text-xs font-bold text-amber-700 sm:inline">
                     Cần 1★ để tiếp tục, hoặc bấm Bỏ qua
@@ -964,16 +973,16 @@ export const StageView: React.FC = () => {
                 )}
                 <button
                   onClick={() => handleNextTurn(true)}
-                  className="min-h-[48px] rounded-xl border-2 border-ghibli-clay bg-ghibli-cream px-3.5 text-sm font-bold text-ghibli-ink-soft transition hover:bg-[#FBEBD0]"
+                  className="min-h-[48px] rounded-xl border-2 border-ghibli-clay bg-ghibli-cream px-2.5 text-sm font-bold text-ghibli-ink-soft sm:px-3.5 transition hover:bg-[#FBEBD0]"
                 >
                   Bỏ qua
                 </button>
                 <button
                   disabled={(turnStars[turnIdx] || 0) < 1}
                   onClick={() => handleNextTurn(false)}
-                  className="min-h-[48px] rounded-xl border-2 border-ghibli-clay bg-gradient-to-r from-ghibli-sage to-[#9FD68A] px-4 text-sm font-black text-ghibli-ink shadow-[0_3px_0_#6B4E3D] transition hover:scale-105 disabled:cursor-not-allowed disabled:bg-none disabled:bg-[#F1E9DC] disabled:text-ghibli-ink-soft disabled:shadow-none disabled:opacity-60"
+                  className="min-h-[48px] rounded-xl border-2 border-ghibli-clay bg-gradient-to-r from-ghibli-sage to-[#9FD68A] px-3 sm:px-4 text-sm font-black text-ghibli-ink shadow-[0_3px_0_#6B4E3D] transition hover:scale-105 disabled:cursor-not-allowed disabled:bg-none disabled:bg-[#F1E9DC] disabled:text-ghibli-ink-soft disabled:shadow-none disabled:opacity-60"
                 >
-                  {turnIdx + 1 >= scene.turns.length ? 'Kết thúc 🎉' : 'Tiếp tục ➔'}
+                  {turnIdx + 1 >= scene.turns.length ? 'Kết thúc 🎉' : 'Tiếp ➔'}
                 </button>
               </div>
             </div>
