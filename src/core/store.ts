@@ -1,3 +1,5 @@
+import { EMPTY_LEARN, type LearnState } from './cando';
+import { newChunkCard, scheduleChunk } from './chunks';
 import { create } from 'zustand';
 import { SCENES, SCHEDULE, SHOP, TIPS } from '../data/content';
 import { scheduleAfter, SRS_MAX_BOX, boxOf } from './srs';
@@ -64,9 +66,14 @@ export const DEFAULT_STATE: GameState = {
   muted: false,
   voiceURI: null,
   pron: { progress: {}, recent: [] },
+  learn: deepCloneLearn(),
 };
 
 export { chaNeed } from './career';
+
+function deepCloneLearn(): LearnState {
+  return JSON.parse(JSON.stringify(EMPTY_LEARN));
+}
 
 export function deepClone<T>(obj: T): T {
   return JSON.parse(JSON.stringify(obj));
@@ -274,6 +281,16 @@ interface GameStore {
   pronOpen: boolean;
   setPronOpen: (open: boolean) => void;
   recordPron: (drillId: string, ok: boolean) => void;
+
+  // Phòng luyện: khởi động bằng cụm, nhịp ngắt nghỉ, năng lực, kiểm tra tuần
+  trainOpen: boolean;
+  trainTab: 'warmup' | 'rhythm' | 'cando';
+  setTrainOpen: (open: boolean, tab?: 'warmup' | 'rhythm' | 'cando') => void;
+  /** Ghi nhận sau khi hoàn thành một kịch bản: +1 lần gặp, lượt tự nói đạt, cụm mới vào hộp ôn. */
+  recordStageLearning: (p: { scriptKey: string; sceneId: string; unsupportedPasses: number; chunkIds: string[] }) => number;
+  gradeChunk: (chunkId: string, correct: boolean) => void;
+  recordRhythm: (drillId: string, ok: boolean) => void;
+  recordWeekly: (score: number) => void;
   ackTour: (stepId: string) => void;
   skipTour: () => void;
 }
@@ -304,6 +321,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   questOpen: false,
   helpOpen: false,
   pronOpen: false,
+  trainOpen: false,
+  trainTab: 'warmup',
 
   bonusOf: (key) => {
     const items = get().state.items;
@@ -1019,6 +1038,53 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ state: next });
     persistStateDebounced(next);
     get().evaluateQuests();
+  },
+
+  setTrainOpen: (open, tab) => {
+    if (open) SFX.play('tap');
+    set(tab ? { trainOpen: open, trainTab: tab } : { trainOpen: open });
+  },
+
+  recordStageLearning: ({ scriptKey, sceneId, unsupportedPasses, chunkIds }) => {
+    const next = deepClone(get().state);
+    const learn = next.learn;
+    learn.exposure[scriptKey] = (learn.exposure[scriptKey] ?? 0) + 1;
+    if (unsupportedPasses > 0) {
+      learn.unsupported[sceneId] = (learn.unsupported[sceneId] ?? 0) + unsupportedPasses;
+    }
+    let added = 0;
+    for (const id of chunkIds) {
+      if (!learn.chunks[id]) {
+        learn.chunks[id] = newChunkCard(next.day);
+        added++;
+      }
+    }
+    set({ state: next });
+    persistStateDebounced(next);
+    return added;
+  },
+
+  gradeChunk: (chunkId, correct) => {
+    const next = deepClone(get().state);
+    next.learn.chunks[chunkId] = scheduleChunk(next.learn.chunks[chunkId], correct, next.day);
+    set({ state: next });
+    persistStateDebounced(next);
+  },
+
+  recordRhythm: (drillId, ok) => {
+    if (!ok) return;
+    const next = deepClone(get().state);
+    next.learn.rhythm[drillId] = (next.learn.rhythm[drillId] ?? 0) + 1;
+    set({ state: next });
+    persistStateDebounced(next);
+  },
+
+  recordWeekly: (score) => {
+    const next = deepClone(get().state);
+    next.learn.weekly.lastDay = next.day;
+    next.learn.weekly.history = [...next.learn.weekly.history, { day: next.day, score: Math.round(score) }].slice(-12);
+    set({ state: next });
+    persistStateDebounced(next);
   },
 
   recordPhraseStars: (phraseId, stars) => {

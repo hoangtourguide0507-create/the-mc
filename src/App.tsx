@@ -14,6 +14,7 @@ import { useGameStore } from './core/store';
 import { QuestSheet } from './components/QuestSheet';
 import { HelpSheet } from './components/HelpSheet';
 import { PronunciationSheet } from './components/PronunciationSheet';
+import { TrainingSheet } from './components/TrainingSheet';
 import { TourOverlay } from './components/TourOverlay';
 
 // Ba màn hình 3D được tách thành gói riêng: màn chào hiện ngay, three.js tải song song phía sau.
@@ -100,6 +101,7 @@ export const App: React.FC = () => {
       <QuestSheet />
       <HelpSheet />
       <PronunciationSheet />
+      <TrainingSheet />
       <TourOverlay />
       <GlobalOverlays />
     </div>

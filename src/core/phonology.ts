@@ -243,3 +243,56 @@ export function phoneVerdict(res: PhoneScore): boolean {
   if (res.score < 0.9) return false;
   return !res.ops.some((o) => o.kind === 'missing' || o.kind === 'wrong');
 }
+
+// ── Nhịp ngắt nghỉ ───────────────────────────────────────────────────────────
+// MC cần ngắt đúng chỗ hơn là đúng từng âm. Ở đây đếm các quãng lặng bên trong câu nói
+// (từ lúc bắt đầu tới lúc kết thúc tiếng nói) và so với số chỗ ngắt mong đợi.
+
+export interface PauseReport {
+  /** Số quãng nghỉ tìm thấy bên trong câu. */
+  found: number;
+  expected: number;
+  /** Đủ số chỗ ngắt và không ngắt vụn quá nhiều. */
+  ok: boolean;
+  verdict: 'ok' | 'rushed' | 'choppy' | 'silent';
+  /** Độ dài từng quãng nghỉ (ms). */
+  pausesMs: number[];
+  /** Thời lượng phần có tiếng nói (ms). */
+  speechMs: number;
+}
+
+/** Quãng lặng ngắn nhất được tính là một chỗ ngắt có chủ ý. */
+export const MIN_PAUSE_MS = 220;
+
+export function checkPauses(samples: Float32Array, expected: number, sampleRate = 16000): PauseReport {
+  const hop = Math.round(0.01 * sampleRate);
+  const frame = Math.round(0.025 * sampleRate);
+  const rms: number[] = [];
+  for (let start = 0; start + frame <= samples.length; start += hop) {
+    let sum = 0;
+    for (let k = 0; k < frame; k++) sum += samples[start + k] * samples[start + k];
+    rms.push(Math.sqrt(sum / frame));
+  }
+  const peak = rms.reduce((m, v) => Math.max(m, v), 0);
+  const silent: PauseReport = { found: 0, expected, ok: false, verdict: 'silent', pausesMs: [], speechMs: 0 };
+  if (peak < 0.01) return silent;
+  const threshold = Math.max(0.008, peak * 0.12);
+  const voiced = rms.map((v) => v >= threshold);
+  const first = voiced.indexOf(true);
+  const last = voiced.lastIndexOf(true);
+  if (first < 0 || last <= first) return silent;
+
+  const pausesMs: number[] = [];
+  let run = 0;
+  for (let i = first; i <= last; i++) {
+    if (!voiced[i]) {
+      run++;
+    } else {
+      if (run * 10 >= MIN_PAUSE_MS) pausesMs.push(run * 10);
+      run = 0;
+    }
+  }
+  const found = pausesMs.length;
+  const verdict = found < expected ? 'rushed' : found > expected + 2 ? 'choppy' : 'ok';
+  return { found, expected, ok: verdict === 'ok', verdict, pausesMs, speechMs: (last - first + 1) * 10 };
+}

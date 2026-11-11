@@ -1,3 +1,5 @@
+import { dueChunkIds } from '../core/chunks';
+import { weeklyDue } from '../core/cando';
 import React from 'react';
 import { GIG_ORDER, SCENES, SHOP, WORLD_LOCS } from '../data/content';
 import { fmtTime, getPeriodMeta, sceneStatus } from '../core/clock';
@@ -20,6 +22,9 @@ export const HubView: React.FC = () => {
   const setQuestOpen = useGameStore((s) => s.setQuestOpen);
   const setHelpOpen = useGameStore((s) => s.setHelpOpen);
   const setPronOpen = useGameStore((s) => s.setPronOpen);
+  const setTrainOpen = useGameStore((s) => s.setTrainOpen);
+  // Số việc tới hạn trong Phòng luyện: cụm cần ôn hôm nay, cộng bài kiểm tra tuần nếu đã mở
+  const trainDue = dueChunkIds(state.learn.chunks, state.day, 99).length + (weeklyDue(state.learn, state.day) ? 1 : 0);
   const hint = nextHint(state);
   const quest = currentQuest(state);
   const questProg = quest ? questProgress(quest, state) : null;
@@ -84,6 +89,21 @@ export const HubView: React.FC = () => {
  className="min-h-[44px] rounded-full border ghibli-panel px-2.5 py-1 text-xs font-black text-ghibli-ink transition hover:brightness-95"
             >
               ❓
+            </button>
+
+            {/* Phòng luyện: khởi động bằng cụm, nhịp ngắt nghỉ, năng lực */}
+            <button
+              onClick={() => setTrainOpen(true, trainDue > 0 ? 'warmup' : 'cando')}
+              title="Phòng luyện"
+              aria-label={`Phòng luyện${trainDue > 0 ? `, ${trainDue} việc tới hạn` : ''}`}
+              className="relative flex min-h-[48px] items-center gap-1 whitespace-nowrap rounded-full border ghibli-panel px-3 text-sm font-black text-ghibli-ink transition"
+            >
+              🎯 Luyện
+              {trainDue > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#D1502C] px-1 text-[11px] font-black text-white">
+                  {trainDue}
+                </span>
+              )}
             </button>
 
             {/* Bắt lỗi phát âm */}

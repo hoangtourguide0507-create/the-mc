@@ -33,7 +33,8 @@ export async function loadContent() {
   const src = (f) => JSON.stringify(path.join(root, 'src', 'data', f));
   await writeFile(
     entry,
-    `export * from ${src('content.ts')};\nexport { PRON_DRILLS, coachFor } from ${src('pronunciation.ts')};\n`
+    `export * from ${src('content.ts')};\nexport { PRON_DRILLS, coachFor } from ${src('pronunciation.ts')};\n` +
+      `export { CHUNKS } from ${src('chunks.ts')};\nexport { RHYTHM_DRILLS, rhythmPlain } from ${src('rhythm.ts')};\n`
   );
   await build({ entryPoints: [entry], bundle: true, format: 'esm', platform: 'node', outfile, logLevel: 'silent' });
   try {
@@ -93,7 +94,14 @@ export function collect(C) {
     for (const o of it.options || []) if (o.ok) add('streettalk', 'coach', o.en);
   }
 
-  // 5. Sổ tay và từ đơn (chạm vào từ để nghe)
+  // 5. Cụm mang về (câu mẫu trong ngữ cảnh mới) và bài nhịp ngắt nghỉ
+  for (const ch of Object.values(C.CHUNKS || {})) {
+    add('chunks', 'coach', ch.en);
+    add('chunks', 'coach', ch.sample);
+  }
+  for (const d of C.RHYTHM_DRILLS || []) add('rhythm', 'coach', C.rhythmPlain(d));
+
+  // 6. Sổ tay và từ đơn (chạm vào từ để nghe)
   for (const p of C.STARTER || []) add('phrasebook', 'coach', p.en);
   const words = new Set();
   for (const line of playerLines) {

@@ -230,6 +230,8 @@ export interface GameState {
     progress: Record<string, { tries: number; ok: number }>;
     recent: string[];
   };
+  /** Tiến trình học: số lần gặp kịch bản, lượt tự nói, hộp ôn cụm, bài nhịp, kiểm tra tuần. */
+  learn: import('../core/cando').LearnState;
 }
 
 export interface ShopItem {

@@ -17,6 +17,8 @@ const MODES: { name: string; desc: string }[] = [
   { name: 'Semi', desc: 'Ghép câu từ các ô gợi ý theo khung cho sẵn.' },
   { name: 'Free', desc: 'Tự nói theo nhiệm vụ, phải có các từ bắt buộc.' },
   { name: 'Quiz', desc: 'Nghe xong chọn đáp án đúng, càng nhanh càng được nhiều sao.' },
+  { name: 'Tự nói', desc: 'Gặp lại một tình huống, thẻ tiếng Anh bị ẩn: lần hai còn gợi ý tiếng Việt, từ lần ba chỉ còn câu NPC. Máy chấm theo ý, không đòi đúng từng chữ. Câu hỏi chọn đáp án đổi thành phản xạ nói có đồng hồ.' },
+  { name: 'Phòng luyện 🎯', desc: 'Khởi động: nói lại các cụm tới hạn trong tình huống mới. Nhịp: đọc lời dẫn với ngắt nghỉ đúng chỗ. Năng lực: những việc bạn đã tự làm được và bài kiểm tra tuần.' },
 ];
 
 /** Hướng dẫn chơi: mở từ nút ❓ ở Hub (Cozy Modern Tactile). */

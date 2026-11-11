@@ -1239,6 +1239,17 @@ export function scenarioForDay(scene: SceneData, day: number): DayScript {
   return { scenarioId: null, title: null, turns: generatedTurnsForDay(scene, d) };
 }
 
+/** Lượt thoại của một kịch bản theo khóa ("<cảnh>:base" hoặc id tình huống). Bộ sinh ("<cảnh>:gen") trả null. */
+export function scriptTurns(key: string): { scene: SceneData; turns: TurnData[] } | null {
+  const [sceneId, kind] = key.split(':');
+  if (kind === 'base' && SCENES[sceneId]) return { scene: SCENES[sceneId], turns: SCENES[sceneId].turns };
+  for (const [id, list] of Object.entries(PREPARED_SCENARIOS)) {
+    const sc = list.find((x) => x.id === key);
+    if (sc && SCENES[id]) return { scene: SCENES[id], turns: sc.turns };
+  }
+  return null;
+}
+
 export function turnsForDay(scene: SceneData, day: number): TurnData[] {
   return scenarioForDay(scene, day).turns;
 }

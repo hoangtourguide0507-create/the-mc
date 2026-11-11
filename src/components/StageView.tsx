@@ -5,6 +5,8 @@ import { viSupport } from '../core/support';
 import { clamp } from '../core/clock';
 import { evaluateScripted, evaluateTurnCandidates } from '../core/evaluator';
 import { applyChunkAttempt, focusChunk, mergeAttempts } from '../core/retry';
+import { evaluateRecallCandidates, planTurn, supportStage } from '../core/recall';
+import { CHUNKS_BY_SCRIPT } from '../data/chunks';
 import { useGameStore } from '../core/store';
 import { STAGE_TOP_PAD } from './HUD';
 import {
@@ -33,6 +35,11 @@ export const StageView: React.FC = () => {
   // Lượt thoại đổi theo ngày trong game; nhiệm vụ và sổ tay vẫn dùng baseScene (chỉ số lượt ổn định).
   const dayScript = useMemo(() => scenarioForDay(baseScene, state.day), [baseScene, state.day]);
   const scene = useMemo(() => ({ ...baseScene, turns: dayScript.turns }), [baseScene, dayScript]);
+  // Khóa kịch bản để đếm số lần đã gặp: id tình huống, hoặc kịch bản gốc / bộ sinh của cảnh
+  const scriptKey = dayScript.scenarioId ?? `${baseScene.id}:${state.day < 2 ? 'base' : 'gen'}`;
+  // Mức hỗ trợ chốt lúc vào cảnh: 0 = đủ thẻ, 1 = chỉ gợi ý tiếng Việt, 2 = không gợi ý
+  const stage = useMemo(() => supportStage(state.learn.exposure[scriptKey]), [scriptKey]);
+  const recordStageLearning = useGameStore((s) => s.recordStageLearning);
 
   const [turnIdx, setTurnIdx] = useState(0);
   const [turnStars, setTurnStars] = useState<number[]>(() =>
@@ -58,6 +65,12 @@ export const StageView: React.FC = () => {
   // Cụm ngắn còn chứa từ chưa đúng (lượt đọc theo thẻ / bắt từ). Người học luyện riêng cụm này
   // thay vì đọc lại cả câu; evalResult là kết quả cộng dồn của mọi lần đọc trong lượt.
   const [chunkRec, setChunkRec] = useState(false);
+  // Tự nói không nhìn thẻ: người học tự bật ở lần gặp đầu (từ lần hai game tự bật)
+  const [selfTalk, setSelfTalk] = useState(false);
+  // Đã xin gợi ý tiếng Việt ở lượt không có gợi ý (giới hạn 2 sao)
+  const [hintAsked, setHintAsked] = useState(false);
+  // Các lượt đã tự nói đạt từ 2 sao khi không có thẻ
+  const selfPassRef = useRef<Set<number>>(new Set());
   const practiceChunk = useMemo(
     () => (evalResult && evalResult.tokens.length > 0 ? focusChunk(evalResult.tokens) : null),
     [evalResult]
@@ -85,6 +98,11 @@ export const StageView: React.FC = () => {
   const reflexTimerRef = useRef<number | null>(null);
 
   const turn = scene.turns[turnIdx] || scene.turns[0];
+  const plan = planTurn(turn, stage, selfTalk);
+  /** Lượt này người học phải tự nói, không có câu tiếng Anh để đọc. */
+  const selfSpeak = plan.kind !== 'authored';
+  const reacting = plan.kind === 'react';
+  const hintVisible = plan.kind === 'recall' ? plan.hint || hintAsked : stage <= 1 || hintAsked;
   const currentNpcId = turn.who || scene.npc;
   const currentNpc = NPCS[currentNpcId] || NPCS.leo;
 
@@ -144,13 +162,12 @@ export const StageView: React.FC = () => {
     setQuizWrongIndices([]);
     setReflexExpired(false);
     setManualText('');
-    setMicPhase(turn.mode === 'catch' ? 'locked' : 'idle');
+    setHintAsked(false);
+    setMicPhase(turn.mode === 'catch' && !selfSpeak ? 'locked' : 'idle');
 
-    if (turn.mode === 'quiz' && turn.reflex) {
-      setReflexLeft(turn.reflex);
-    } else {
-      setReflexLeft(null);
-    }
+    // Đồng hồ phản xạ: lượt chọn đáp án có ghi reflex, hoặc lượt phản xạ nói
+    const countdown = reacting ? plan.seconds : turn.mode === 'quiz' && turn.reflex ? turn.reflex : 0;
+    setReflexLeft(countdown > 0 ? countdown : null);
 
     const speakTimer = window.setTimeout(async () => {
       if (attemptRef.current !== myAttempt) return;
@@ -163,8 +180,8 @@ export const StageView: React.FC = () => {
 
       if (attemptRef.current !== myAttempt) return;
 
-      // Start reflex countdown for Quiz after NPC finishes speaking
-      if (turn.mode === 'quiz' && turn.reflex) {
+      // Start reflex countdown after NPC finishes speaking
+      if (countdown > 0) {
         reflexTimerRef.current = window.setInterval(() => {
           setReflexLeft((prev) => {
             if (prev === null) return null;
@@ -183,7 +200,7 @@ export const StageView: React.FC = () => {
       window.clearTimeout(speakTimer);
       if (reflexTimerRef.current) window.clearInterval(reflexTimerRef.current);
     };
-  }, [turnIdx, scene.id]);
+  }, [turnIdx, scene.id, selfSpeak]);
 
   const setMoodTemporary = (mood: NpcMood, ms = 2400) => {
     setNpcMood(mood);
@@ -210,7 +227,7 @@ export const StageView: React.FC = () => {
 
   const handlePlaySampleCue = (slow = false) => {
     SFX.play('tap');
-    const text = turn.cue || turn.sample || '';
+    const text = plan.kind !== 'authored' ? plan.target : turn.cue || turn.sample || '';
     if (!text) return;
     Voice.speak(text, {
       npcId: 'coach',
@@ -299,6 +316,16 @@ export const StageView: React.FC = () => {
 
   const evaluateCandidatesAndAward = (candidates: string[]) => {
     setMicPhase('analyzing');
+    if (plan.kind !== 'authored') {
+      // Tự nói: chấm theo ý (các từ mang nghĩa của câu mẫu), không đòi đúng từng chữ
+      let res = evaluateRecallCandidates(plan.target, candidates);
+      const capped = (plan.kind === 'recall' && !plan.hint && hintAsked) || (reacting && reflexExpired);
+      if (capped && res.stars > 2) res = { ...res, stars: 2 };
+      if (evalResult && evalResult.score > res.score) res = { ...evalResult, transcript: res.transcript };
+      if (res.stars >= 2) selfPassRef.current.add(turnIdx);
+      awardTurn(res, false);
+      return;
+    }
     const res = evaluateTurnCandidates(turn, candidates);
     // Đọc theo thẻ / bắt từ: cộng dồn với các lần đọc trước, từ đã đúng một lần thì giữ là đúng
     const cumulative = turn.mode === 'scripted' || turn.mode === 'catch';
@@ -448,6 +475,11 @@ export const StageView: React.FC = () => {
       return;
     }
 
+    if (reacting && reflexTimerRef.current) {
+      // Đã kịp bấm mic: dừng đồng hồ phản xạ
+      window.clearInterval(reflexTimerRef.current);
+      reflexTimerRef.current = null;
+    }
     const myAttempt = ++attemptRef.current;
     setMicPhase('arming');
     setNpcMood('listening');
@@ -520,6 +552,13 @@ export const StageView: React.FC = () => {
     if (turnIdx + 1 >= scene.turns.length) {
       Voice.stop();
       SpeechEngine.abort();
+      const added = recordStageLearning({
+        scriptKey,
+        sceneId: baseScene.id,
+        unsupportedPasses: selfPassRef.current.size,
+        chunkIds: (CHUNKS_BY_SCRIPT[scriptKey] || []).map((c) => c.id),
+      });
+      if (added > 0) toast(`🧩 ${added} cụm mới vào phần Khởi động ngày mai`, 'success', 3200);
       finishScene(finalStars, speakingXpTotal, listeningXpTotal);
     } else {
       setTurnIdx(turnIdx + 1);
@@ -722,7 +761,11 @@ export const StageView: React.FC = () => {
           <div className="flex-1 rounded-3xl ghibli-panel p-3.5 sm:p-4">
             <div className="mb-2 flex items-center justify-between">
               <span className="rounded-full border-2 border-ghibli-clay bg-[#FBE3EC] px-3 py-1 text-xs font-black tracking-wide text-pink-800">
-                {turn.mode === 'catch'
+                {reacting
+                  ? '⚡ Phản xạ nói'
+                  : selfSpeak
+                  ? '🧠 Tự nói, không có thẻ'
+                  : turn.mode === 'catch'
                   ? '🎯 Bắt từ rồi nói'
                   : turn.mode === 'semi'
                   ? '✍️ Điền ô rồi nói'
@@ -733,21 +776,75 @@ export const StageView: React.FC = () => {
                   : '🎙️ Đọc theo thẻ nhắc'}
               </span>
 
-              {turn.mode === 'quiz' && reflexLeft !== null && (
+              {stage === 0 && (turn.mode === 'scripted' || turn.mode === 'catch') && !evalResult && (
+                <button
+                  onClick={() => setSelfTalk((v) => !v)}
+                  className="min-h-[44px] rounded-full border-2 border-ghibli-clay bg-ghibli-cream px-3 text-xs font-black text-ghibli-ink"
+                >
+                  {selfTalk ? '👁 Hiện thẻ' : '🙈 Thử không nhìn thẻ'}
+                </button>
+              )}
+
+              {(turn.mode === 'quiz' || reacting) && reflexLeft !== null && !(reacting && evalResult) && (
                 <span
                   className={`rounded-full px-3 py-0.5 text-xs font-black ${
                     reflexLeft <= 5
-                      ? 'bg-[#B2421E] text-ghibli-ink'
+                      ? 'bg-[#B2421E] text-white'
                       : 'bg-ghibli-sun text-ghibli-ink'
                   }`}
                 >
-                  ⏱️ Phản xạ: {reflexLeft}s
+                  ⏱️ {reacting ? (reflexLeft > 0 ? `Bấm mic trong ${reflexLeft}s` : 'Hết giờ: tối đa 2★') : `Phản xạ: ${reflexLeft}s`}
                 </span>
               )}
             </div>
 
+            {/* TỰ NÓI: không có câu tiếng Anh để đọc. Sau khi nói mới hiện câu mẫu để so. */}
+            {selfSpeak && (
+              <div className="space-y-2.5">
+                {!evalResult ? (
+                  <>
+                    <p className="font-display text-base font-extrabold text-ghibli-ink">
+                      {reacting
+                        ? `Đáp lại ${currentNpc.name} ngay bằng lời, không cần đúng từng chữ.`
+                        : `Hãy tự đáp lại ${currentNpc.name} bằng tiếng Anh.`}
+                    </p>
+                    {hintVisible && turn.cueVi ? (
+                      <p className="rounded-2xl border-2 border-ghibli-clay bg-[#FFF8E1] px-3 py-2 text-base font-bold text-ghibli-ink">
+                        🇻🇳 {turn.cueVi}
+                      </p>
+                    ) : (
+                      turn.cueVi && (
+                        <button
+                          onClick={() => setHintAsked(true)}
+                          className="min-h-[48px] rounded-xl border-2 border-dashed border-ghibli-clay bg-ghibli-cream px-3 text-sm font-extrabold text-ghibli-ink-soft"
+                        >
+                          💡 Xin gợi ý tiếng Việt (tối đa 2★)
+                        </button>
+                      )
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <div className="text-xs font-black text-ghibli-ink-soft">Câu mẫu (chạm để nghe):</div>
+                    <button
+                      onClick={() => handlePlaySampleCue(false)}
+                      className="block w-full rounded-2xl border-2 border-ghibli-clay bg-[#E4F2DC] px-3 py-2 text-left font-display text-lg font-extrabold leading-snug text-[#2F6128]"
+                    >
+                      🔊 {plan.target}
+                    </button>
+                    {turn.cueVi && <p className="text-sm font-semibold text-ghibli-ink-soft">🇻🇳 {turn.cueVi}</p>}
+                    {(evalResult.missingKeywords?.length ?? 0) > 0 && (
+                      <p className="text-sm font-bold text-[#8A5A00]">
+                        Ý còn thiếu: {evalResult.missingKeywords!.join(', ')}
+                      </p>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+
             {/* MODE A: SCRIPTED OR CATCH */}
-            {(turn.mode === 'scripted' || turn.mode === 'catch') && (
+            {!selfSpeak && (turn.mode === 'scripted' || turn.mode === 'catch') && (
               <div className="space-y-3">
                 {/* Word-Catcher fill-in-the-blank preview */}
                 {turn.mode === 'catch' && micPhase === 'locked' ? (
@@ -946,7 +1043,7 @@ export const StageView: React.FC = () => {
             )}
 
             {/* MODE D: QUIZ */}
-            {turn.mode === 'quiz' && (
+            {!selfSpeak && turn.mode === 'quiz' && (
               <div className="space-y-2.5">
                 <p className="font-display text-base font-extrabold text-ghibli-ink">
                   {turn.question}
@@ -1023,16 +1120,19 @@ export const StageView: React.FC = () => {
             <div className="flex flex-wrap items-center justify-between gap-2">
               {/* Left: Sample Audio + Fallback Toggle */}
               <div className="order-2 flex items-center gap-1.5 sm:order-none">
-                {turn.mode !== 'quiz' && (
+                {(turn.mode !== 'quiz' || reacting) && (
                   <>
                     <button
                       onClick={() => handlePlaySampleCue(false)}
-                      className="min-h-[48px] rounded-xl border-2 border-ghibli-clay bg-ghibli-cream px-2.5 text-sm sm:px-3 font-extrabold text-ghibli-ink transition hover:bg-[#FBEBD0]"
+                      disabled={selfSpeak && !evalResult}
+                      title={selfSpeak && !evalResult ? 'Nói thử trước, rồi mới nghe câu mẫu' : undefined}
+                      className="min-h-[48px] rounded-xl border-2 border-ghibli-clay bg-ghibli-cream px-2.5 text-sm sm:px-3 font-extrabold text-ghibli-ink transition hover:bg-[#FBEBD0] disabled:opacity-40"
                     >
                       🔊 Mẫu
                     </button>
                     <button
                       onClick={() => handlePlaySampleCue(true)}
+                      disabled={selfSpeak && !evalResult}
                       aria-label="Nghe câu mẫu chậm 0.8×"
                       className="min-h-[48px] min-w-[44px] rounded-xl border-2 border-ghibli-clay bg-ghibli-cream px-2.5 text-sm font-extrabold text-[#23706A] transition hover:bg-[#FBEBD0] sm:px-3"
                     >

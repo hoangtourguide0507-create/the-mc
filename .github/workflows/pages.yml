@@ -55,6 +55,12 @@ jobs:
       - name: Run grammar tests
         run: npm run test:grammar
 
+      - name: Run chunk data tests
+        run: npm run test:chunks
+
+      - name: Run learning logic tests
+        run: npm run test:learning
+
       - name: Run cumulative scoring tests
         run: npm run test:retry
 
