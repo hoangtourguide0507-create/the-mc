@@ -14,7 +14,8 @@ Lưu ý: hai file đó còn ghi Vite 5, trong khi repo đang dùng Vite 8 (`pack
 - Không thêm tính năng mới vào `src/components` hay các file `.tsx` trong `src/three`.
 - Phạm vi mới (2026-11-11): chỉ giữ bài học tiếng Anh và thang nghề. Bỏ thành phố, đồng hồ, năng lượng, tiền, shop, nhân vật 3D và phòng MC 3D. 3D chỉ là nền `StageBackdrop`, nội dung là HTML phủ lên. Không dùng phong cách Ghibli.
 - Phong cách: nền sáng là mặc định (giấy ấm, chữ nâu than). Nền tối là tuỳ chọn qua `<html data-theme="dark">`, lưu ở `localStorage['mclife.ui.theme']`. Giao diện dịu mắt cho phiên học dài: không đen trắng tuyệt đối, chữ từ 16px.
-- Lộ trình: GĐ1 đến GĐ4 đã xong (GĐ4 mới xong phần cốt lõi). GĐ5 đến GĐ7 chưa làm. Bản React cũ sẽ bị xoá ở GĐ7.
+- Lộ trình: GĐ1 đến GĐ6 đã xong bản đầu. GĐ5 gồm ba tab: Luyện tập (`src/ui/screens/training/`: khởi động, phát âm, nhịp, phản xạ nhanh, năng lực), Sổ tay (`notebook.ts`), Nhiệm vụ (`quests.ts`); khung trang chung ở `src/ui/screens/page.ts`, nút mic dùng chung ở `src/ui/answer.ts`, điều hướng tab ở `showTab` trong `src/app.ts`. Mỗi màn xuất `mountXxx(root): () => void` và có file CSS riêng cùng tên. Còn lại GĐ7: xoá bản React cũ và đổi `v2.html` thành `index.html`.
+- "Phản xạ nhanh" thay cho trò chuyện với người đi đường: không gọi `openStreetTalk` (sẽ mở hộp thoại của bản React), nhưng vẫn gọi `markStreetTalkUsed` để nhiệm vụ loại `street` được tính.
 
 ## Lệnh thường dùng
 - `npm ci` (cài đặt đúng theo lockfile), `npm run dev`, `npm run build` (gồm `tsc -b` và `vite build`).

@@ -23,6 +23,18 @@ const SCENE_INFO: Record<string, { kind: string; theme: StageTheme }> = {
   interview: { kind: 'Toạ đàm', theme: 'conference' },
   ...EVENT_UI,
 };
+/** Nhóm để lọc danh sách trên màn chính */
+const GROUPS: { id: string; label: string; scenes: string[] }[] = [
+  { id: 'all', label: 'Tất cả', scenes: [] },
+  { id: 'warm', label: 'Khởi động', scenes: ['coffee', 'market', 'backstage'] },
+  { id: 'wedding', label: 'Cưới', scenes: ['wedding', 'beach', 'banquet', 'tradwedding'] },
+  { id: 'brand', label: 'Thương hiệu và triển lãm', scenes: ['launch', 'opening', 'expo', 'brand', 'fashion', 'customer'] },
+  { id: 'formal', label: 'Hội nghị và nghi thức', scenes: ['summit', 'signing', 'press', 'interview'] },
+  { id: 'show', label: 'Giải trí và tiệc', scenes: ['fanmeet', 'awards', 'gala', 'auction', 'yearend', 'teambuilding'] },
+];
+/** Nhóm đang chọn, giữ lại khi quay về màn chính */
+let activeGroup = 'all';
+
 /** Khởi động trước, rồi các sự kiện theo cấp mở khoá tăng dần */
 const ORDER = Object.values(SCENES)
   .sort((a, b) => Number(a.type === 'show') - Number(b.type === 'show') || a.reqLv - b.reqLv || (a.minRep ?? 0) - (b.minRep ?? 0))
@@ -56,6 +68,30 @@ export function mountHome(root: HTMLElement, opts: HomeOptions): () => void {
   const career = h('section', { class: 'panel career' });
   const list = h('div', { class: 'col', style: { gap: '12px' } });
   let selected: string | null = null;
+  const filters = h('div', { class: 'filters', role: 'group', ariaLabel: 'Lọc theo nhóm sự kiện' });
+  const paintFilters = () => {
+    clear(filters);
+    for (const g of GROUPS) {
+      const n = g.id === 'all' ? ORDER.length : g.scenes.filter((id) => SCENES[id]).length;
+      filters.append(
+        h(
+          'button',
+          {
+            class: 'filter',
+            ariaPressed: String(activeGroup === g.id),
+            onclick: () => {
+              activeGroup = g.id;
+              selected = null;
+              opts.onTheme('lounge');
+              paintFilters();
+              renderList();
+            },
+          },
+          `${g.label} · ${n}`
+        )
+      );
+    }
+  };
   const themeBtn = h('button', { class: 'link' }, opts.themeLabel());
   themeBtn.onclick = () => {
     opts.onToggleTheme();
@@ -77,6 +113,7 @@ export function mountHome(root: HTMLElement, opts: HomeOptions): () => void {
       h('div', { class: 'spacer-hero' }),
       career,
       h('div', { class: 'section-title eyebrow' }, 'Tình huống'),
+      filters,
       list
     )
   );
@@ -104,9 +141,11 @@ export function mountHome(root: HTMLElement, opts: HomeOptions): () => void {
   function renderList() {
     const { charisma, rep, stats, learn } = gameStore.getState().state;
     clear(list);
+    const group = GROUPS.find((g) => g.id === activeGroup);
     for (const id of ORDER) {
       const sc = SCENES[id];
       if (!sc) continue;
+      if (group && group.id !== 'all' && !group.scenes.includes(id)) continue;
       const info = SCENE_INFO[id] ?? { kind: 'Tình huống', theme: 'lounge' as StageTheme };
       const locked = lockReason(sc, charisma.lv, rep);
       const open = selected === id;
@@ -155,6 +194,7 @@ export function mountHome(root: HTMLElement, opts: HomeOptions): () => void {
     watch((s) => s.state.rep, () => { renderCareer(); renderList(); }, false),
     watch((s) => s.state.stats, () => { renderCareer(); renderList(); }, false),
   ];
+  paintFilters();
   renderList();
 
   return () => {

@@ -1,0 +1,34 @@
+/* Bảng nhiệm vụ: chỉ dùng biến màu của base.css để chạy đúng cả nền sáng lẫn nền tối. */
+.quests { display: flex; flex-direction: column; gap: 16px; }
+.quests-card { padding: 16px; display: grid; gap: 12px; }
+.quests-cefr { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; }
+.quests-lv { border-radius: 14px; padding: 10px 6px; background: var(--panel-2); display: grid; gap: 2px; }
+.quests-lv b { font: 700 18px/1.2 var(--display); }
+.quests-lv small { font-size: 13px; color: var(--muted); }
+
+.quests-chapter { display: grid; gap: 10px; }
+.quests-chead { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.quests-ctitle { margin: 0; font: 700 18px/1.3 var(--display); color: var(--ink); }
+
+.quests-tag {
+  font-size: 13px; font-weight: 600; padding: 4px 12px; border-radius: 99px;
+  background: var(--panel-2); color: var(--muted); white-space: nowrap;
+}
+.quests-tag.done { background: var(--ok-bg); color: var(--ok-ink); }
+.quests-tag.ready { background: var(--near-bg); color: var(--near-ink); }
+
+.quests-quest { padding: 14px 16px; display: grid; gap: 10px; }
+.quests-quest.done { border-color: var(--ok-ink); }
+.quests-qhead { display: flex; align-items: center; justify-content: space-between; gap: 6px 10px; flex-wrap: wrap; }
+.quests-qname { font-weight: 600; font-size: 16px; color: var(--ink); }
+.quests-reward { font-size: 13px; font-weight: 600; color: var(--accent); white-space: nowrap; }
+
+.quests-objs { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.quests-obj { display: flex; align-items: flex-start; gap: 8px; font-size: 14.5px; color: var(--muted); }
+.quests-obj.met { color: var(--ok-ink); }
+.quests-mark {
+  flex: none; width: 18px; height: 18px; margin-top: 3px; border-radius: 5px;
+  border: 1px solid var(--line); background: var(--panel-2);
+  display: grid; place-items: center; font-size: 13px; line-height: 1; font-weight: 700;
+}
+.quests-obj.met .quests-mark { background: var(--ok-bg); border-color: transparent; color: var(--ok-ink); }

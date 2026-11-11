@@ -1,0 +1,26 @@
+/* Khởi động (phòng luyện): chỉ thêm kiểu cho phần riêng; nút, thẻ và chữ dùng lại base.css. */
+.warmup { display: grid; gap: 12px; }
+.warmup .eyebrow { font-size: 13px; letter-spacing: 0.08em; }
+.warmup .vi { font-size: 15px; }
+
+.warmup-situation {
+  display: grid; gap: 6px; padding: 14px; border-radius: 14px;
+  background: var(--panel-2); border: 1px solid var(--line);
+}
+.warmup-use { margin: 0; font: 700 20px/1.4 var(--display); color: var(--ink); }
+.warmup-meaning { font-weight: 600; color: var(--rec); }
+.warmup-chunk { margin: 0; font: 700 22px/1.35 var(--display); color: var(--ok-ink); }
+.warmup-peek { width: 100%; }
+
+.warmup-result {
+  display: grid; gap: 8px; padding: 14px; border-radius: 14px; border: 1px solid var(--line);
+}
+.warmup-result.ok { background: var(--ok-bg); color: var(--ok-ink); }
+.warmup-result.miss { background: var(--bad-bg); color: var(--bad-ink); }
+.warmup-result .vi { color: inherit; }
+.warmup-verdict { margin: 0; font-size: 16px; font-weight: 700; }
+.warmup-sample {
+  width: 100%; justify-content: flex-start; text-align: left; white-space: normal;
+  font-size: 16px; font-weight: 600; color: var(--ink); background: var(--panel);
+}
+.warmup-next { margin-top: 2px; }

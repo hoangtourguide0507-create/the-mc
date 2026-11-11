@@ -1,0 +1,66 @@
+/* Luyện phát âm: chỉ các kiểu riêng, phần còn lại lấy từ base.css. Mọi màu là biến của base.css. */
+.pron { display: grid; gap: 12px; }
+.pron .vi, .pron .note-box { font-size: 16px; }
+.pron .btn.quiet { width: 100%; }
+
+/* Lộ trình nhóm */
+.pron-ladder { gap: 8px; }
+.pron-step { display: inline-flex; align-items: center; padding: 6px 12px; border-radius: 99px; font-size: 14px; background: var(--panel-2); color: var(--muted); }
+.pron-step.open { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.pron-step.done { background: var(--ok-bg); color: var(--ok-ink); font-weight: 600; }
+.pron-meta { align-items: center; }
+.pron-meta .who { font-size: 14px; }
+
+/* Từ, phiên âm, trọng âm */
+.pron-h { font: 700 19px/1.3 var(--display); color: var(--ink); }
+.pron-word { text-align: center; justify-items: center; }
+.pron-word-text { font: 700 40px/1.2 var(--display); color: var(--ink); overflow-wrap: anywhere; }
+.pron-ipa { font-size: 18px; color: var(--muted); }
+.pron-ipa-alt { font-size: 15px; margin-left: 8px; }
+.pron-word .chips { justify-content: center; }
+.pron-syl { padding: 6px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel-2); font-size: 16px; color: var(--muted); }
+.pron-syl.stressed { border: 2px solid var(--accent); background: var(--accent-soft); color: var(--ink); font-size: 20px; font-weight: 700; }
+
+/* Nghe từ và câu mẫu */
+.pron-listen { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.pron-listen .btn { width: 100%; }
+
+/* Danh sách phân tích và lỗi hay gặp */
+.pron-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.pron-item { display: grid; gap: 4px; padding: 12px 14px; border-radius: 14px; background: var(--panel-2); font-size: 16px; color: var(--ink); }
+.pron-item.bad { background: var(--bad-bg); color: var(--bad-ink); }
+.pron-item.bad .vi { color: var(--bad-ink); }
+.pron .pron-tip { margin: 0; background: var(--ok-bg); color: var(--ok-ink); }
+
+/* Luyện nói */
+.pron-practice { gap: 10px; }
+.pron-practice .npc-line { font-size: 18px; }
+.pron-interim { margin: 0; font-size: 15px; font-style: italic; color: var(--muted); }
+.pron .link.pron-link { width: 100%; white-space: normal; text-align: center; }
+.pron .answer-form .btn { width: auto; }
+.pron-verdict { padding: 12px 14px; border-radius: 14px; font-size: 16px; font-weight: 600; }
+.pron-verdict.ok { background: var(--ok-bg); color: var(--ok-ink); }
+.pron-verdict.bad { background: var(--bad-bg); color: var(--bad-ink); }
+.pron-verdict-note { margin-top: 4px; font-size: 14px; font-weight: 400; }
+.pron-result { display: grid; gap: 10px; }
+.pron-ops { list-style: none; margin: 0; padding: 12px 14px; border-radius: 14px; background: var(--panel-2); display: grid; gap: 6px; font-size: 15px; font-weight: 600; }
+.pron-op.ok { color: var(--ok-ink); }
+.pron-op.near { color: var(--near-ink); }
+.pron-op.bad { color: var(--bad-ink); }
+.pron-result .heard { font-size: 15px; }
+.pron-warn { color: var(--bad-ink); font-weight: 600; }
+
+/* Nghe phân biệt cặp từ */
+.pron-pair { gap: 10px; }
+.pron-pair-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.pron .pron-pair-opt { font: 700 20px/1.2 var(--display); text-align: center; color: var(--ink); }
+.pron .pron-pair-opt.picked { color: var(--ok-ink); }
+.pron .pron-pair-opt.wrong { color: var(--bad-ink); }
+.pron-pair-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-size: 16px; font-weight: 600; }
+.pron .pron-pair-foot .btn { width: auto; }
+.pron-pair-ok { color: var(--ok-ink); }
+.pron-pair-no { color: var(--bad-ink); }
+.pron-pair-score { font-weight: 600; }
+
+/* Câu mẫu */
+.pron-en { font-size: 16px; font-weight: 600; color: var(--ink); }

@@ -132,6 +132,22 @@ button:disabled { cursor: default; opacity: 0.45; }
 .script .st small { font-size: 13px; font-weight: 400; color: var(--muted); }
 .script .go { font-size: 13px; font-weight: 600; color: var(--accent); white-space: nowrap; }
 
+/* ---------- Bộ lọc nhóm tình huống và các tab phụ ---------- */
+.filters { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 6px; margin: 0 -2px; scrollbar-width: none; }
+.filters::-webkit-scrollbar { display: none; }
+.filter { flex: none; min-height: var(--tap); padding: 8px 16px; border-radius: 99px; border: 1px solid var(--line); background: var(--panel); font-size: 14px; font-weight: 500; color: var(--muted); white-space: nowrap; }
+.filter[aria-pressed='true'] { background: var(--primary); color: var(--primary-ink); border-color: transparent; }
+.screen.page { background: var(--veil); }
+.seg { display: flex; gap: 6px; overflow-x: auto; padding: 4px; border-radius: 14px; background: var(--panel-2); scrollbar-width: none; }
+.seg::-webkit-scrollbar { display: none; }
+.seg-btn { flex: 1 0 auto; min-height: var(--tap); padding: 8px 14px; border: 0; border-radius: 10px; background: none; font-size: 14px; font-weight: 500; color: var(--muted); white-space: nowrap; }
+.seg-btn[aria-selected='true'] { background: var(--panel); color: var(--ink); box-shadow: var(--shadow); }
+.page-body { display: flex; flex-direction: column; gap: 12px; }
+.answer { display: grid; gap: 8px; }
+.answer-form { display: flex; gap: 8px; }
+.answer-form input, .text-input { flex: 1; min-width: 0; min-height: 48px; padding: 8px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); font-size: 16px; -webkit-user-select: text; user-select: text; }
+.empty { padding: 28px 18px; text-align: center; color: var(--muted); }
+
 /* ---------- Màn bài học: cột dọc, thanh mic ghim đáy và nằm ngoài vùng cuộn ---------- */
 .lesson { position: absolute; inset: 0; display: flex; flex-direction: column; background: var(--veil); }
 .lesson > * { width: 100%; max-width: 640px; margin: 0 auto; }
@@ -202,6 +218,8 @@ button:disabled { cursor: default; opacity: 0.45; }
 @media (min-width: 900px) {
   .screen { padding-left: 6vw; background: linear-gradient(90deg, var(--veil) 0, var(--veil) 480px, transparent 900px); }
   .screen > .col { margin: 0; max-width: 460px; }
+  .screen.page { background: linear-gradient(90deg, var(--veil) 0, var(--veil) 560px, transparent 960px); }
+  .screen.page > .col { max-width: 520px; }
   .spacer-hero { height: 3vh; min-height: 20px; }
   .tabbar { left: 6vw; right: auto; width: 460px; margin: 0; }
   .lesson { background: linear-gradient(90deg, var(--veil) 0, var(--veil) 620px, transparent 1000px); padding-left: 6vw; }

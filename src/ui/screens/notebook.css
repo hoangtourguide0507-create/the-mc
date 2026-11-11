@@ -1,0 +1,14 @@
+/* Sổ tay mẫu câu và từ yếu (notebook.ts). Chỉ dùng biến màu của base.css để chạy đúng cả nền sáng lẫn nền tối. */
+.notebook { display: grid; gap: 14px; }
+.notebook .vi { font-size: 16px; }
+.notebook .filters { margin: 0 -2px; }
+.notebook .filter { font-size: 16px; }
+.notebook .filter .pill { margin-left: 6px; padding: 1px 8px; font-size: 13px; }
+.notebook .note-box { font-size: 16px; }
+.notebook .pill { font-size: 13px; }
+.notebook-list { display: grid; gap: 12px; }
+.notebook-word { font: 700 20px/1.3 var(--display); color: var(--ink); }
+.notebook-item .head { row-gap: 6px; }
+.notebook-locked { opacity: 0.6; }
+.notebook .chips .btn.quiet { flex: 1 1 auto; justify-content: center; }
+.notebook .btn.notebook-main { background: var(--primary); color: var(--primary-ink); border-color: transparent; }

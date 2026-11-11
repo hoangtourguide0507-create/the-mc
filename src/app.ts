@@ -12,6 +12,14 @@ import { h } from './ui/dom';
 import { watch } from './engine/watch';
 import { mountHome } from './ui/screens/home';
 import { mountLesson } from './ui/screens/lesson';
+import { mountNotebook } from './ui/screens/notebook';
+import { mountPage } from './ui/screens/page';
+import { mountQuests } from './ui/screens/quests';
+import { mountCando } from './ui/screens/training/cando';
+import { mountPronunciation } from './ui/screens/training/pronunciation';
+import { mountQuickchat } from './ui/screens/training/quickchat';
+import { mountRhythm } from './ui/screens/training/rhythm';
+import { mountWarmup } from './ui/screens/training/warmup';
 
 const canvas = document.getElementById('stage3d') as HTMLCanvasElement;
 const ui = document.getElementById('ui') as HTMLDivElement;
@@ -92,27 +100,56 @@ const tabs: [string, string][] = [
   ['Sổ tay', 'M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3zM5 17a3 3 0 0 1 3-3h11'],
   ['Nhiệm vụ', 'M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.5 6.7 19.4l1.2-6L3.4 9.3l6-.7z'],
 ];
-const tabbar = h(
-  'nav',
-  { class: 'panel tabbar' },
-  ...tabs.map(([label, d], i) =>
-    h('button', { class: 'tab', ariaCurrent: i === 0 ? 'page' : null, onclick: () => i > 0 && say(`${label}: sẽ có ở bước kế tiếp`) }, icon(d), label)
-  )
-);
+type TabId = 'home' | 'train' | 'notebook' | 'quests';
+const TAB_IDS: TabId[] = ['home', 'train', 'notebook', 'quests'];
+let activeTab: TabId = 'home';
+const tabButtons = tabs.map(([label, d], i) => h('button', { class: 'tab', onclick: () => showTab(TAB_IDS[i]) }, icon(d), label));
+const tabbar = h('nav', { class: 'panel tabbar' }, ...tabButtons);
 
 let unmount: (() => void) | null = null;
 
-function showHome() {
+/** Dừng mọi âm thanh và lượt thu khi rời một màn */
+function quiet() {
+  Voice.stop();
+  SpeechEngine.abort();
+}
+
+function showTab(tab: TabId) {
+  quiet();
   unmount?.();
-  backdrop.setCalm(1);
-  backdrop.setTheme('lounge');
+  activeTab = tab;
   tabbar.style.display = '';
-  unmount = mountHome(ui, {
-    onTheme: (theme: StageTheme) => backdrop.setTheme(theme),
-    onStart: (sceneId, scriptKey) => showLesson(sceneId, scriptKey),
-    themeLabel: () => (uiTheme === 'light' ? 'Nền tối' : 'Nền sáng'),
-    onToggleTheme: () => setUiTheme(uiTheme === 'light' ? 'dark' : 'light'),
-  });
+  tabButtons.forEach((b, i) => (TAB_IDS[i] === tab ? b.setAttribute('aria-current', 'page') : b.removeAttribute('aria-current')));
+  backdrop.setTheme('lounge');
+  // Màn chính cho thấy sân khấu; các tab đọc nhiều thì làm dịu nền
+  backdrop.setCalm(tab === 'home' ? 1 : 0.45);
+  if (tab === 'home') {
+    unmount = mountHome(ui, {
+      onTheme: (theme: StageTheme) => backdrop.setTheme(theme),
+      onStart: (sceneId, scriptKey) => showLesson(sceneId, scriptKey),
+      themeLabel: () => (uiTheme === 'light' ? 'Nền tối' : 'Nền sáng'),
+      onToggleTheme: () => setUiTheme(uiTheme === 'light' ? 'dark' : 'light'),
+    });
+  } else if (tab === 'train') {
+    unmount = mountPage(ui, {
+      key: 'train',
+      eyebrow: 'Phòng luyện',
+      title: 'Luyện tập',
+      sections: [
+        { id: 'warmup', label: 'Khởi động', mount: mountWarmup },
+        { id: 'pron', label: 'Phát âm', mount: mountPronunciation },
+        { id: 'rhythm', label: 'Nhịp', mount: mountRhythm },
+        { id: 'quick', label: 'Phản xạ nhanh', mount: mountQuickchat },
+        { id: 'cando', label: 'Năng lực', mount: mountCando },
+      ],
+    });
+  } else if (tab === 'notebook') {
+    unmount = mountPage(ui, { key: 'notebook', eyebrow: 'Ôn lại', title: 'Sổ tay', sections: [{ id: 'all', label: 'Sổ tay', mount: mountNotebook }] });
+  } else {
+    unmount = mountPage(ui, { key: 'quests', eyebrow: 'Thang nghề', title: 'Nhiệm vụ', sections: [{ id: 'all', label: 'Nhiệm vụ', mount: mountQuests }] });
+  }
+  // Đặt màn mới dưới thanh tab và thông báo
+  ui.append(tabbar, toast);
 }
 
 function showLesson(sceneId: string, scriptKey: string | null = null) {
@@ -125,13 +162,14 @@ function showLesson(sceneId: string, scriptKey: string | null = null) {
     onExit: (again) => {
       gameStore.getState().closeLesson();
       if (again) showLesson(sceneId, scriptKey);
-      else showHome();
+      else showTab('home');
     },
   });
+  ui.append(toast);
 }
 
 ui.append(tabbar, toast);
-showHome();
+showTab('home');
 
 // QA: ?qa=1 mở store, engine và nền sân khấu ra window để chụp ảnh tự động
 if (new URLSearchParams(window.location.search).has('qa')) {

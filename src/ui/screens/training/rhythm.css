@@ -1,0 +1,113 @@
+/* Luyện nhịp ngắt nghỉ. Chỉ dùng biến màu của base.css để chạy đúng cả nền sáng lẫn nền tối. */
+
+.rhythm {
+  display: grid;
+  gap: 14px;
+}
+
+.rhythm-intro {
+  margin: 0;
+  font-size: 15px;
+  color: var(--muted);
+}
+
+.rhythm-slash {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.rhythm-drills {
+  gap: 8px;
+}
+
+.rhythm-drill {
+  min-width: var(--tap);
+  min-height: var(--tap);
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  background: var(--panel-2);
+  color: var(--ink);
+  font: 600 16px/1.1 var(--body);
+  cursor: pointer;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.rhythm-drill[aria-pressed='true'] {
+  background: var(--primary);
+  color: var(--primary-ink);
+  border-color: transparent;
+}
+
+.rhythm-drill.passed {
+  background: var(--ok-bg);
+  color: var(--ok-ink);
+}
+
+.rhythm-drill.passed[aria-pressed='true'] {
+  outline: 2px solid var(--ok-ink);
+  outline-offset: 2px;
+}
+
+.rhythm-drill-mark {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.rhythm-sheet {
+  padding: 16px;
+  display: grid;
+  gap: 10px;
+}
+
+.rhythm-line {
+  margin: 0;
+  font: 600 20px/1.7 var(--body);
+  color: var(--ink);
+}
+
+.rhythm-tip {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--near-ink);
+}
+
+.rhythm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.rhythm-actions .btn {
+  flex: 1 1 160px;
+  width: auto;
+}
+
+.rhythm-actions .btn.quiet {
+  flex: 0 0 auto;
+}
+
+.rhythm-report {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.5;
+  background: var(--near-bg);
+  color: var(--near-ink);
+}
+
+.rhythm-report.ok {
+  background: var(--ok-bg);
+  color: var(--ok-ink);
+}
+
+.rhythm-report[hidden] {
+  display: none;
+}
