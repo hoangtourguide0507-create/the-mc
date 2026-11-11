@@ -1,5 +1,6 @@
 /**
  * Nền 3D duy nhất của bản mới: sân khấu tối, đèn sang trọng, không nhân vật.
+ * Chỉnh cho phiên học dài: độ sáng thấp, bloom nhẹ, đèn lia rất chậm, không nhấp nháy.
  * Bối cảnh (theme) đổi theo tình huống bài học: sảnh chờ, hội nghị, sàn diễn thời trang,
  * concert idol, tiệc cưới, gala. Đổi theme bằng cách tối đèn rồi sáng lại (dip-to-black).
  */
@@ -32,14 +33,14 @@ const THEMES: Record<StageTheme, ThemeSpec> = {
     wall: ['#6B4526', '#0A0708'],
     beams: [GOLD, '#F3DDB0', GOLD],
     bokeh: '#F6DDA8',
-    sway: 0.25,
+    sway: 0.12,
     props: (g) => bulbs(g, 14, GOLD, 5.2, 9),
   },
   conference: {
     wall: ['#2A52A0', '#05080F'],
     beams: ['#BBD6FF', '#FFFFFF', '#BBD6FF', GOLD],
     bokeh: '#CFE2FF',
-    sway: 0.18,
+    sway: 0.09,
     props: (g) => {
       // Bục phát biểu và hai màn hình bên
       box(g, 0.9, 1.15, 0.6, '#15171C', 2.6, 0.575, -1.5);
@@ -51,7 +52,7 @@ const THEMES: Record<StageTheme, ThemeSpec> = {
     wall: ['#6A6A78', '#060607'],
     beams: ['#FFFFFF', '#F4F0FF', '#FFFFFF', '#FFFFFF', '#F4F0FF'],
     bokeh: '#FFFFFF',
-    sway: 0.12,
+    sway: 0.06,
     props: (g) => {
       // Sàn catwalk chạy về phía người xem, viền đèn hai bên
       box(g, 2.4, 0.25, 16, '#8C8A88', 0, 0.125, 1);
@@ -60,22 +61,22 @@ const THEMES: Record<StageTheme, ThemeSpec> = {
     },
   },
   concert: {
-    wall: ['#7A22A8', '#07030C'],
-    beams: ['#FF4FD8', '#7C5CFF', '#22D3EE', '#FF4FD8', '#7C5CFF', '#22D3EE'],
-    bokeh: '#FF9CEB',
-    sway: 0.9,
+    wall: ['#4A2E5E', '#15131A'],
+    beams: ['#C79BC0', '#9C93D6', '#8FC4CC', '#C79BC0', '#9C93D6', '#8FC4CC'],
+    bokeh: '#D9BAD6',
+    sway: 0.15,
     props: (g) => {
       // Giàn truss trên cao với dãy đèn
-      box(g, 18, 0.25, 0.25, '#1B1B22', 0, 7.4, -3);
-      for (let i = -4; i <= 4; i++) dot(g, 0.14, i % 2 ? '#22D3EE' : '#FF4FD8', i * 2, 7.2, -3);
-      for (const x of [-6.5, 6.5]) screen(g, 2.6, 5.5, '#7C5CFF', x, 3.2, -7, x < 0 ? 0.3 : -0.3);
+      box(g, 18, 0.25, 0.25, '#2C2D34', 0, 7.4, -3);
+      for (let i = -4; i <= 4; i++) dot(g, 0.14, i % 2 ? '#8FC4CC' : '#C79BC0', i * 2, 7.2, -3);
+      for (const x of [-6.5, 6.5]) screen(g, 2.6, 5.5, '#5E588F', x, 3.2, -7, x < 0 ? 0.3 : -0.3);
     },
   },
   wedding: {
     wall: ['#8A4A40', '#0C0707'],
     beams: ['#FFD9C2', '#FFE8C9', '#FFD9C2'],
     bokeh: '#FFE3CF',
-    sway: 0.15,
+    sway: 0.07,
     props: (g) => {
       // Cổng hoa và rèm đèn
       const arch = new THREE.Mesh(
@@ -96,7 +97,7 @@ const THEMES: Record<StageTheme, ThemeSpec> = {
     wall: ['#7A5618', '#090705'],
     beams: [GOLD, '#FFF1CF', GOLD, '#FFB86B'],
     bokeh: '#FFE2A6',
-    sway: 0.3,
+    sway: 0.15,
     props: (g) => {
       // Đèn chùm và bàn tiệc tròn
       for (let ring = 0; ring < 3; ring++) {
@@ -143,15 +144,20 @@ export class StageBackdrop implements GameScene {
   private light = 0;
   private sway = 0.25;
   private portrait = true;
+  /** 1 = sáng đủ (màn chính), thấp hơn = dịu lại khi đang đọc bài */
+  private calm = 1;
+  private calmTarget = 1;
+  /** 0 khi máy bật "giảm chuyển động" */
+  private motion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 0 : 1;
 
   constructor(theme: StageTheme = 'lounge') {
-    this.scene.background = new THREE.Color('#050406');
-    this.scene.fog = new THREE.Fog('#050406', 16, 46);
+    this.scene.background = new THREE.Color('#15161A');
+    this.scene.fog = new THREE.Fog('#15161A', 16, 46);
     this.scene.add(new THREE.AmbientLight('#2A2430', 0.9));
 
     const floor = new THREE.Mesh(
       new THREE.PlaneGeometry(80, 60),
-      new THREE.MeshStandardMaterial({ color: '#0B0A0D', roughness: 0.28, metalness: 0.65 })
+      new THREE.MeshStandardMaterial({ color: '#1A1B20', roughness: 0.5, metalness: 0.4 })
     );
     floor.rotation.x = -Math.PI / 2;
     this.scene.add(floor);
@@ -192,7 +198,7 @@ export class StageBackdrop implements GameScene {
     }
 
     // Hạt bokeh trôi chậm
-    const N = 140;
+    const N = 60;
     const pos = new Float32Array(N * 3);
     for (let i = 0; i < N; i++) {
       pos[i * 3] = (Math.random() - 0.5) * 30;
@@ -223,12 +229,17 @@ export class StageBackdrop implements GameScene {
     this.pending = theme;
   }
 
+  /** Làm dịu nền khi người học đang đọc và nói (0.35 = rất dịu, 1 = bình thường). */
+  setCalm(level: number): void {
+    this.calmTarget = Math.min(1, Math.max(0.2, level));
+  }
+
   enter(ctx: EngineContext): void {
     this.renderer = ctx.renderer;
     if (!this.composer) {
       const c = new EffectComposer(ctx.renderer);
       c.addPass(new RenderPass(this.scene, this.camera));
-      this.bloom = new UnrealBloomPass(new THREE.Vector2(ctx.width / 2, ctx.height / 2), 0.75, 0.85, 0.55);
+      this.bloom = new UnrealBloomPass(new THREE.Vector2(ctx.width / 2, ctx.height / 2), 0.3, 0.9, 0.75);
       c.addPass(this.bloom);
       c.addPass(new OutputPass());
       this.composer = c;
@@ -257,29 +268,30 @@ export class StageBackdrop implements GameScene {
       this.applyTheme(this.pending);
       this.pending = null;
     }
+    this.calm = damp(this.calm, this.calmTarget, 2, dt);
     const spec = THEMES[this.theme];
     this.sway = damp(this.sway, spec.sway, 2, dt);
 
     for (let i = 0; i < this.beams.length; i++) {
       const b = this.beams[i];
       if (!b.visible) continue;
-      b.rotation.z = Math.sin(t * this.sway + i * 1.7) * 0.42;
-      b.rotation.x = 0.12 + Math.cos(t * this.sway * 0.7 + i) * 0.14;
-      b.material.opacity = (0.13 + 0.05 * Math.sin(t * 0.8 + i * 2.1)) * this.light;
+      b.rotation.z = Math.sin(t * this.sway * this.motion + i * 1.7) * 0.42;
+      b.rotation.x = 0.12 + Math.cos(t * this.sway * 0.7 * this.motion + i) * 0.14;
+      b.material.opacity = 0.09 * this.light * this.calm;
     }
-    for (const s of this.spots) s.intensity = 110 * this.light;
+    for (const s of this.spots) s.intensity = 70 * this.light * this.calm;
     this.wall.material.opacity = 1;
-    this.wall.material.color.setScalar(this.light);
-    this.floorGlow.material.opacity = 0.35 * this.light;
-    this.bokeh.material.opacity = 0.55 * this.light;
+    this.wall.material.color.setScalar(this.light * 0.6 * this.calm);
+    this.floorGlow.material.opacity = 0.2 * this.light * this.calm;
+    this.bokeh.material.opacity = 0.28 * this.light * this.calm;
     this.props.traverse((o) => {
       const m = (o as THREE.Mesh).material as THREE.MeshBasicMaterial | undefined;
-      if (m && m.userData.glow) m.color.copy(m.userData.glow as THREE.Color).multiplyScalar(this.light);
+      if (m && m.userData.glow) m.color.copy(m.userData.glow as THREE.Color).multiplyScalar(this.light * 0.7 * this.calm);
     });
 
     const p = this.bokeh.geometry.attributes.position as THREE.BufferAttribute;
     for (let i = 0; i < p.count; i++) {
-      let y = p.getY(i) + dt * (0.12 + (i % 7) * 0.02);
+      let y = p.getY(i) + dt * this.motion * (0.05 + (i % 7) * 0.008);
       if (y > 11) y = 0;
       p.setY(i, y);
     }
@@ -287,7 +299,7 @@ export class StageBackdrop implements GameScene {
 
     // Máy quay trôi rất chậm, không gây chóng mặt khi đọc bài
     const z = this.portrait ? 15 : 13;
-    this.camera.position.set(Math.sin(t * 0.07) * 1.6, 3.1 + Math.sin(t * 0.11) * 0.25, z);
+    this.camera.position.set(Math.sin(t * 0.04) * 0.8 * this.motion, 3.1, z);
     this.camera.lookAt(0, 3.4, -4);
   }
 
