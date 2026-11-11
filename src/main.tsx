@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
-import { useGameStore } from './core/store';
+import { useGameStore } from './core/storeReact';
 import './index.css';
 import { installGhibliShading } from './three/artStyle';
 

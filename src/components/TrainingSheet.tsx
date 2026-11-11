@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useDialog } from './useDialog';
-import { useGameStore } from '../core/store';
+import { useGameStore } from '../core/storeReact';
 import { dueChunkIds, evaluateChunkUse, masteredChunks } from '../core/chunks';
 import { canDoList, pickForDay, weeklyDue, weeklyTrend, WEEKLY_PASS } from '../core/cando';
 import { evaluateRecallCandidates } from '../core/recall';

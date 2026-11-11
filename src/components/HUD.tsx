@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { chaNeed, useGameStore } from '../core/store';
+import { chaNeed } from '../core/store';
+import { useGameStore } from '../core/storeReact';
 import { fmtRep, levelTitle, MAX_LV } from '../core/career';
 
 /** Khoảng đệm trên: chỉ còn một hàng thẻ cấp độ và tiền (tính cả tai thỏ iPhone) */

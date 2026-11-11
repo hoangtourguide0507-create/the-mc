@@ -5,7 +5,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { PASSER_LOOKS, SCENES, SHOP, STARTER } from '../data/content';
 import { dayPlan, fmtTime } from '../core/clock';
 import { evaluateScripted, wordSim } from '../core/evaluator';
-import { useGameStore } from '../core/store';
+import { useGameStore } from '../core/storeReact';
 import { SFX, SpeechEngine, Voice } from '../audio/audioSystem';
 import { Confetti } from './Confetti';
 

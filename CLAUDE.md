@@ -7,6 +7,13 @@ Lưu ý: hai file đó còn ghi Vite 5, trong khi repo đang dùng Vite 8 (`pack
 - Vite 8, React 18, TypeScript 5 (strict), Three.js r169 với `@react-three/fiber` và `drei`, Zustand, Tailwind 3.
 - Giao diện và nội dung học viên bằng tiếng Việt, nội dung tiếng Anh cho luyện nói.
 
+## Đang chuyển sang three.js thuần
+- Kế hoạch và quy tắc: `docs/VANILLA_THREE_MIGRATION.md`. Đọc trước khi viết code 3D hoặc UI mới.
+- Code mới nằm ở `src/engine`, `src/scenes`, `src/ui`, `src/app.ts` và trang `v2.html`.
+- Store là `gameStore` trong `src/core/store.ts` (vanilla). Code React cũ dùng `src/core/storeReact.ts`.
+- Không thêm tính năng mới vào `src/components` hay các file `.tsx` trong `src/three`.
+- Lộ trình hiện ở GĐ1 (nền móng, đã xong). Bản React cũ sẽ bị xoá ở GĐ7.
+
 ## Lệnh thường dùng
 - `npm ci` (cài đặt đúng theo lockfile), `npm run dev`, `npm run build` (gồm `tsc -b` và `vite build`).
 - Test, chạy từng cái (danh sách đầy đủ ở `package.json` và `pages.yml`):

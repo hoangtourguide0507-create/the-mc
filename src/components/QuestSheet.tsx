@@ -1,7 +1,7 @@
 import { useDialog } from './useDialog';
 import React from 'react';
 import { CHAPTERS, QUESTS, objectiveLabel, objectiveMet, questMet } from '../core/quests';
-import { useGameStore } from '../core/store';
+import { useGameStore } from '../core/storeReact';
 import { objectiveReport } from '../core/progress';
 
 /** Bảng nhiệm vụ: liệt kê các chương, quest và tiến độ từng mục tiêu. */

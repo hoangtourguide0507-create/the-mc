@@ -22,7 +22,7 @@ import {
   StressReport,
   tokenizePhones,
 } from '../core/phonology';
-import { useGameStore } from '../core/store';
+import { useGameStore } from '../core/storeReact';
 
 type PhoneResult = {
   source: 'phone';

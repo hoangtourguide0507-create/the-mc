@@ -18,7 +18,7 @@ import {
   sceneStatus,
   travelMinutes,
 } from '../core/clock';
-import { useGameStore } from '../core/store';
+import { useGameStore } from '../core/storeReact';
 import { GameState } from '../types/game';
 import { SFX } from '../audio/audioSystem';
 import { buildCityGrid, DISTRICTS, FILLERS, findPath, GRID, GridData, gridToWorld } from './city/cityMap';

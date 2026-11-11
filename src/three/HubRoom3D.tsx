@@ -4,7 +4,7 @@ import { ContactShadows, Float, Html, OrbitControls, RoundedBox } from '@react-t
 import * as THREE from 'three';
 import { getPlayerLook } from '../data/content';
 import { getPeriodMeta } from '../core/clock';
-import { useGameStore } from '../core/store';
+import { useGameStore } from '../core/storeReact';
 import { ClayCharacter3D } from './ClayCharacter3D';
 import { GHIBLI, ghibliSky } from './artStyle';
 

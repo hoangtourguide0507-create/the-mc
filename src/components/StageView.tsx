@@ -7,7 +7,7 @@ import { evaluateScripted, evaluateTurnCandidates } from '../core/evaluator';
 import { applyChunkAttempt, focusChunk, mergeAttempts } from '../core/retry';
 import { evaluateRecallCandidates, planTurn, supportStage } from '../core/recall';
 import { CHUNKS_BY_SCRIPT } from '../data/chunks';
-import { useGameStore } from '../core/store';
+import { useGameStore } from '../core/storeReact';
 import { STAGE_TOP_PAD } from './HUD';
 import {
   EvalResult,

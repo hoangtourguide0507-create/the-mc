@@ -15,5 +15,7 @@ export default defineConfig({
   build: {
     target: 'es2022',
     sourcemap: false,
+    // Hai trang trong lúc chuyển đổi: index.html (React cũ) và v2.html (three.js thuần)
+    rollupOptions: { input: { main: 'index.html', v2: 'v2.html' } },
   },
 });

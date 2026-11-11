@@ -1,6 +1,6 @@
 import { EMPTY_LEARN, type LearnState } from './cando';
 import { newChunkCard, scheduleChunk } from './chunks';
-import { create } from 'zustand';
+import { createStore } from 'zustand/vanilla';
 import { SCENES, SCHEDULE, SHOP, TIPS } from '../data/content';
 import { scheduleAfter, SRS_MAX_BOX, boxOf } from './srs';
 import { objectiveMetBy } from './progress';
@@ -204,7 +204,7 @@ export interface WorldAutoTarget {
   enterSceneId?: string;
 }
 
-interface GameStore {
+export interface GameStore {
   state: GameState;
   view: ViewName;
   routing: boolean;
@@ -298,7 +298,8 @@ interface GameStore {
 let toastSeq = 1;
 let floatSeq = 1;
 
-export const useGameStore = create<GameStore>((set, get) => ({
+/** Store thuần (không phụ thuộc React). Bản React cũ dùng qua `core/storeReact.ts`. */
+export const gameStore = createStore<GameStore>((set, get) => ({
   state: loadInitialState(),
   view: 'welcome',
   routing: false,

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { currentTourStep, TOUR_STEPS } from '../core/onboarding';
-import { useGameStore } from '../core/store';
+import { useGameStore } from '../core/storeReact';
 
 /** Chỉ điểm từng nút trên Hub cho người chơi ngày đầu. Không chặn thao tác trên phần tử được chỉ. */
 export const TourOverlay: React.FC = () => {

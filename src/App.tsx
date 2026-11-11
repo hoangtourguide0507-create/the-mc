@@ -10,7 +10,7 @@ import {
   WelcomeOverlay,
 } from './components/SheetsAndModals';
 import { dayKey } from './core/clock';
-import { useGameStore } from './core/store';
+import { useGameStore } from './core/storeReact';
 import { QuestSheet } from './components/QuestSheet';
 import { HelpSheet } from './components/HelpSheet';
 import { PronunciationSheet } from './components/PronunciationSheet';

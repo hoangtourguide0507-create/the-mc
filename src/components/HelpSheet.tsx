@@ -2,7 +2,7 @@ import { useDialog } from './useDialog';
 import React from 'react';
 import { SCENES } from '../data/content';
 import { levelTitle } from '../core/career';
-import { useGameStore } from '../core/store';
+import { useGameStore } from '../core/storeReact';
 
 const STATS: { icon: string; name: string; desc: string }[] = [
   { icon: '⚡', name: 'Năng lượng', desc: 'Mỗi show tốn 20 ⚡. Cà phê và chợ hồi ⚡ mỗi ngày; đi ngủ hồi lại phần lớn ⚡ (60% nếu bị ngất lúc 24:00).' },

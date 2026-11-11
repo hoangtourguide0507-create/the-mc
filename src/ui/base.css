@@ -1,0 +1,43 @@
+/* Giao diện thuần CSS cho bản three.js (không Tailwind). Bảng màu theo docs/STYLE_GHIBLI.md. */
+:root {
+  --cream: #fbf3e0;
+  --ink: #4a3a2e;
+  --sky: #bfe6f2;
+  --clay: #6b4e3d;
+  --leaf: #7db86a;
+  --sun: #f2b84b;
+  --tap: 44px; /* vùng chạm tối thiểu */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body {
+  margin: 0; height: 100%; overflow: hidden; overscroll-behavior: none;
+  background: var(--cream); color: var(--ink);
+  font-family: 'Nunito', system-ui, sans-serif; font-weight: 700;
+  -webkit-user-select: none; user-select: none; touch-action: manipulation;
+}
+#stage3d { position: fixed; inset: 0; width: 100vw; height: 100dvh; display: block; touch-action: none; }
+/* Lớp UI phủ trên canvas: mặc định không chặn chạm, từng khối tự bật lại */
+#ui { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
+#ui > * { pointer-events: auto; }
+.panel {
+  background: rgba(251, 243, 224, 0.92); border: 2px solid rgba(107, 78, 61, 0.25);
+  border-radius: 20px; box-shadow: 0 6px 0 rgba(107, 78, 61, 0.18); backdrop-filter: blur(8px);
+}
+.btn {
+  min-height: var(--tap); padding: 10px 18px; border: 0; border-radius: 999px; cursor: pointer;
+  font: 800 16px 'Baloo 2', 'Nunito', sans-serif; color: #fff; background: var(--leaf);
+  box-shadow: 0 4px 0 rgba(74, 58, 46, 0.3);
+}
+.btn:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(74, 58, 46, 0.3); }
+.btn.ghost { background: #fff; color: var(--ink); }
+.btn[aria-pressed='true'] { background: var(--sun); }
+.devbar {
+  position: absolute; left: 50%; bottom: calc(16px + var(--safe-bottom)); transform: translateX(-50%);
+  display: flex; gap: 8px; padding: 10px;
+}
+.devnote {
+  position: absolute; left: 50%; top: calc(12px + var(--safe-top)); transform: translateX(-50%);
+  padding: 8px 16px; font-size: 14px; white-space: nowrap;
+}

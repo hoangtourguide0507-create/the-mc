@@ -4,7 +4,7 @@ import { ContactShadows, Float, Html, RoundedBox } from '@react-three/drei';
 import * as THREE from 'three';
 import { getPlayerLook, NPCS } from '../data/content';
 import { NpcMood, SceneData, StageMicPhase, VisemeType } from '../types/game';
-import { useGameStore } from '../core/store';
+import { useGameStore } from '../core/storeReact';
 import { ClayCharacter3D } from './ClayCharacter3D';
 
 /** Bảng màu bối cảnh sân khấu Ghibli: phông màu nước ấm áp, sàn tự nhiên, ánh đèn vàng kem */
