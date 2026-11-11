@@ -22,6 +22,7 @@
     "test:learning": "node tests/learning.test.mjs",
     "test:chunks": "node tests/chunks.test.mjs",
     "test:lesson": "node tests/lesson.test.mjs",
+    "test:events": "node tests/events.test.mjs",
     "voices:kokoro": "python3 tools/render-kokoro.py"
   },
   "dependencies": {

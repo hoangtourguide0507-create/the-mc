@@ -1,0 +1,132 @@
+// Họp báo: MC điều phối buổi công bố hợp tác giữa hai công ty, nêu quy tắc, giới thiệu người phát ngôn,
+// từ chối khéo câu hỏi ngoài lề và kết thúc bằng hướng dẫn nhận thông cáo báo chí.
+import { eventScene, npc, type EventPack } from './types';
+
+const pack: EventPack = {
+  ui: { kind: 'Họp báo', theme: 'conference' },
+  objective: {
+    cefr: 'B2',
+    can: 'Run a press conference: set the rules, introduce a speaker, decline an off-topic question and close the event.',
+    canVi: 'Điều phối họp báo: nêu quy tắc, giới thiệu người phát ngôn, từ chối khéo câu hỏi ngoài lề và kết thúc buổi họp.',
+  },
+  npcs: {
+    marcus: npc('marcus', 'Marcus', 'PR Lead', { lang: 'en-US', gender: 'm', pitch: 0.96, rate: 1.0 }),
+    hannah: npc('hannah', 'Hannah', 'Journalist', { lang: 'en-GB', gender: 'f', pitch: 1.02, rate: 1.04 }),
+  },
+  chunks: [
+    [
+      'Thank you for your question',
+      'Cảm ơn câu hỏi của bạn',
+      'Khách hàng ở quầy lễ tân hỏi về việc đặt phòng, bạn cảm ơn rồi trả lời lịch sự.',
+      'Thank you for your question about the hotel booking, and I will check it right away.',
+    ],
+    [
+      'I will hand over to',
+      'Tôi sẽ chuyển lời cho',
+      'Trong bữa tiệc, bạn chuyển micro cho đầu bếp để giới thiệu món ăn đặc biệt.',
+      'I will hand over to the chef, who will explain the special dish.',
+    ],
+  ],
+  scene: eventScene({
+    id: 'press',
+    kind: 'Họp báo',
+    level: 'Advanced',
+    reqLv: 6,
+    minRep: 1.8,
+    title: 'Joint Announcement',
+    sub: 'Điều phối họp báo công bố hợp tác giữa hai công ty cùng người phát ngôn Lena Ward',
+    npc: 'marcus',
+    charisma: 60,
+    turns: [
+      {
+        mode: 'scripted',
+        npc: 'Good afternoon, Thien An. The press is seated. Please open the conference and remind everyone of our rules: one question each, and always give your name and outlet first.',
+        npcVi: 'Chào buổi chiều, Thiên Ân. Báo chí đã ngồi vào chỗ. Bạn hãy mở đầu buổi họp báo và nhắc lại quy tắc: mỗi người một câu hỏi, và luôn nêu tên cùng cơ quan báo chí trước khi hỏi.',
+        cue: 'Good afternoon, everyone, and welcome. Each journalist may ask one question, so please state your name and publication first.',
+        cueVi: 'Chào buổi chiều quý vị và chào mừng đến với buổi họp báo. Mỗi phóng viên được hỏi một câu, xin vui lòng nêu tên và cơ quan báo chí trước khi đặt câu hỏi.',
+        key: 'each journalist may ask one question',
+        tip: 'Đọc chậm câu chào và dừng một nhịp trước khi nói quy tắc để khán giả chú ý.',
+      },
+      {
+        mode: 'catch',
+        npc: 'Our speaker today is Lena Ward, our chief innovation officer, who has led this partnership from the very first meeting.',
+        npcVi: 'Diễn giả hôm nay là Lena Ward, giám đốc đổi mới sáng tạo, người đã dẫn dắt hợp tác này ngay từ cuộc họp đầu tiên.',
+        cue: 'Please welcome our speaker, Lena Ward, our chief {innovation} officer, who has led this {partnership} from the start.',
+        cueVi: 'Xin mời quý vị chào đón diễn giả của chúng tôi, Lena Ward, giám đốc đổi mới sáng tạo, người đã dẫn dắt hợp tác này ngay từ đầu.',
+        catch: ['director', 'designer', 'engineer', 'finance'],
+        key: 'lena ward chief innovation officer',
+        tip: 'Nghe tên người và chức danh. Đây là hai từ quan trọng nhất của câu giới thiệu.',
+      },
+      {
+        mode: 'semi',
+        npc: 'Now open the floor. Invite the journalists to ask their questions, and remind them to say which publication they represent.',
+        npcVi: 'Giờ hãy mở phần hỏi đáp. Mời phóng viên đặt câu hỏi và nhắc họ nêu cơ quan báo chí mà họ đại diện.',
+        frame: 'The floor is now open. Please ___ your question, and tell us which ___ you are representing.',
+        cueVi: 'Mời quý vị đặt câu hỏi. Xin vui lòng ___ câu hỏi và cho biết bạn đang đại diện cho ___ nào.',
+        blanks: 2,
+        blankPool: [
+          ['ask', 'raise', 'share'],
+          ['publication', 'newspaper', 'outlet'],
+        ],
+        sample: 'The floor is now open. Please ask your question, and tell us which publication you are representing.',
+        key: 'please ask your question',
+        tip: 'Điền động từ mời đặt câu hỏi và danh từ chỉ cơ quan báo chí.',
+      },
+      {
+        mode: 'scripted',
+        who: 'hannah',
+        npc: 'Hannah Price from the Morning Post. Is it true the merger talks collapsed last month, and that this deal is just a backup plan?',
+        npcVi: 'Hannah Price, báo Morning Post. Có đúng là cuộc đàm phán sáp nhập đã đổ vỡ tháng trước, và thương vụ này chỉ là phương án dự phòng không?',
+        cue: 'Thank you for your question, Hannah, but today we are focusing only on this partnership, so let us keep that topic for another day.',
+        cueVi: 'Cảm ơn câu hỏi của bạn, Hannah, nhưng hôm nay chúng ta chỉ tập trung vào hợp tác này, nên xin để chủ đề đó cho một dịp khác.',
+        key: 'thank you for your question',
+        tip: 'Từ chối lịch sự theo ba bước: cảm ơn, nêu lý do ngắn, rồi chuyển hướng về chủ đề chính.',
+      },
+      {
+        mode: 'quiz',
+        reflex: 15,
+        npc: 'We have time for one final question, so please ask it briefly and keep the answer short.',
+        npcVi: 'Chúng ta còn thời gian cho một câu hỏi cuối, nên bạn hãy đề nghị hỏi ngắn gọn và trả lời ngắn gọn.',
+        question: 'Marcus vừa thông báo điều gì về thời gian hỏi đáp?',
+        options: [
+          { t: 'We have time for just one more question, so please keep it brief.', ok: true },
+          { t: 'The session will run for another hour, so take as many questions as you like.', ok: false },
+          { t: 'Questions are now closed, and the press kit will be handed out immediately.', ok: false },
+        ],
+        cueVi: 'Còn thời gian cho một câu hỏi cuối, xin quý vị vui lòng hỏi ngắn gọn để chúng ta giữ đúng thời gian.',
+        tip: 'Nghe kỹ "one final question" và "keep it brief": chỉ còn đúng một câu hỏi.',
+      },
+      {
+        mode: 'scripted',
+        who: 'hannah',
+        npc: 'Hannah Price once more. Will this partnership create new jobs for workers in the local community, and when will the first results appear?',
+        npcVi: 'Lại là Hannah Price. Hợp tác này có tạo ra việc làm mới cho người lao động địa phương không, và khi nào sẽ có kết quả đầu tiên?',
+        cue: 'That is a fair question. I will hand over to Lena Ward, who can answer it in detail.',
+        cueVi: 'Đây là một câu hỏi hợp lý. Tôi xin chuyển lời cho Lena Ward, người có thể trả lời chi tiết.',
+        key: 'i will hand over to',
+        tip: 'Ghi nhận câu hỏi trước, rồi giao lời cho người phù hợp để trả lời.',
+      },
+      {
+        mode: 'free',
+        npc: 'Thank you, that was a great session. Please close the press conference, thank the journalists, and tell them where to collect the press release.',
+        npcVi: 'Cảm ơn bạn, một buổi rất tốt. Bạn hãy kết thúc họp báo, cảm ơn các phóng viên và cho họ biết nơi nhận thông cáo báo chí.',
+        task: 'Kết thúc buổi họp báo: cảm ơn báo chí và hướng dẫn họ đến nơi nhận thông cáo báo chí.',
+        taskVi: 'Bắt buộc có lời cảm ơn (thank / thanks) và chỉ dẫn nhận thông cáo (press release / desk / collect).',
+        requiredKeywords: [
+          ['thank', 'thanks', 'grateful'],
+          ['press release', 'press kit', 'collect', 'pick up', 'desk'],
+        ],
+        bonusKeywords: [
+          ['journalists', 'reporters', 'media'],
+          ['today', 'this afternoon', 'joining'],
+        ],
+        sample: 'Thank you all for joining us today. Members of the media, please collect your press release at the front desk on your way out.',
+        minWords: 15,
+        key: 'collect your press release',
+        tip: 'Kết bằng lời cảm ơn, rồi nói rõ báo chí nhận thông cáo ở đâu.',
+      },
+    ],
+  }),
+};
+
+export default pack;

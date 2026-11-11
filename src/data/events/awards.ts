@@ -1,0 +1,120 @@
+// Lễ trao giải: MC dẫn đêm trao giải thường niên của một tập đoàn, xướng tên người thắng và xử lý khi người nhận vắng mặt.
+import { eventScene, npc, type EventPack } from './types';
+
+const pack: EventPack = {
+  ui: { kind: 'Lễ trao giải', theme: 'gala' },
+  objective: {
+    cefr: 'B2',
+    can: 'Run an awards ceremony: build suspense, announce a winner, handle an absent recipient and close the evening.',
+    canVi: 'Dẫn dắt lễ trao giải: tạo hồi hộp, xướng tên người thắng, xử lý khi người nhận vắng mặt và kết thúc buổi tối.',
+  },
+  npcs: {
+    olivia: npc('olivia', 'Olivia', 'Show Producer', { lang: 'en-GB', gender: 'f', pitch: 1.0, rate: 1.02 }),
+  },
+  chunks: [
+    ['it is my honor to', 'Tôi rất vinh dự được', 'Bạn nhận lời mời phát biểu tại một hội thảo khách hàng.', 'It is my honor to speak at our customer conference this year.'],
+    ['thank you all for joining us', 'Cảm ơn tất cả mọi người đã đến dự', 'Bạn cảm ơn khách đã đến dự một buổi gây quỹ từ thiện.', 'Thank you all for joining us at our charity dinner last night.'],
+  ],
+  scene: eventScene({
+    id: 'awards',
+    kind: 'Lễ trao giải',
+    level: 'Advanced',
+    reqLv: 8,
+    minRep: 2.2,
+    title: 'The Golden Envelope',
+    sub: 'Dẫn đêm trao giải thường niên của tập đoàn, xướng tên người thắng giải Đổi mới bền vững',
+    npc: 'olivia',
+    charisma: 75,
+    turns: [
+      {
+        mode: 'scripted',
+        npc: 'Thien An, the guests are seated and the cameras are rolling. Please open the evening and introduce tonight\'s awards.',
+        npcVi: 'Thiên Ân, khách đã vào chỗ và máy quay đã chạy. Bạn mở đầu buổi tối và giới thiệu các hạng mục trao giải nhé.',
+        cue: 'Good evening, and welcome to the annual awards night. It is my honor to host you tonight, as we celebrate excellence together.',
+        cueVi: 'Chào buổi tối và chào mừng quý vị đến với đêm trao giải thường niên. Tôi rất vinh dự được dẫn dắt chương trình tối nay, khi chúng ta cùng tôn vinh sự xuất sắc.',
+        key: 'welcome to the annual awards night',
+        tip: 'Mở đầu chậm và trang trọng, dừng một nhịp sau tên đêm trao giải.',
+      },
+      {
+        mode: 'catch',
+        channel: 'inear',
+        npc: 'Quick reminder before we begin: this award recognizes sustainable innovation, and the jury chose three finalists from many entries.',
+        npcVi: 'Nhắc nhanh trước khi bắt đầu: giải thưởng này ghi nhận đổi mới bền vững, và ban giám khảo đã chọn ba đề cử từ rất nhiều hồ sơ.',
+        cue: 'This award recognizes {sustainable innovation}, and the jury chose {three finalists} from many entries.',
+        cueVi: 'Giải thưởng này ghi nhận sự đổi mới bền vững, và ban giám khảo đã chọn ba đề cử vào vòng chung kết từ rất nhiều hồ sơ.',
+        catch: ['budget', 'sponsor', 'location', 'trophy'],
+        key: 'recognizes sustainable innovation',
+        tip: 'Nghe hai cụm chính: "sustainable innovation" là hạng mục, "three finalists" là số đề cử.',
+      },
+      {
+        mode: 'semi',
+        npc: 'Now build the suspense. Tell the room the jury has decided, then ask them to applaud the finalists and the whole field.',
+        npcVi: 'Giờ hãy tạo hồi hộp. Nói với khán phòng rằng ban giám khảo đã quyết định, rồi mời mọi người vỗ tay cho các đề cử và tất cả hồ sơ.',
+        frame: 'The jury has made its decision, so please give a warm round of applause to ___ and ___!',
+        cueVi: 'Ban giám khảo đã đưa ra quyết định, vì vậy xin hãy dành một tràng pháo tay nồng nhiệt cho ___ và ___!',
+        blanks: 2,
+        blankPool: [
+          ['our finalists', 'the finalists', 'our nominees'],
+          ['everyone who entered', 'every team', 'all the nominees'],
+        ],
+        sample: 'The jury has made its decision, so please give a warm round of applause to our finalists and everyone who entered!',
+        key: 'please give a warm round of applause',
+        tip: 'Ngắt một nhịp dài trước khi nói "The jury has made its decision" để khán giả căng thẳng.',
+      },
+      {
+        mode: 'quiz',
+        channel: 'inear',
+        reflex: 15,
+        npc: 'Change of plan: our presenter is not ready yet. Do not open the envelope. Fill thirty seconds by thanking the sponsors.',
+        npcVi: 'Đổi kế hoạch: người trao giải chưa sẵn sàng. Bạn đừng mở phong bì vội. Hãy lấp ba mươi giây bằng lời cảm ơn các nhà tài trợ.',
+        question: 'Olivia vừa dặn bạn làm gì ngay lúc này?',
+        options: [
+          { t: 'And the winner is, let me open the envelope right now!', ok: false },
+          { t: 'Before we reveal the winner, let us take a moment to thank the sponsors who made tonight possible.', ok: true },
+          { t: 'Unfortunately this award is cancelled, so please enjoy your dinner.', ok: false },
+        ],
+        cueVi: 'Trước khi công bố người thắng giải, xin dành ít phút cảm ơn các nhà tài trợ đã làm nên đêm nay.',
+        tip: 'Đáp án đúng nằm ở cụm "wait for my signal": không cảm ơn bằng tên khi chưa có tín hiệu.',
+      },
+      {
+        mode: 'scripted',
+        npc: 'The envelope is open. The winner is Daniel Brooks from Greenline Logistics. Please read the name and congratulate him.',
+        npcVi: 'Phong bì đã mở. Người thắng giải là Daniel Brooks đến từ Greenline Logistics. Bạn đọc tên và chúc mừng anh ấy nhé.',
+        cue: 'And the winner is Daniel Brooks! Please join me in congratulating him on a packaging program that changed our industry.',
+        cueVi: 'Và người thắng giải là Daniel Brooks! Xin mời quý vị cùng tôi chúc mừng anh ấy vì chương trình bao bì đã thay đổi cả ngành.',
+        key: 'the winner is Daniel Brooks',
+        tip: 'Đọc tên thật chậm, nhấn vào "Daniel Brooks" rồi mới dừng để vỗ tay.',
+      },
+      {
+        mode: 'scripted',
+        npc: 'Daniel is travelling tonight, so his colleague Sarah Lin will accept for him. Please remind her to keep her speech under two minutes.',
+        npcVi: 'Daniel đang đi công tác tối nay, nên đồng nghiệp Sarah Lin sẽ nhận giải thay anh ấy. Bạn nhắc chị ấy giữ bài phát biểu dưới hai phút nhé.',
+        cue: 'Daniel cannot be with us tonight, so please welcome his colleague Sarah Lin to accept the award on his behalf.',
+        cueVi: 'Daniel không thể có mặt với chúng ta tối nay, vì vậy xin mời đồng nghiệp của anh ấy, chị Sarah Lin, lên nhận giải thay anh.',
+        key: 'accept the award on his behalf',
+        tip: 'Giọng vẫn ấm áp và không tỏ ra tiếc nuối quá mức, rồi chuyển sang người nhận giải thay.',
+      },
+      {
+        mode: 'free',
+        npc: 'Wonderful awards night! Please congratulate every winner, thank our guests, and close the program with a warm goodnight.',
+        npcVi: 'Đêm trao giải tuyệt vời! Bạn hãy chúc mừng mọi người thắng giải, cảm ơn khách mời và kết thúc chương trình bằng lời chúc ngủ ngon ấm áp.',
+        task: 'Chúc mừng người thắng giải, cảm ơn khách mời và chào kết thúc buổi tối.',
+        taskVi: 'Bắt buộc có lời chúc mừng (congratulations) và lời cảm ơn (thank hoặc grateful).',
+        requiredKeywords: [
+          ['thank', 'thanks', 'grateful'],
+          ['congratulations', 'congratulate', 'congrats'],
+        ],
+        bonusKeywords: [
+          ['tonight', 'evening'],
+          ['wonderful', 'enjoy'],
+        ],
+        sample: 'Congratulations to every winner tonight. Thank you all for joining us, and have a wonderful evening everyone.',
+        minWords: 12,
+        key: 'thank you all for joining us',
+        tip: 'Kết bằng lời chúc ngắn, có tên buổi tối và sự cảm ơn rõ ràng.',
+      },
+    ],
+  }),
+};
+
+export default pack;

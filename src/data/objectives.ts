@@ -1,3 +1,4 @@
+import { EVENT_OBJECTIVES } from './events';
 // Mục tiêu năng lực (can-do) cho từng cảnh, theo khung CEFR.
 // Mỗi cảnh có một câu "bạn có thể…" để người học biết buổi này nhằm rèn kỹ năng gì.
 
@@ -21,3 +22,5 @@ export const SCENE_OBJECTIVES: Record<string, SceneObjective> = {
   gala: { cefr: 'B2', can: 'Recover from an unexpected delay while keeping the audience positive.', canVi: 'Ứng biến khi có sự cố bất ngờ mà vẫn giữ khán giả tích cực.' },
   interview: { cefr: 'B2', can: 'Redirect a conversation and close an interview politely.', canVi: 'Chuyển hướng cuộc trò chuyện và kết thúc phỏng vấn một cách lịch sự.' },
 };
+
+Object.assign(SCENE_OBJECTIVES, EVENT_OBJECTIVES);

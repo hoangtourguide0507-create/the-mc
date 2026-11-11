@@ -61,6 +61,9 @@ jobs:
       - name: Run lesson flow tests
         run: npm run test:lesson
 
+      - name: Run event pack tests
+        run: npm run test:events
+
       - name: Run learning logic tests
         run: npm run test:learning
 

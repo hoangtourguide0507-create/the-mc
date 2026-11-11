@@ -6,22 +6,27 @@ import { chaNeed, fmtRep, levelTitle, MAX_LV } from '../../core/career';
 import { lessonLock } from '../../core/lesson';
 import { gameStore } from '../../core/store';
 import { SCENES } from '../../data/content';
+import { EVENT_UI } from '../../data/events';
 import { watch } from '../../engine/watch';
 import type { StageTheme } from '../../scenes/StageBackdrop';
 import type { SceneData } from '../../types/game';
 import { clear, h } from '../dom';
 
-/** Tên tiếng Việt và bối cảnh 3D cho từng tình huống */
+/** Nhãn thể loại và bối cảnh 3D của các tình huống gốc; sự kiện mới tự khai trong gói (EVENT_UI) */
 const SCENE_INFO: Record<string, { kind: string; theme: StageTheme }> = {
   coffee: { kind: 'Khởi động', theme: 'lounge' },
   market: { kind: 'Khởi động', theme: 'lounge' },
-  backstage: { kind: 'Hội nghị', theme: 'conference' },
+  backstage: { kind: 'Tổng duyệt', theme: 'conference' },
   wedding: { kind: 'Tiệc cưới', theme: 'wedding' },
   beach: { kind: 'Tiệc cưới', theme: 'wedding' },
   gala: { kind: 'Gala', theme: 'gala' },
   interview: { kind: 'Toạ đàm', theme: 'conference' },
+  ...EVENT_UI,
 };
-const ORDER = ['coffee', 'market', 'backstage', 'wedding', 'beach', 'gala', 'interview'];
+/** Khởi động trước, rồi các sự kiện theo cấp mở khoá tăng dần */
+const ORDER = Object.values(SCENES)
+  .sort((a, b) => Number(a.type === 'show') - Number(b.type === 'show') || a.reqLv - b.reqLv || (a.minRep ?? 0) - (b.minRep ?? 0))
+  .map((s) => s.id);
 
 export interface HomeOptions {
   onTheme: (theme: StageTheme) => void;

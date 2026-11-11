@@ -1,0 +1,130 @@
+// Fan meeting: MC dẫn buổi gặp fan của ca sĩ quốc tế Jay tại Việt Nam, từ khuấy động khán giả đến lời chào kết.
+import { eventScene, npc, type EventPack } from './types';
+
+const pack: EventPack = {
+  ui: { kind: 'Giao lưu thần tượng', theme: 'concert' },
+  objective: {
+    cefr: 'B1',
+    can: 'Host a fan meeting: warm up the crowd, introduce an idol, run a Q and A and close the event.',
+    canVi: 'Dẫn một buổi gặp fan: khuấy động khán giả, giới thiệu thần tượng, điều phối phần hỏi đáp và kết thúc chương trình.',
+  },
+  npcs: {
+    mina: npc('mina', 'Mina', 'Stage Manager', { lang: 'en-US', gender: 'f', pitch: 1.05, rate: 1.02 }),
+    jay: npc('jay', 'Jay', 'Idol Singer', { lang: 'en-US', gender: 'm', pitch: 1.0, rate: 1.0 }),
+  },
+  chunks: [
+    [
+      'please give a warm welcome',
+      'hãy dành một lời chào đón nồng nhiệt',
+      'Trong buổi họp công ty, bạn nhờ mọi người chào đón đồng nghiệp mới.',
+      'At the office meeting, the manager said: Please give a warm welcome to our new colleagues.',
+    ],
+    [
+      'one question at a time',
+      'từng câu hỏi một',
+      'Trong cuộc họp nhóm, bạn nhắc mọi người chỉ hỏi một điều tại một thời điểm.',
+      'In the team meeting, please ask one question at a time so everyone can follow.',
+    ],
+  ],
+  scene: eventScene({
+    id: 'fanmeet',
+    kind: 'Giao lưu thần tượng',
+    level: 'Intermediate',
+    reqLv: 3,
+    title: 'Fan Meeting Night',
+    sub: 'Dẫn buổi gặp fan của ca sĩ quốc tế Jay tại Việt Nam, từ khuấy động khán giả đến lời chào kết',
+    npc: 'mina',
+    charisma: 35,
+    turns: [
+      {
+        mode: 'scripted',
+        npc: 'Thien An, the arena is full and the fans are waiting. Please welcome everyone and tell them what tonight is about.',
+        npcVi: 'Thiên Ân, sân khấu đã kín người và fan đang chờ. Bạn hãy chào mọi người và cho họ biết tối nay có gì nhé.',
+        cue: "Good evening, Vietnam! Welcome to tonight's fan meeting, and thank you for sharing this special night with us.",
+        cueVi: 'Chào buổi tối, Việt Nam! Chào mừng quý vị đến với buổi fan meeting tối nay, cảm ơn quý vị đã cùng chúng tôi trải qua đêm đặc biệt này.',
+        key: 'welcome to tonight',
+        tip: 'Chào to và rõ, nhìn thẳng vào khán giả ở hàng ghế sau.',
+      },
+      {
+        mode: 'catch',
+        npc: 'The fans are excited, so tell them the show starts with a song and keep the aisles clear for everyone.',
+        npcVi: 'Fan đang rất háo hức, bạn hãy nói với họ chương trình mở đầu bằng một bài hát và giữ lối đi thông thoáng cho mọi người.',
+        cue: 'Please keep the {aisles} clear for everyone. We will open tonight with a brand new {song}!',
+        cueVi: 'Xin quý vị giữ lối đi thông thoáng cho mọi người. Chúng ta sẽ mở màn tối nay bằng một bài hát hoàn toàn mới!',
+        catch: ['camera', 'phone', 'price', 'weight'],
+        key: 'keep the aisles clear',
+        tip: 'Nghe hai danh từ: lối đi và bài hát. Bắt đúng từ là biết việc cần làm.',
+      },
+      {
+        mode: 'semi',
+        npc: 'Now bring the guest in. Ask the fans to give a warm welcome, then cheer loudly as he walks out.',
+        npcVi: 'Giờ hãy mời khách mời lên. Bạn nhờ fan dành một lời chào đón nồng nhiệt, rồi cổ vũ thật to khi anh ấy bước ra.',
+        frame: 'Ladies and gentlemen, please give a warm ___ to our special guest, and let us ___ him onto the stage!',
+        cueVi: 'Kính thưa quý vị, xin hãy dành cho khách mời đặc biệt của chúng ta một ___ thật nồng nhiệt, và cùng ___ anh ấy bước lên sân khấu!',
+        blanks: 2,
+        blankPool: [
+          ['welcome', 'applause'],
+          ['cheer', 'clap'],
+        ],
+        sample: 'Ladies and gentlemen, please give a warm welcome to our special guest, and let us cheer him onto the stage!',
+        key: 'please give a warm welcome',
+        tip: 'Đọc chậm câu mở và nhấn vào "warm welcome" để fan hiểu bạn đang mời họ vỗ tay.',
+      },
+      {
+        mode: 'scripted',
+        who: 'jay',
+        npc: 'Hi Thien An! I am so happy to be back in Vietnam. Please introduce me to the fans, and tell them I have new songs tonight.',
+        npcVi: 'Chào Thiên Ân! Tôi rất vui được trở lại Việt Nam. Bạn hãy giới thiệu tôi với fan, và cho họ biết tối nay tôi có những bài hát mới.',
+        cue: 'It is my pleasure to introduce the star who has travelled all the way to be with us tonight, Jay!',
+        cueVi: 'Tôi rất hân hạnh được giới thiệu ngôi sao đã vượt chặng đường dài để có mặt cùng chúng ta tối nay, Jay!',
+        key: 'it is my pleasure to introduce',
+        tip: 'Đặt tên Jay ở cuối câu và nói thật rõ để fan vỗ tay đúng lúc.',
+      },
+      {
+        mode: 'quiz',
+        who: 'jay',
+        reflex: 15,
+        npc: 'Now it is question time. Please remind the fans that they can ask only one question at a time, and that nobody should push near the stage.',
+        npcVi: 'Đến phần hỏi đáp rồi. Bạn nhắc fan rằng mỗi người chỉ hỏi một câu tại một thời điểm, và không ai được chen lấn gần sân khấu.',
+        question: 'Jay vừa dặn fan điều gì khi đặt câu hỏi?',
+        options: [
+          { t: 'Everyone should rush to the stage together and ask their questions at once.', ok: false },
+          { t: 'Fans should ask one question at a time and never push near the stage.', ok: true },
+          { t: 'Please film the whole concert on your phone from the front aisle.', ok: false },
+        ],
+        cueVi: 'Vâng, mỗi người hãy hỏi một câu và giữ trật tự, không chen lấn nhé.',
+        tip: 'Nghe kỹ hai vế: hỏi từng câu một và không chen lấn. Đáp án đúng nhắc cả hai.',
+      },
+      {
+        mode: 'scripted',
+        npc: 'Great questions! Now let the crowd join in. Ask them to clap along and sing the chorus with you.',
+        npcVi: 'Những câu hỏi hay quá! Giờ hãy để khán giả cùng tham gia. Bạn mời họ vỗ tay theo và hát cùng điệp khúc.',
+        cue: 'Let us play a quick game together! Raise your hands if you know the chorus, and clap along with me!',
+        cueVi: 'Cùng chơi một trò chơi nhanh nhé! Ai thuộc điệp khúc thì giơ tay lên, và vỗ tay cùng tôi!',
+        key: 'raise your hands',
+        tip: 'Dùng câu mệnh lệnh ngắn, rõ ràng, và làm mẫu động tác cùng khán giả.',
+      },
+      {
+        mode: 'free',
+        npc: 'The show is almost over. Please thank the fans, say goodbye with a smile, and remind them to travel home safely.',
+        npcVi: 'Chương trình sắp kết thúc rồi. Bạn hãy cảm ơn fan, chào tạm biệt với nụ cười và nhắc mọi người về nhà an toàn.',
+        task: 'Cảm ơn fan đã tham dự, chào tạm biệt và nhắc mọi người về nhà an toàn.',
+        taskVi: 'Bắt buộc có lời cảm ơn (thank) và lời chào tạm biệt (goodbye / good night / see you).',
+        requiredKeywords: [
+          ['thank', 'thanks', 'grateful'],
+          ['goodbye', 'good night', 'see you'],
+        ],
+        bonusKeywords: [
+          ['amazing', 'wonderful', 'special'],
+          ['safe', 'safely', 'home'],
+        ],
+        sample: 'Thank you all for an amazing night. Please stay safe on your way home, and see you at the next show! Good night, everyone.',
+        minWords: 12,
+        key: 'thank you all',
+        tip: 'Kết bằng lời cảm ơn cụ thể rồi mới chào tạm biệt.',
+      },
+    ],
+  }),
+};
+
+export default pack;

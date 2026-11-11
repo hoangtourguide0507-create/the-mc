@@ -107,7 +107,7 @@ assert.equal(P.checkPauses(padded, 1, RATE).found, 1);
 // ── 5. Năng lực và kiểm tra tuần ──
 const learn = JSON.parse(JSON.stringify(D.EMPTY_LEARN));
 let list = D.canDoList(learn);
-assert.equal(list.length, 10, '7 cảnh + cụm + nhịp + kiểm tra tuần');
+assert.equal(list.length, 16, '13 cảnh (7 gốc + 6 gói sự kiện) + cụm + nhịp + kiểm tra tuần');
 assert.ok(list.every((c) => !c.done && c.have === 0));
 learn.unsupported.coffee = 7;
 learn.chunks = Object.fromEntries(Array.from({ length: 20 }, (_, i) => [`c${i}`, { box: 4, due: 1 }]));

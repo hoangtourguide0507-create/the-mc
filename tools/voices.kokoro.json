@@ -83,6 +83,51 @@
       "voice": "af_heart",
       "lang": "en-us",
       "speed": 0.97
+    },
+    "maya": {
+      "voice": "af_nova",
+      "lang": "en-us",
+      "speed": 1.0
+    },
+    "mina": {
+      "voice": "af_jessica",
+      "lang": "en-us",
+      "speed": 1.02
+    },
+    "jay": {
+      "voice": "am_liam",
+      "lang": "en-us",
+      "speed": 1.0
+    },
+    "isabelle": {
+      "voice": "bf_lily",
+      "lang": "en-gb",
+      "speed": 0.98
+    },
+    "priya": {
+      "voice": "bf_alice",
+      "lang": "en-gb",
+      "speed": 1.0
+    },
+    "okafor": {
+      "voice": "bm_daniel",
+      "lang": "en-gb",
+      "speed": 0.96
+    },
+    "marcus": {
+      "voice": "am_eric",
+      "lang": "en-us",
+      "speed": 1.0
+    },
+    "hannah": {
+      "voice": "bf_emma:0.6+bf_alice:0.4",
+      "lang": "en-gb",
+      "speed": 1.04
+    },
+    "olivia": {
+      "voice": "bf_isabella:0.5+bf_lily:0.5",
+      "lang": "en-gb",
+      "speed": 1.02
     }
   },
   "_passerHelp": "Người qua đường: mỗi tình huống chọn cố định một giọng trong danh sách này (theo nội dung câu), để phố có nhiều giọng Mỹ và Anh khác nhau.",

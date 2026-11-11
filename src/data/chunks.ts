@@ -3,6 +3,8 @@
 // Cụm phải xuất hiện trong câu trả lời của kịch bản đó, và câu mẫu phải chứa cụm
 // (tests/chunks.test.mjs kiểm tra). Khóa: id tình huống, hoặc "<cảnh>:base" cho kịch bản ngày 1.
 
+import { EVENT_CHUNKS } from './events';
+
 export interface Chunk {
   id: string;
   en: string;
@@ -257,6 +259,9 @@ const RAW: Record<string, Row[]> = {
     ['Let us start at the beginning', 'Chúng ta bắt đầu từ đầu nhé', 'Mở đầu phỏng vấn về sự nghiệp của một đầu bếp.', 'Let us start at the beginning: who taught you to cook?'],
   ],
 };
+
+// Cụm của các gói sự kiện (src/data/events) gắn với kịch bản ngày 1 của sự kiện đó
+for (const [id, rows] of Object.entries(EVENT_CHUNKS)) RAW[`${id}:base`] = rows;
 
 export const CHUNKS: Record<string, Chunk> = {};
 /** Các cụm của từng kịch bản (theo khóa kịch bản). */

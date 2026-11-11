@@ -21,6 +21,7 @@ import { STREET_TALK_EXTRA_10 } from './streetTalkExtra10';
 import { DAILY_GENERATORS } from './dailyGen';
 import { SHOW_GENERATORS } from './showGen';
 import { SCENARIOS, type Scenario } from './scenarios';
+import { EVENT_NPCS, EVENT_SCENES } from './events';
 
 export const APP_VERSION = '2026.11.08-3d2';
 
@@ -1196,7 +1197,9 @@ function prepareScenes(scenes: Record<string, SceneData>): Record<string, SceneD
   return out;
 }
 
-export const SCENES: Record<string, SceneData> = prepareScenes(rawScenes);
+// Các thể loại sự kiện bổ sung (src/data/events): mỗi thể loại một file
+Object.assign(NPCS, EVENT_NPCS);
+export const SCENES: Record<string, SceneData> = prepareScenes({ ...rawScenes, ...EVENT_SCENES });
 
 const PREPARED_SCENARIOS: Record<string, Scenario[]> = Object.fromEntries(
   Object.entries(SCENARIOS).map(([id, list]) => [id, list.map((sc) => ({ ...sc, turns: prepareTurns(sc.turns) }))])

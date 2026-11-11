@@ -1,0 +1,121 @@
+// Diễn đàn quốc tế: MC song ngữ khai mạc phiên Asia Pacific Tourism Forum với đại biểu nhiều nước.
+import { eventScene, npc, type EventPack } from './types';
+
+const pack: EventPack = {
+  ui: { kind: 'Sự kiện quốc tế', theme: 'conference' },
+  objective: {
+    cefr: 'B1',
+    can: 'Open an international forum, introduce a keynote speaker and handle a schedule change.',
+    canVi: 'Khai mạc diễn đàn quốc tế, giới thiệu diễn giả chính và xử lý thay đổi lịch trình.',
+  },
+  npcs: {
+    priya: npc('priya', 'Priya', 'Conference Director', { lang: 'en-GB', gender: 'f', pitch: 1.0, rate: 1.0 }),
+    okafor: npc('okafor', 'Dr. Okafor', 'Keynote Speaker', { lang: 'en-GB', gender: 'm', pitch: 0.95, rate: 0.96 }),
+  },
+  chunks: [
+    ['On behalf of the', 'Thay mặt cho', 'Bạn thay mặt cả nhóm cảm ơn một nhà tài trợ.', 'On behalf of the whole team, I would like to thank our sponsor.'],
+    ['open the floor for questions', 'mời mọi người đặt câu hỏi', 'Bạn vừa thuyết trình xong kế hoạch tour cho đoàn khách.', 'That is the full plan for tomorrow, so let me open the floor for questions.'],
+  ],
+  scene: eventScene({
+    id: 'summit',
+    kind: 'Sự kiện quốc tế',
+    level: 'Intermediate',
+    reqLv: 5,
+    minRep: 1.6,
+    title: 'Asia Pacific Forum Opening',
+    sub: 'Khai mạc diễn đàn du lịch Châu Á Thái Bình Dương với đại biểu quốc tế và diễn giả chính',
+    npc: 'priya',
+    charisma: 50,
+    turns: [
+      {
+        mode: 'scripted',
+        npc: 'Thien An, the delegates are seated and the ministers have arrived. Please open the forum and welcome everyone properly.',
+        npcVi: 'Thiên Ân, các đại biểu đã vào chỗ và các bộ trưởng đã đến. Bạn hãy khai mạc diễn đàn và chào mừng mọi người theo đúng nghi thức nhé.',
+        cue: 'Good morning, ladies and gentlemen. On behalf of the organizing committee, it is my pleasure to welcome our distinguished guests and delegates.',
+        cueVi: 'Chào buổi sáng quý vị. Thay mặt ban tổ chức, tôi rất hân hạnh được chào mừng các quý khách và đại biểu danh dự của chúng ta.',
+        key: 'it is my pleasure to welcome',
+        tip: 'Chào theo thứ tự: khách danh dự trước, rồi đến đại biểu các nước.',
+      },
+      {
+        mode: 'catch',
+        npc: 'Remind the audience that interpretation is available through the headsets at their seats, and that English is on channel two.',
+        npcVi: 'Bạn nhắc khán giả rằng có phiên dịch qua tai nghe đặt tại chỗ ngồi, và tiếng Anh ở kênh số hai.',
+        cue: 'Interpretation is available through the {headsets} at your seats. For English, please select {channel} two.',
+        cueVi: 'Quý vị có thể nghe phiên dịch qua tai nghe đặt tại chỗ ngồi. Để nghe tiếng Anh, xin chọn kênh số hai.',
+        catch: ['microphones', 'projector', 'lanyards', 'brochures'],
+        key: 'interpretation is available in every session',
+        tip: 'Hai từ cần bắt là thiết bị nghe và tên kênh.',
+      },
+      {
+        mode: 'scripted',
+        npc: 'Next, introduce our keynote speaker. He is the chief economist of the regional tourism council and an expert on sustainable travel.',
+        npcVi: 'Tiếp theo, bạn giới thiệu diễn giả chính. Ông là kinh tế trưởng của hội đồng du lịch khu vực và là chuyên gia về du lịch bền vững.',
+        cue: 'Please join me in welcoming our keynote speaker, the chief economist of the regional tourism council and a leading voice on sustainable travel.',
+        cueVi: 'Xin mời quý vị cùng tôi chào đón diễn giả chính, kinh tế trưởng của hội đồng du lịch khu vực và là tiếng nói hàng đầu về du lịch bền vững.',
+        key: 'please join me in welcoming',
+        tip: 'Ngắt nhịp trước câu giới thiệu để khán giả chú ý, rồi đọc chức danh chậm rãi.',
+      },
+      {
+        mode: 'quiz',
+        reflex: 15,
+        who: 'okafor',
+        npc: 'Before I speak, please tell the audience that the panel discussion starts after the coffee break, not before. Questions will follow the panel.',
+        npcVi: 'Trước khi tôi phát biểu, bạn hãy cho khán giả biết phiên thảo luận bắt đầu sau giờ giải lao, không phải trước. Phần hỏi đáp sẽ diễn ra sau phiên thảo luận.',
+        question: 'Dr. Okafor vừa nói phiên thảo luận bắt đầu khi nào?',
+        options: [
+          { t: 'The panel starts before the coffee break, so please come early.', ok: false },
+          { t: 'The panel starts after the coffee break, and questions follow the panel.', ok: true },
+          { t: 'There will be no panel discussion at this forum this year.', ok: false },
+        ],
+        cueVi: 'Phiên thảo luận sẽ bắt đầu sau giờ giải lao, và phần hỏi đáp sẽ diễn ra sau phiên thảo luận.',
+        tip: 'Nghe kỹ hai từ "after" và "before": đáp án đúng là sau giờ giải lao.',
+      },
+      {
+        mode: 'semi',
+        npc: 'Our keynote speaker is delayed by a few minutes because of traffic. Please fill the time with a short announcement and invite everyone to the refreshments.',
+        npcVi: 'Diễn giả chính của chúng ta bị kẹt xe nên đến muộn vài phút. Bạn hãy lấp đầy thời gian bằng một thông báo ngắn và mời mọi người dùng đồ giải khát.',
+        frame: 'Thank you for your patience. Our keynote will begin in ___ minutes, so please enjoy the ___ in the meantime.',
+        cueVi: 'Cảm ơn quý vị đã kiên nhẫn. Diễn giả chính sẽ bắt đầu sau ___ phút nữa, mời quý vị thưởng thức ___ trong lúc chờ.',
+        blanks: 2,
+        blankPool: [
+          ['five', 'ten', 'fifteen'],
+          ['refreshments', 'coffee', 'foyer'],
+        ],
+        sample: 'Thank you for your patience. Our keynote will begin in ten minutes, so please enjoy the refreshments in the meantime.',
+        key: 'please enjoy the refreshments',
+        tip: 'Điền số phút và nơi nghỉ; nói chậm, giữ giọng ấm để khán giả yên tâm.',
+      },
+      {
+        mode: 'scripted',
+        who: 'okafor',
+        npc: 'Thank you, Thien An. I have arrived and I am ready to begin. Please ask everyone to return to their seats so we can start on time.',
+        npcVi: 'Cảm ơn bạn Thiên Ân. Tôi đã đến và sẵn sàng bắt đầu. Bạn hãy mời mọi người trở lại chỗ ngồi để chúng ta bắt đầu đúng giờ.',
+        cue: 'Ladies and gentlemen, thank you for your patience. Our keynote speaker has arrived, so please return to your seats.',
+        cueVi: 'Thưa quý vị, cảm ơn quý vị đã kiên nhẫn. Diễn giả chính đã đến, xin mời quý vị trở lại chỗ ngồi.',
+        key: 'thank you for your patience',
+        tip: 'Chuyển từ thông báo sang chào diễn giả bằng giọng ấm và nhanh gọn.',
+      },
+      {
+        mode: 'free',
+        npc: 'Excellent work. Now open the question and answer session, thank our speaker, and invite the delegates to ask their questions.',
+        npcVi: 'Làm tốt lắm. Giờ bạn mở phần hỏi đáp, cảm ơn diễn giả và mời các đại biểu đặt câu hỏi.',
+        task: 'Cảm ơn diễn giả và mở phần hỏi đáp để đại biểu đặt câu hỏi.',
+        taskVi: 'Bắt buộc có lời cảm ơn (thank) và lời mời đặt câu hỏi (question / ask).',
+        requiredKeywords: [
+          ['thank', 'thanks', 'grateful'],
+          ['question', 'questions', 'ask'],
+        ],
+        bonusKeywords: [
+          ['speaker', 'keynote'],
+          ['floor', 'raise', 'hand'],
+        ],
+        sample: 'Thank you, our keynote speaker, for sharing such insights. Now we open the floor for questions, so please raise your hand and ask.',
+        minWords: 12,
+        key: 'open the floor for questions',
+        tip: 'Mở phần hỏi đáp bằng lời mời rõ ràng: hỏi ở đâu, ai được hỏi.',
+      },
+    ],
+  }),
+};
+
+export default pack;
