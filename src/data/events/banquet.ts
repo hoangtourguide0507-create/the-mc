@@ -1,0 +1,131 @@
+// Tiệc cưới sang trọng: MC song ngữ dẫn tiệc cưới tại khách sạn năm sao, chú rể người nước ngoài và cô dâu Việt Nam.
+import { eventScene, npc, type EventPack } from './types';
+
+const pack: EventPack = {
+  ui: { kind: 'Tiệc cưới sang trọng', theme: 'wedding' },
+  objective: {
+    cefr: 'B1',
+    can: 'Host a bilingual wedding banquet: welcome both families, introduce the couple, invite parents to the stage, lead the toast and invite guests to dinner.',
+    canVi: 'Dẫn tiệc cưới song ngữ: chào đón hai họ, giới thiệu cô dâu chú rể, mời bố mẹ lên sân khấu, dẫn lời chúc và mời khách dùng tiệc.',
+  },
+  npcs: {
+    chloe: npc('chloe', 'Chloe', 'Wedding Coordinator', { lang: 'en-US', gender: 'f', pitch: 1.02, rate: 1.0 }),
+    henry: npc('henry', 'Henry', 'Best Man', { lang: 'en-GB', gender: 'm', pitch: 1.0, rate: 1.0 }),
+  },
+  chunks: [
+    [
+      'Please join me in',
+      'Xin mời quý vị cùng tôi',
+      'Ở đêm gala từ thiện, bạn mời khán giả cùng cảm ơn các tình nguyện viên.',
+      'Please join me in thanking our volunteers who made this charity dinner possible tonight.',
+    ],
+    [
+      'Please raise your glasses',
+      'Xin hãy nâng ly',
+      'Ở buổi họp lớp, bạn mời mọi người nâng ly chúc mừng tình bạn lâu bền.',
+      'Please raise your glasses to our class reunion and to a friendship that never fades.',
+    ],
+  ],
+  scene: eventScene({
+    id: 'banquet',
+    kind: 'Tiệc cưới sang trọng',
+    level: 'Intermediate',
+    reqLv: 4,
+    minRep: 1.4,
+    title: 'Two Families, One Night',
+    sub: 'Dẫn tiệc cưới song ngữ tại khách sạn năm sao cho chú rể người nước ngoài và cô dâu Việt Nam cùng Chloe',
+    npc: 'chloe',
+    charisma: 45,
+    turns: [
+      {
+        mode: 'scripted',
+        npc: 'Thien An, the guests from both families are taking their seats. Please welcome them in English and tell them the couple will enter very soon.',
+        npcVi: 'Thiên Ân, khách của hai họ đang vào chỗ ngồi. Bạn hãy chào mừng mọi người bằng tiếng Anh và cho họ biết cô dâu chú rể sẽ sớm bước vào.',
+        cue: 'Good evening, ladies and gentlemen, and welcome to this wedding celebration. On behalf of both families, we are honored to have you here tonight.',
+        cueVi: 'Kính thưa quý vị, xin chào mừng quý vị đến với tiệc cưới hôm nay. Thay mặt hai gia đình, chúng tôi rất hân hạnh được đón tiếp quý vị tối nay.',
+        key: 'welcome to the wedding',
+        tip: 'Chào khách bằng giọng ấm, nhấn vào cụm "two families" để hai họ cảm thấy được chào đón.',
+      },
+      {
+        mode: 'catch',
+        who: 'henry',
+        npc: 'Before they walk in, remind everyone that the groom flew in from Sydney, and the bride has been waiting for this moment all year.',
+        npcVi: 'Trước khi họ bước vào, bạn nhắc mọi người rằng chú rể đã bay từ Sydney tới, còn cô dâu đã chờ khoảnh khắc này cả năm nay.',
+        cue: 'Please give a warm welcome to the {groom} and the {bride} as they make their way into the hall together.',
+        cueVi: 'Xin dành một tràng pháo tay chào đón chú rể và cô dâu khi cả hai cùng bước vào sảnh tiệc.',
+        catch: ['camera', 'violin', 'lantern', 'dessert'],
+        key: 'the groom and the bride',
+        tip: 'Nghe hai danh từ chỉ người trong đám cưới: chú rể và cô dâu.',
+      },
+      {
+        mode: 'semi',
+        npc: 'Now invite the parents of both families to join the couple on stage, and ask them to stand together for the first photo.',
+        npcVi: 'Giờ hãy mời bố mẹ của hai bên lên sân khấu cùng cô dâu chú rể, và nhờ mọi người đứng cạnh nhau để chụp tấm ảnh đầu tiên.',
+        frame: 'Ladies and gentlemen, please welcome the ___ and their ___ to the stage for our first family photo.',
+        cueVi: 'Thưa quý vị, xin mời quý vị chào đón ___ và ___ lên sân khấu để chụp tấm ảnh gia đình đầu tiên.',
+        blanks: 2,
+        blankPool: [
+          ['bride and groom', 'newlyweds', 'couple'],
+          ['parents', 'families'],
+        ],
+        sample: 'Ladies and gentlemen, please welcome the bride and groom and their parents to the stage for our first family photo.',
+        key: 'please welcome the',
+        tip: 'Điền hai đối tượng: cô dâu chú rể, rồi bố mẹ hai bên.',
+      },
+      {
+        mode: 'quiz',
+        reflex: 15,
+        npc: 'The cake is ready, but please wait until the band starts playing before you invite the couple to the stage.',
+        npcVi: 'Bánh cưới đã sẵn sàng, nhưng bạn hãy đợi đến khi ban nhạc bắt đầu chơi rồi mới mời cô dâu chú rể lên sân khấu.',
+        question: 'Chloe vừa dặn MC điều gì về thời điểm mời cô dâu chú rể lên sân khấu?',
+        options: [
+          { t: 'Please invite the couple to the stage right now, before the band starts.', ok: false },
+          { t: 'In just a moment, when the band begins to play, we will invite our couple to the stage.', ok: true },
+          { t: 'The couple is already on stage, so please give them a big applause.', ok: false },
+        ],
+        cueVi: 'Chúng tôi sẽ mời cô dâu chú rể lên sân khấu khi ban nhạc bắt đầu chơi.',
+        tip: 'Nghe kỹ cụm "wait until the band starts": phải đợi nhạc, không mời trước.',
+      },
+      {
+        mode: 'scripted',
+        who: 'henry',
+        npc: 'Lovely, Thien An. Now invite everyone to raise a glass for the newlyweds, and keep the toast short and warm, please.',
+        npcVi: 'Tuyệt lắm, Thiên Ân. Bây giờ mời mọi người nâng ly chúc mừng đôi uyên ương, và giữ lời chúc thật ngắn gọn, ấm áp nhé.',
+        cue: 'Please raise your glasses to the newlyweds, and let us wish them a lifetime of happiness together.',
+        cueVi: 'Xin mời quý vị nâng ly chúc mừng đôi vợ chồng mới cưới, và chúc hai bạn hạnh phúc trọn đời bên nhau.',
+        key: 'please raise your glasses',
+        tip: 'Giọng chúc ấm và chậm ở cụm "a lifetime of happiness".',
+      },
+      {
+        mode: 'scripted',
+        npc: 'The couple is ready to cut the cake. Invite the guests to gather around, and let them share the first slice with the newlyweds.',
+        npcVi: 'Cô dâu chú rể sẵn sàng cắt bánh cưới. Bạn hãy mời khách quây quần lại, để mọi người cùng chia sẻ lát bánh đầu tiên với đôi uyên ương.',
+        cue: 'Please join me in celebrating this sweet moment, as the couple cuts the first slice of their wedding cake.',
+        cueVi: 'Xin mời quý vị cùng tôi chung vui trong khoảnh khắc ngọt ngào này, khi đôi uyên ương cắt lát bánh cưới đầu tiên.',
+        key: 'cuts the first slice',
+        tip: 'Dừng một nhịp khi cô dâu chú rể cầm dao, rồi nói chậm để khán giả chờ.',
+      },
+      {
+        mode: 'free',
+        npc: 'Lovely! Now close the program by thanking the guests and inviting them to the dinner tables, where the meal is about to be served.',
+        npcVi: 'Tuyệt vời! Bây giờ bạn hãy kết thúc chương trình bằng cách cảm ơn khách mời và mời họ vào bàn tiệc, nơi bữa ăn sắp được phục vụ.',
+        task: 'Kết thúc chương trình: cảm ơn khách và mời mọi người vào bàn dùng tiệc.',
+        taskVi: 'Bắt buộc có lời cảm ơn (thank / thanks / grateful) và lời mời dùng tiệc (dinner / dine / dining / meal).',
+        requiredKeywords: [
+          ['thank', 'thanks', 'grateful'],
+          ['dinner', 'dine', 'dining', 'meal'],
+        ],
+        bonusKeywords: [
+          ['tonight', 'today', 'evening', 'celebration'],
+          ['enjoy', 'invite', 'welcome', 'please'],
+        ],
+        sample: 'Thank you all for celebrating with us tonight. Please take your seats at the tables and enjoy a wonderful dinner with the couple!',
+        minWords: 15,
+        key: 'enjoy a wonderful dinner',
+        tip: 'Kết bằng lời cảm ơn, rồi mời khách vào bàn để dùng bữa.',
+      },
+    ],
+  }),
+};
+
+export default pack;

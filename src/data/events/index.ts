@@ -3,7 +3,10 @@ import type { NpcData, SceneData } from '../../types/game';
 import type { SceneObjective } from '../objectives';
 import auction from './auction';
 import awards from './awards';
+import banquet from './banquet';
+import brand from './brand';
 import customer from './customer';
+import expo from './expo';
 import fanmeet from './fanmeet';
 import fashion from './fashion';
 import launch from './launch';
@@ -12,38 +15,63 @@ import press from './press';
 import signing from './signing';
 import summit from './summit';
 import teambuilding from './teambuilding';
+import tradwedding from './tradwedding';
 import yearend from './yearend';
 import openingMore from './opening.more';
+import openingMore2 from './opening.more2';
 import launchMore from './launch.more';
+import launchMore2 from './launch.more2';
 import yearendMore from './yearend.more';
+import yearendMore2 from './yearend.more2';
 import teambuildingMore from './teambuilding.more';
+import teambuildingMore2 from './teambuilding.more2';
 import fanmeetMore from './fanmeet.more';
+import fanmeetMore2 from './fanmeet.more2';
+import expoMore from './expo.more';
+import expoMore2 from './expo.more2';
+import brandMore from './brand.more';
+import brandMore2 from './brand.more2';
 import fashionMore from './fashion.more';
+import fashionMore2 from './fashion.more2';
+import banquetMore from './banquet.more';
+import banquetMore2 from './banquet.more2';
 import signingMore from './signing.more';
+import signingMore2 from './signing.more2';
 import summitMore from './summit.more';
+import summitMore2 from './summit.more2';
+import tradweddingMore from './tradwedding.more';
+import tradweddingMore2 from './tradwedding.more2';
 import customerMore from './customer.more';
+import customerMore2 from './customer.more2';
 import pressMore from './press.more';
+import pressMore2 from './press.more2';
 import auctionMore from './auction.more';
+import auctionMore2 from './auction.more2';
 import awardsMore from './awards.more';
+import awardsMore2 from './awards.more2';
 import type { EventPack, EventScript, EventTheme } from './types';
 
 /** Xếp theo cấp mở khoá */
-export const EVENT_PACKS: EventPack[] = [opening, launch, yearend, teambuilding, fanmeet, fashion, signing, summit, customer, press, auction, awards];
+export const EVENT_PACKS: EventPack[] = [opening, launch, yearend, teambuilding, fanmeet, expo, brand, fashion, banquet, signing, summit, tradwedding, customer, press, auction, awards];
 
-/** Bài bổ sung theo gói (file `<id>.more.ts`). Thêm file mới thì khai báo ở đây. */
+/** Bài bổ sung theo gói (file `<id>.more.ts`, `<id>.more2.ts`). Thêm file mới thì khai báo ở đây. */
 const MORE: Record<string, EventScript[]> = {
-  opening: openingMore,
-  launch: launchMore,
-  yearend: yearendMore,
-  teambuilding: teambuildingMore,
-  fanmeet: fanmeetMore,
-  fashion: fashionMore,
-  signing: signingMore,
-  summit: summitMore,
-  customer: customerMore,
-  press: pressMore,
-  auction: auctionMore,
-  awards: awardsMore,
+  opening: [...openingMore, ...openingMore2],
+  launch: [...launchMore, ...launchMore2],
+  yearend: [...yearendMore, ...yearendMore2],
+  teambuilding: [...teambuildingMore, ...teambuildingMore2],
+  fanmeet: [...fanmeetMore, ...fanmeetMore2],
+  expo: [...expoMore, ...expoMore2],
+  brand: [...brandMore, ...brandMore2],
+  fashion: [...fashionMore, ...fashionMore2],
+  banquet: [...banquetMore, ...banquetMore2],
+  signing: [...signingMore, ...signingMore2],
+  summit: [...summitMore, ...summitMore2],
+  tradwedding: [...tradweddingMore, ...tradweddingMore2],
+  customer: [...customerMore, ...customerMore2],
+  press: [...pressMore, ...pressMore2],
+  auction: [...auctionMore, ...auctionMore2],
+  awards: [...awardsMore, ...awardsMore2],
 };
 
 export const EVENT_SCENES: Record<string, SceneData> = {};

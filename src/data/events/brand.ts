@@ -1,0 +1,131 @@
+// Sự kiện thương hiệu: MC dẫn ngày hội làm đẹp và phong cách sống nhiều thương hiệu, giới thiệu đối tác,
+// ghi nhận nhà sáng tạo nội dung, chào khách mời nổi tiếng và dẫn khán giả sang khu trải nghiệm.
+import { eventScene, npc, type EventPack } from './types';
+
+const pack: EventPack = {
+  ui: { kind: 'Sự kiện thương hiệu', theme: 'runway' },
+  objective: {
+    cefr: 'B1',
+    can: 'Host a beauty and lifestyle brand day: open the event, introduce brand partners and a celebrity guest, then guide guests to the experience zone.',
+    canVi: 'Dẫn ngày hội thương hiệu làm đẹp và phong cách sống: mở màn, giới thiệu đối tác và khách mời nổi tiếng, rồi dẫn khách sang khu trải nghiệm.',
+  },
+  npcs: {
+    tina: npc('tina', 'Tina', 'Event Producer', { lang: 'en-US', gender: 'f', pitch: 1.04, rate: 1.02 }),
+    luna: npc('luna', 'Luna', 'Celebrity Guest', { lang: 'en-US', gender: 'f', pitch: 1.08, rate: 1.0 }),
+  },
+  chunks: [
+    [
+      'give a warm welcome to',
+      'dành một tràng pháo tay chào đón',
+      'Ở đám cưới, bạn mời cô dâu chú rể bước vào hội trường.',
+      'Please give a warm welcome to the bride and groom as they enter the hall.',
+    ],
+    [
+      'stay tuned for',
+      'hãy đón xem',
+      'Ở buổi họp báo, bạn hẹn phóng viên chờ thông báo tiếp theo.',
+      'Please stay tuned for the next announcement, coming up right after this short break.',
+    ],
+  ],
+  scene: eventScene({
+    id: 'brand',
+    kind: 'Sự kiện thương hiệu',
+    level: 'Intermediate',
+    reqLv: 3,
+    title: 'Glow Day',
+    sub: 'Dẫn ngày hội Glow Day với đối tác thương hiệu làm đẹp và khách mời nổi tiếng Luna',
+    npc: 'tina',
+    charisma: 40,
+    turns: [
+      {
+        mode: 'scripted',
+        npc: 'Thien An, the doors are opening now and the guests are arriving. Please welcome everyone and tell them what today is about.',
+        npcVi: 'Thiên Ân, cửa đã mở và khách mời đang lần lượt đến. Bạn hãy chào mọi người và cho họ biết hôm nay có gì nhé.',
+        cue: 'Good morning, beauty lovers, and welcome to Glow Day, our celebration of beauty and lifestyle brands. We are delighted to have you here.',
+        cueVi: 'Chào buổi sáng các tín đồ làm đẹp, và chào mừng quý vị đến với Glow Day, ngày hội tôn vinh các thương hiệu làm đẹp và phong cách sống. Chúng tôi rất vui khi có mặt quý vị hôm nay.',
+        key: 'welcome to Glow Day',
+        tip: 'Mở bằng lời chào ngắn, nhìn thẳng khán giả và ngắt một nhịp trước tên sự kiện.',
+      },
+      {
+        mode: 'catch',
+        npc: 'Before the first brand talk, thank our sponsors and creators for joining us, then tell the guests the theme of the day.',
+        npcVi: 'Trước phần chia sẻ đầu tiên, bạn cảm ơn các nhà tài trợ và những nhà sáng tạo nội dung đã đến, rồi nói cho khách biết chủ đề của ngày hôm nay.',
+        cue: 'Thank you to our {sponsors} and our {creators} for joining us, and for bringing your passion to this celebration.',
+        cueVi: 'Xin cảm ơn các nhà tài trợ và những nhà sáng tạo nội dung của chúng tôi đã đồng hành cùng ngày hôm nay.',
+        catch: ['speakers', 'designers', 'lighting', 'florists'],
+        key: 'thank our sponsors and creators',
+        tip: 'Nghe hai danh từ chỉ người được cảm ơn: nhà tài trợ và nhà sáng tạo nội dung.',
+      },
+      {
+        mode: 'semi',
+        npc: 'Now invite our first brand partner to the stage, and ask the guest to share what the brand means to them.',
+        npcVi: 'Giờ hãy mời đối tác thương hiệu đầu tiên lên sân khấu và nhờ bạn ấy chia sẻ thương hiệu có ý nghĩa gì với mình.',
+        frame: 'Please give a warm welcome to our first brand partner, ___, and to the ___ team behind it.',
+        cueVi: 'Xin hãy dành một tràng pháo tay chào đón đối tác thương hiệu đầu tiên, ___, và đội ngũ ___ đứng sau thương hiệu này!',
+        blanks: 2,
+        blankPool: [
+          ['Lumi Skin', 'Aster Beauty', 'Velvet Lab'],
+          ['founding', 'creative', 'design'],
+        ],
+        sample: 'Please give a warm welcome to our first brand partner, Lumi Skin, and to the founding team behind it.',
+        key: 'give a warm welcome to',
+        tip: 'Đọc rõ tên thương hiệu, rồi dừng nhẹ trước cụm đội ngũ phía sau.',
+      },
+      {
+        mode: 'scripted',
+        who: 'luna',
+        npc: 'Hi Thien An, thank you for having me today! Could you introduce me properly, and mention my new skincare line too?',
+        npcVi: 'Chào Thiên Ân, cảm ơn bạn đã mời mình hôm nay! Bạn giới thiệu mình thật đầy đủ nhé, nhớ nhắc luôn đến dòng chăm sóc da mới nhé.',
+        cue: 'Ladies and gentlemen, our special guest Luna is here to share her favorite beauty secrets with all of you today.',
+        cueVi: 'Thưa quý vị, khách mời đặc biệt của chúng ta, Luna, hôm nay sẽ chia sẻ những bí quyết làm đẹp yêu thích của cô ấy với tất cả quý vị.',
+        key: 'our special guest',
+        tip: 'Giới thiệu tên khách trước, rồi mới nói đến lý do khách có mặt.',
+      },
+      {
+        mode: 'quiz',
+        reflex: 15,
+        npc: 'Thanks for that. Our surprise gift is still a secret, so do not reveal it yet. Keep the audience curious until later.',
+        npcVi: 'Cảm ơn bạn. Món quà bất ngờ vẫn là bí mật, nên đừng tiết lộ vội. Hãy giữ khán giả tò mò đến lúc thích hợp.',
+        question: 'Tina vừa dặn điều gì về món quà bất ngờ?',
+        options: [
+          { t: 'Our surprise gift is waiting at the front desk, so grab yours right now!', ok: false },
+          { t: 'Our surprise gift is still a secret, so please stay tuned for the big reveal this afternoon.', ok: true },
+          { t: 'Please post a photo of our surprise gift on social media right away, everyone!', ok: false },
+        ],
+        cueVi: 'Món quà bất ngờ vẫn là một bí mật, nên xin quý vị theo dõi màn công bố lớn vào chiều nay.',
+        tip: 'Nghe kỹ "do not reveal it yet": MC giữ bí mật, không nói quà là gì hay nhận ở đâu.',
+      },
+      {
+        mode: 'scripted',
+        who: 'luna',
+        npc: 'Thank you, Thien An! I would love to try the makeup workshop with everyone. Could you tell the guests where to go next?',
+        npcVi: 'Cảm ơn bạn, Thiên Ân! Mình rất muốn cùng mọi người thử buổi học trang điểm. Bạn nói cho khách biết nên đi đâu tiếp theo nhé?',
+        cue: 'Our makeup workshop opens now in the garden area, so please head there and enjoy a hands-on session with our artists.',
+        cueVi: 'Buổi học trang điểm của chúng tôi mở ngay bây giờ ở khu vườn, xin mời quý vị đến đó và trải nghiệm trực tiếp cùng các nghệ sĩ.',
+        key: 'head there and enjoy',
+        tip: 'Chỉ rõ địa điểm và hoạt động, khán giả sẽ biết ngay phải làm gì.',
+      },
+      {
+        mode: 'free',
+        npc: 'Great job today, Thien An. Please close the segment, thank the brands and creators, and send everyone to the experience zone.',
+        npcVi: 'Làm tốt lắm hôm nay, Thiên Ân. Bạn hãy kết thúc phần này, cảm ơn các thương hiệu và nhà sáng tạo, rồi mời mọi người sang khu trải nghiệm nhé.',
+        task: 'Kết thúc phần sự kiện: cảm ơn khách, các thương hiệu và nhà sáng tạo, rồi mời khán giả sang khu trải nghiệm.',
+        taskVi: 'Bắt buộc có lời cảm ơn (thank / thanks) và chỉ dẫn sang khu trải nghiệm (experience / zone / try / workshop).',
+        requiredKeywords: [
+          ['thank', 'thanks', 'grateful'],
+          ['experience', 'zone', 'try', 'workshop'],
+        ],
+        bonusKeywords: [
+          ['brands', 'partners', 'creators'],
+          ['enjoy', 'today', 'join'],
+        ],
+        sample: 'Thank you all for joining us today. Please visit the beauty experience zone and enjoy the workshops with our brand partners and creators!',
+        minWords: 15,
+        key: 'visit the beauty experience zone',
+        tip: 'Kết bằng lời cảm ơn, rồi nói rõ khách đi đâu và làm gì.',
+      },
+    ],
+  }),
+};
+
+export default pack;

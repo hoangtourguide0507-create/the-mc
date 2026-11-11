@@ -1,0 +1,130 @@
+// Triển lãm cưới: MC sân khấu chính dẫn chương trình trong ngày, chào khách trong nước và quốc tế,
+// giới thiệu show trên sân khấu, mời khách ghé gian hàng và nhắc đăng ký tại quầy thông tin.
+import { eventScene, npc, type EventPack } from './types';
+
+const pack: EventPack = {
+  ui: { kind: 'Triển lãm', theme: 'conference' },
+  objective: {
+    cefr: 'B1',
+    can: 'Host a wedding expo stage: welcome visitors, announce the schedule, invite guests to exhibition booths and close the day.',
+    canVi: 'Dẫn sân khấu triển lãm cưới: chào khách tham quan, thông báo chương trình, mời khách ghé gian hàng và kết thúc ngày.',
+  },
+  npcs: {
+    nadia: npc('nadia', 'Nadia', 'Exhibition Director', { lang: 'en-GB', gender: 'f', pitch: 1.0, rate: 1.0 }),
+    kevin: npc('kevin', 'Kevin', 'Brand Manager', { lang: 'en-US', gender: 'm', pitch: 1.0, rate: 1.02 }),
+  },
+  chunks: [
+    [
+      'We are delighted to',
+      'Chúng tôi rất vui được',
+      'Bạn đón tiếp khách mời trong buổi khai mạc triển lãm.',
+      'We are delighted to welcome young couples and their families from across the region.',
+    ],
+    [
+      'Thank you for joining us',
+      'Cảm ơn quý vị đã đến tham dự',
+      'Bạn cảm ơn khách đã đến dự một buổi lễ đóng cửa.',
+      'Thank you for joining us at the closing ceremony, and please drive home safely.',
+    ],
+  ],
+  scene: eventScene({
+    id: 'expo',
+    kind: 'Triển lãm',
+    level: 'Intermediate',
+    reqLv: 3,
+    title: 'Golden Vows Expo',
+    sub: 'Dẫn sân khấu chính Triển lãm cưới Golden Vows cùng giám đốc triển lãm Nadia',
+    npc: 'nadia',
+    charisma: 35,
+    turns: [
+      {
+        mode: 'scripted',
+        npc: 'Good morning, Thien An. The doors are open and thousands of guests are already walking in. Please welcome them and tell them what today is about.',
+        npcVi: 'Chào buổi sáng, Thiên Ân. Cửa đã mở và hàng nghìn khách đang bước vào. Bạn hãy chào đón mọi người và cho họ biết hôm nay có gì.',
+        cue: 'Good morning and welcome to the Golden Vows Wedding Expo. We are delighted to have you here with us today.',
+        cueVi: 'Chào buổi sáng và chào mừng quý vị đến với Triển lãm cưới Golden Vows. Chúng tôi rất vui khi được đón quý vị tại đây hôm nay.',
+        key: 'welcome to the golden vows wedding expo',
+        tip: 'Chào đúng tên triển lãm rồi mới nói lời chào mừng, để khách biết mình đang ở đâu.',
+      },
+      {
+        mode: 'catch',
+        npc: 'Our guests have traveled from Hanoi, Singapore and Seoul, so please remind them that the show starts at two and the booth is open all day.',
+        npcVi: 'Khách của chúng ta đến từ Hà Nội, Singapore và Seoul, nên bạn hãy nhắc họ rằng chương trình bắt đầu lúc hai giờ và gian chụp ảnh mở cửa cả ngày.',
+        cue: 'Dear guests, the fashion {show} starts at two this afternoon, and the photo {booth} is open all day.',
+        cueVi: 'Thưa quý khách, show thời trang bắt đầu lúc hai giờ chiều nay, và gian chụp ảnh mở cửa suốt cả ngày.',
+        catch: ['bouquet', 'caterer', 'florist', 'violin'],
+        key: 'the show starts at two',
+        tip: 'Nghe hai danh từ chỉ sự kiện và địa điểm: chương trình và gian chụp ảnh.',
+      },
+      {
+        mode: 'scripted',
+        who: 'kevin',
+        npc: 'Thien An, our sponsor team is ready. Please introduce me, and tell the guests that our bridal fashion show begins at noon.',
+        npcVi: 'Thiên Ân, bên tài trợ đã sẵn sàng. Bạn hãy giới thiệu tôi, rồi cho khách biết show thời trang cô dâu bắt đầu lúc trưa.',
+        cue: 'Please give a warm welcome to Kevin, our brand manager, who will tell you all about our bridal fashion show at noon.',
+        cueVi: 'Xin quý vị dành một tràng vỗ tay chào đón Kevin, quản lý thương hiệu của chúng tôi, người sẽ giới thiệu về show thời trang cô dâu lúc trưa.',
+        key: 'a warm welcome to kevin',
+        tip: 'Giới thiệu người theo thứ tự: tên, vai trò, rồi nội dung họ sẽ nói.',
+      },
+      {
+        mode: 'semi',
+        npc: 'Now let the guests know where to go next. Ask them to visit the bridal gown hall, and remind them to sign up at the information desk.',
+        npcVi: 'Bây giờ hãy cho khách biết nên đi đâu tiếp theo. Mời họ ghé sảnh áo cưới và nhắc họ đăng ký tại quầy thông tin.',
+        frame: 'Now, please ___ the bridal gown hall and ___ at the information desk.',
+        cueVi: 'Bây giờ, xin mời quý vị ___ sảnh áo cưới và ___ tại quầy thông tin.',
+        blanks: 2,
+        blankPool: [
+          ['visit', 'explore', 'browse'],
+          ['register', 'sign up', 'check in'],
+        ],
+        sample: 'Now, please visit the bridal gown hall and register at the information desk.',
+        key: 'please visit the bridal gown hall',
+        tip: 'Động từ đầu tiên là lời mời ghé thăm, động từ thứ hai là hành động đăng ký.',
+      },
+      {
+        mode: 'quiz',
+        reflex: 15,
+        npc: 'Our lucky draw starts at four o\'clock, and only guests who register at the desk first can join it. Please share this clearly.',
+        npcVi: 'Buổi bốc thăm may mắn bắt đầu lúc bốn giờ, và chỉ những khách đã đăng ký tại quầy mới được tham gia. Bạn hãy thông báo rõ ràng nhé.',
+        question: 'Nadia vừa dặn điều gì về việc tham gia bốc thăm?',
+        options: [
+          { t: 'The lucky draw has been cancelled, so guests can simply go home now.', ok: false },
+          { t: 'Please register at the desk first, so you can join our four o\'clock lucky draw.', ok: true },
+          { t: 'Registration is closed, so please tell guests to wait for the next expo.', ok: false },
+        ],
+        cueVi: 'Xin quý vị đăng ký tại quầy trước, để có thể tham gia buổi bốc thăm lúc bốn giờ.',
+        tip: 'Nghe từ "only" và "first": phải đăng ký trước thì mới được bốc thăm.',
+      },
+      {
+        mode: 'scripted',
+        npc: 'The runway show is next. Please introduce the designer, Mia Laurent, and her Silk Dawn collection, then invite the audience to watch.',
+        npcVi: 'Tiếp theo là show thời trang. Bạn hãy giới thiệu nhà thiết kế Mia Laurent và bộ sưu tập Silk Dawn, rồi mời khán giả theo dõi.',
+        cue: 'Please join me in welcoming Mia Laurent, whose Silk Dawn collection will take the runway in five minutes.',
+        cueVi: 'Xin mời quý vị cùng tôi chào đón Mia Laurent, người có bộ sưu tập Silk Dawn sẽ bước lên sàn diễn sau năm phút nữa.',
+        key: 'take the runway in five minutes',
+        tip: 'Đặt tên nhà thiết kế ở cuối câu và nói chậm để khán giả nhớ.',
+      },
+      {
+        mode: 'free',
+        npc: 'Lovely. The expo is closing soon, so please thank the guests and invite them to join our lucky draw on the main stage.',
+        npcVi: 'Tuyệt vời. Triển lãm sắp kết thúc, nên bạn hãy cảm ơn khách và mời họ tham gia buổi bốc thăm trên sân khấu chính.',
+        task: 'Kết thúc triển lãm: cảm ơn khách tham quan và mời họ tham gia bốc thăm trên sân khấu chính.',
+        taskVi: 'Bắt buộc có lời cảm ơn (thank / thanks) và lời mời tham gia (join / draw / visit).',
+        requiredKeywords: [
+          ['thank', 'thanks', 'grateful'],
+          ['join', 'draw', 'visit'],
+        ],
+        bonusKeywords: [
+          ['guests', 'visitors', 'everyone'],
+          ['today', 'this afternoon', 'main stage'],
+        ],
+        sample: 'Thank you for joining us today, dear guests. Please join our lucky draw on the main stage at four, and enjoy your afternoon.',
+        minWords: 15,
+        key: 'please join our lucky draw',
+        tip: 'Kết bằng lời cảm ơn, rồi nói rõ khách làm gì tiếp theo và ở đâu.',
+      },
+    ],
+  }),
+};
+
+export default pack;

@@ -14,13 +14,13 @@ const P = await import(pathToFileURL(outfile).href);
 
 // Mỗi cảnh có đúng một mục tiêu; tổng theo CEFR khớp dữ liệu
 const none = P.objectiveReport({});
-assert.deepEqual(none, { A2: { met: 0, total: 4 }, B1: { met: 0, total: 10 }, B2: { met: 0, total: 5 } }); // 7 cảnh gốc + 12 gói sự kiện
+assert.deepEqual(none, { A2: { met: 0, total: 4 }, B1: { met: 0, total: 13 }, B2: { met: 0, total: 6 } }); // 7 cảnh gốc + 16 gói sự kiện
 
 // Đạt khi sao tốt nhất >= 2
 const some = P.objectiveReport({ coffee: 3, market: 1, wedding: 2, gala: 2 });
 assert.deepEqual(some.A2, { met: 1, total: 4 });
-assert.deepEqual(some.B1, { met: 1, total: 10 });
-assert.deepEqual(some.B2, { met: 1, total: 5 });
+assert.deepEqual(some.B1, { met: 1, total: 13 });
+assert.deepEqual(some.B2, { met: 1, total: 6 });
 
 // Ngưỡng đạt mục tiêu
 assert.equal(P.objectiveMetBy(1.9), false);
