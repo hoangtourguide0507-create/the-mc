@@ -122,6 +122,16 @@ button:disabled { cursor: default; opacity: 0.45; }
 }
 .toast.on { opacity: 1; }
 
+.show .count { grid-column: 1 / -1; font-size: 13px; color: var(--accent); font-weight: 600; }
+.scripts { padding: 6px; display: grid; }
+.script { display: grid; grid-template-columns: 32px 1fr auto; align-items: center; gap: 12px; min-height: 60px; padding: 8px 10px; border: 0; border-radius: 12px; background: none; text-align: left; }
+.script + .script { border-top: 1px solid var(--line); border-radius: 0; }
+.script:active { background: var(--accent-soft); }
+.script .num { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); font-weight: 600; font-size: 14px; }
+.script .st { display: grid; font-weight: 500; }
+.script .st small { font-size: 13px; font-weight: 400; color: var(--muted); }
+.script .go { font-size: 13px; font-weight: 600; color: var(--accent); white-space: nowrap; }
+
 /* ---------- Màn bài học: cột dọc, thanh mic ghim đáy và nằm ngoài vùng cuộn ---------- */
 .lesson { position: absolute; inset: 0; display: flex; flex-direction: column; background: var(--veil); }
 .lesson > * { width: 100%; max-width: 640px; margin: 0 auto; }

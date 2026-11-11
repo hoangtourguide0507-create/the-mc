@@ -1,3 +1,4 @@
+import { EVENT_SCRIPTS } from '../events';
 import { BACKSTAGE_SCENARIOS } from './backstage';
 import { BEACH_SCENARIOS } from './beach';
 import { COFFEE_SCENARIOS } from './coffee';
@@ -18,4 +19,6 @@ export const SCENARIOS: Record<string, Scenario[]> = {
   beach: BEACH_SCENARIOS,
   gala: GALA_SCENARIOS,
   interview: INTERVIEW_SCENARIOS,
+  // Bài bổ sung của các gói sự kiện (src/data/events/<id>.more.ts)
+  ...Object.fromEntries(Object.entries(EVENT_SCRIPTS).map(([id, list]) => [id, list.map(({ id: sid, title, turns }) => ({ id: sid, title, turns }))])),
 };

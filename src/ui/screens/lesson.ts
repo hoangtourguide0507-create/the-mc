@@ -15,7 +15,7 @@ import { applyChunkAttempt, focusChunk, mergeAttempts } from '../../core/retry';
 import { gameStore } from '../../core/store';
 import { viSupport } from '../../core/support';
 import { CHUNKS_BY_SCRIPT } from '../../data/chunks';
-import { NPCS, SCENES, scenarioForDay } from '../../data/content';
+import { NPCS, SCENES, scenarioForDay, scriptList } from '../../data/content';
 import { SCENE_OBJECTIVES } from '../../data/objectives';
 import type { EvalResult, StageMicPhase } from '../../types/game';
 import { append, clear, h } from '../dom';
@@ -29,10 +29,15 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
   const store = () => gameStore.getState();
   const st0 = store().state;
   const baseScene = SCENES[sceneId] || SCENES.coffee;
-  // Lượt thoại đổi theo ngày học; nhiệm vụ và sổ tay vẫn đánh số theo kịch bản gốc
-  const dayScript = scenarioForDay(baseScene, st0.day);
+  // Bài do người học chọn trong danh sách; nếu không chọn thì lấy bài theo ngày học.
+  // Nhiệm vụ và sổ tay vẫn đánh số theo vị trí lượt của tình huống.
+  const pickedKey = store().lessonScriptKey;
+  const picked = pickedKey ? scriptList(baseScene.id).find((x) => x.key === pickedKey) : null;
+  const dayScript = picked
+    ? { scenarioId: picked.key.endsWith(':base') ? null : picked.key, title: picked.title, turns: picked.turns }
+    : scenarioForDay(baseScene, st0.day);
   const turns = dayScript.turns;
-  const scriptKey = dayScript.scenarioId ?? `${baseScene.id}:${st0.day < 2 ? 'base' : 'gen'}`;
+  const scriptKey = picked ? picked.key : dayScript.scenarioId ?? `${baseScene.id}:${st0.day < 2 ? 'base' : 'gen'}`;
   // Mức hỗ trợ chốt lúc vào bài: 0 = đủ thẻ, 1 = chỉ gợi ý tiếng Việt, 2 = không gợi ý
   const stage = supportStage(st0.learn.exposure[scriptKey]);
   const support = viSupport(SCENE_OBJECTIVES[sceneId]?.cefr);

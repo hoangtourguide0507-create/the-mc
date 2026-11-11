@@ -17,6 +17,19 @@ export interface EventPack {
   ui: { kind: string; theme: EventTheme };
 }
 
+/**
+ * Bài bổ sung của một thể loại: cùng nhân vật, tình huống khác hẳn. Viết trong file `<id>.more.ts`.
+ * Số lượt phải bằng bài gốc của gói (nhiệm vụ và sổ tay đánh số theo vị trí lượt).
+ */
+export interface EventScript {
+  /** `<id gói>-<tên ngắn>`, ví dụ 'launch-car' */
+  id: string;
+  /** Tên tình huống bằng tiếng Việt, hiện trong danh sách bài và trên thanh tiêu đề */
+  title: string;
+  turns: TurnData[];
+  chunks: EventPack['chunks'];
+}
+
 /** Nhân vật mới. Bản giao diện mới không vẽ nhân vật nên ngoại hình dùng mặc định. */
 export function npc(id: string, name: string, role: string, voice: VoiceConfig): NpcData {
   return { id, name, role, voice, look: { skin: '#D9A17C', hair: '#27272A', cloth: '#3F3F46', hairStyle: 'short' as never, outfit: 'suit' as never } };

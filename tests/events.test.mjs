@@ -1,5 +1,6 @@
 // Kiểm thử các gói sự kiện (src/data/events). Chạy: npm run test:events
 // Kiểm riêng một file đang viết: node tests/events.test.mjs src/data/events/<tên>.ts
+// Kiểm bài bổ sung: node tests/events.test.mjs src/data/events/<tên>.ts src/data/events/<tên>.more.ts
 import { build } from 'esbuild';
 import os from 'node:os';
 import path from 'node:path';
@@ -15,8 +16,12 @@ const load = async (rel) => {
 const E = await load('src/core/evaluator.ts');
 const K = await load('src/core/chunks.ts');
 
+// Tham số: [file gói] [file bài bổ sung]. Không tham số: kiểm mọi gói và mọi bài bổ sung đã khai báo.
 const single = process.argv[2];
-const packs = single ? [(await load(single)).default] : (await load('src/data/events/index.ts')).EVENT_PACKS;
+const moreFile = process.argv[3];
+const INDEX = single ? null : await load('src/data/events/index.ts');
+const packs = single ? [(await load(single)).default] : INDEX.EVENT_PACKS;
+const moreOf = async (id) => (single ? (moreFile ? (await load(moreFile)).default : []) : INDEX.EVENT_SCRIPTS[id] || []);
 const EXISTING_NPCS = ['leo', 'alex', 'couple', 'victoria', 'sam', 'tom', 'ivy', 'david', 'grandpa', 'grandma', 'boy', 'girl', 'coach', 'passer'];
 const EXISTING_SCENES = ['coffee', 'market', 'backstage', 'wedding', 'beach', 'gala', 'interview'];
 const THEMES = ['lounge', 'conference', 'runway', 'concert', 'wedding', 'gala'];
@@ -36,33 +41,16 @@ const prepare = (t) => {
 };
 
 const sceneIds = new Set();
+const scriptIds = new Set();
+let scriptsChecked = 0;
 const npcIds = new Set();
 const npcLines = new Set();
 const samples = new Set();
 let turnsChecked = 0;
 
-for (const pack of packs) {
-  const sc = pack.scene;
-  const id = sc.id;
-  assert.match(id, /^[a-z]+$/, `id "${id}" chỉ gồm chữ thường`);
-  assert.ok(!EXISTING_SCENES.includes(id) && !sceneIds.has(id), `${id}: trùng id tình huống`);
-  sceneIds.add(id);
-  assert.equal(sc.type, 'show');
-  assert.ok(sc.title && sc.sub && hasVi(sc.sub), `${id}: thiếu title/sub (sub bằng tiếng Việt)`);
-  assert.ok(sc.reqLv >= 1 && sc.reqLv <= 10, `${id}: reqLv ngoài 1..10`);
-  assert.ok(sc.reward.charisma >= 20 && sc.reward.charisma <= 90, `${id}: charisma thưởng ngoài 20..90`);
-  assert.ok(THEMES.includes(pack.ui.theme) && pack.ui.kind, `${id}: ui.theme/kind không hợp lệ`);
-  assert.ok(['A2', 'B1', 'B2'].includes(pack.objective.cefr) && pack.objective.can && hasVi(pack.objective.canVi), `${id}: objective thiếu`);
-
-  for (const [nid, n] of Object.entries(pack.npcs)) {
-    assert.equal(n.id, nid);
-    assert.ok(!EXISTING_NPCS.includes(nid) && !npcIds.has(nid), `${id}: trùng id nhân vật ${nid}`);
-    npcIds.add(nid);
-    assert.ok(n.name && n.role && ['en-US', 'en-GB', 'en-AU'].includes(n.voice.lang), `${nid}: thiếu name/role/voice`);
-  }
-  assert.ok(pack.npcs[sc.npc], `${id}: scene.npc "${sc.npc}" không có trong npcs của gói`);
-
-  const turns = sc.turns.map(prepare);
+/** Kiểm một kịch bản (bài gốc hoặc bài bổ sung): từng lượt, số kiểu bài, cụm mang về */
+function checkScript(pack, id, rawTurns, chunkRows) {
+  const turns = rawTurns.map(prepare);
   assert.ok(turns.length >= 6 && turns.length <= 8, `${id}: cần 6 đến 8 lượt (đang có ${turns.length})`);
   const modes = new Set();
   turns.forEach((t, i) => {
@@ -116,8 +104,8 @@ for (const pack of packs) {
 
   // Cụm mang về
   const text = norm(turns.map((t) => [t.cue, t.sample, (t.options || []).find((o) => o.ok)?.t].filter(Boolean).join(' ')).join(' '));
-  assert.ok(pack.chunks.length >= 2, `${id}: cần ít nhất 2 cụm mang về`);
-  for (const [en, vi, useVi, sample] of pack.chunks) {
+  assert.ok(chunkRows.length >= 2, `${id}: cần ít nhất 2 cụm mang về`);
+  for (const [en, vi, useVi, sample] of chunkRows) {
     assert.ok(en && hasVi(vi + useVi) && sample, `${id}: cụm "${en}" thiếu trường`);
     assert.ok(text.includes(norm(en)), `${id}: cụm "${en}" không có trong câu trả lời của kịch bản`);
     assert.ok(K.evaluateChunkUse(en, sample).ok, `${id}: câu mẫu của cụm "${en}" không chứa cụm hoặc quá ngắn`);
@@ -125,5 +113,39 @@ for (const pack of packs) {
     assert.ok(!samples.has(sample), `${id}: câu mẫu cụm bị trùng`);
     samples.add(sample);
   }
+  return turns.length;
 }
-console.log(`events.test: ${packs.length} gói sự kiện, ${turnsChecked} lượt hợp lệ, câu mẫu đều đạt 3★.`);
+
+for (const pack of packs) {
+  const sc = pack.scene;
+  const id = sc.id;
+  assert.match(id, /^[a-z]+$/, `id "${id}" chỉ gồm chữ thường`);
+  assert.ok(!EXISTING_SCENES.includes(id) && !sceneIds.has(id), `${id}: trùng id tình huống`);
+  sceneIds.add(id);
+  assert.equal(sc.type, 'show');
+  assert.ok(sc.title && sc.sub && hasVi(sc.sub), `${id}: thiếu title/sub (sub bằng tiếng Việt)`);
+  assert.ok(sc.reqLv >= 1 && sc.reqLv <= 10, `${id}: reqLv ngoài 1..10`);
+  assert.ok(sc.reward.charisma >= 20 && sc.reward.charisma <= 90, `${id}: charisma thưởng ngoài 20..90`);
+  assert.ok(THEMES.includes(pack.ui.theme) && pack.ui.kind, `${id}: ui.theme/kind không hợp lệ`);
+  assert.ok(['A2', 'B1', 'B2'].includes(pack.objective.cefr) && pack.objective.can && hasVi(pack.objective.canVi), `${id}: objective thiếu`);
+
+  for (const [nid, n] of Object.entries(pack.npcs)) {
+    assert.equal(n.id, nid);
+    assert.ok(!EXISTING_NPCS.includes(nid) && !npcIds.has(nid), `${id}: trùng id nhân vật ${nid}`);
+    npcIds.add(nid);
+    assert.ok(n.name && n.role && ['en-US', 'en-GB', 'en-AU'].includes(n.voice.lang), `${nid}: thiếu name/role/voice`);
+  }
+  assert.ok(pack.npcs[sc.npc], `${id}: scene.npc "${sc.npc}" không có trong npcs của gói`);
+
+  const baseLen = checkScript(pack, id, sc.turns, pack.chunks);
+  for (const more of await moreOf(id)) {
+    assert.match(more.id, new RegExp(`^${id}-[a-z]+$`), `${id}: id bài bổ sung "${more.id}" phải có dạng ${id}-<chữ thường>`);
+    assert.ok(!scriptIds.has(more.id), `${id}: trùng id bài ${more.id}`);
+    scriptIds.add(more.id);
+    assert.ok(more.title && hasVi(more.title), `${more.id}: title phải là tiếng Việt`);
+    const n = checkScript(pack, more.id, more.turns, more.chunks);
+    assert.equal(n, baseLen, `${more.id}: số lượt (${n}) phải bằng bài gốc của gói (${baseLen})`);
+    scriptsChecked++;
+  }
+}
+console.log(`events.test: ${packs.length} gói sự kiện, ${scriptsChecked} bài bổ sung, ${turnsChecked} lượt hợp lệ, câu mẫu đều đạt 3★.`);

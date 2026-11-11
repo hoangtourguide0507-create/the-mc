@@ -5,7 +5,7 @@
 import { chaNeed, fmtRep, levelTitle, MAX_LV } from '../../core/career';
 import { lessonLock } from '../../core/lesson';
 import { gameStore } from '../../core/store';
-import { SCENES } from '../../data/content';
+import { SCENES, scriptList } from '../../data/content';
 import { EVENT_UI } from '../../data/events';
 import { watch } from '../../engine/watch';
 import type { StageTheme } from '../../scenes/StageBackdrop';
@@ -30,7 +30,7 @@ const ORDER = Object.values(SCENES)
 
 export interface HomeOptions {
   onTheme: (theme: StageTheme) => void;
-  onStart: (sceneId: string) => void;
+  onStart: (sceneId: string, scriptKey: string) => void;
   /** Nhãn nút đổi nền ("Nền tối" / "Nền sáng") và hàm đổi */
   themeLabel: () => string;
   onToggleTheme: () => void;
@@ -102,7 +102,7 @@ export function mountHome(root: HTMLElement, opts: HomeOptions): () => void {
   }
 
   function renderList() {
-    const { charisma, rep, stats } = gameStore.getState().state;
+    const { charisma, rep, stats, learn } = gameStore.getState().state;
     clear(list);
     for (const id of ORDER) {
       const sc = SCENES[id];
@@ -125,11 +125,27 @@ export function mountHome(root: HTMLElement, opts: HomeOptions): () => void {
         stars(stats.bestStars[id] ?? 0),
         h('span', { class: 'name' }, sc.title),
         h('span', { class: 'sub' }, plainSub(sc.sub)),
+        h('span', { class: 'count' }, `${scriptList(id).length} bài`),
         locked ? h('span', { class: 'lock' }, locked) : null
       );
       list.append(card);
       if (open && !locked) {
-        list.append(h('button', { class: 'btn', onclick: () => opts.onStart(id) }, 'Lên sân khấu'));
+        // Danh sách bài của tình huống: chọn bài nào cũng được, luyện lại bao nhiêu lần cũng được
+        const scripts = scriptList(id);
+        const box = h('div', { class: 'panel scripts' });
+        scripts.forEach((sc, i) => {
+          const seen = learn.exposure[sc.key] || 0;
+          box.append(
+            h(
+              'button',
+              { class: 'script', onclick: () => opts.onStart(id, sc.key) },
+              h('span', { class: 'num' }, String(i + 1)),
+              h('span', { class: 'st' }, sc.title, h('small', null, `${sc.turns.length} lượt · ${seen > 0 ? `đã luyện ${seen} lần` : 'chưa luyện'}`)),
+              h('span', { class: 'go' }, seen > 0 ? 'Luyện lại' : 'Bắt đầu')
+            )
+          );
+        });
+        list.append(box);
       }
     }
   }

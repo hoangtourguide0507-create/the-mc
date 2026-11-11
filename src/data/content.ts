@@ -1253,6 +1253,19 @@ export function scriptTurns(key: string): { scene: SceneData; turns: TurnData[] 
   return null;
 }
 
+/**
+ * Mọi bài luyện của một tình huống, để người học tự chọn (không phụ thuộc ngày):
+ * bài gốc (`<cảnh>:base`) rồi các bộ tình huống. Khóa trùng với khóa của `scriptTurns` và `state.learn.exposure`.
+ */
+export function scriptList(sceneId: string): { key: string; title: string; turns: TurnData[] }[] {
+  const scene = SCENES[sceneId];
+  if (!scene) return [];
+  return [
+    { key: `${sceneId}:base`, title: scene.title, turns: scene.turns },
+    ...(PREPARED_SCENARIOS[sceneId] || []).map((sc) => ({ key: sc.id, title: sc.title, turns: sc.turns })),
+  ];
+}
+
 export function turnsForDay(scene: SceneData, day: number): TurnData[] {
   return scenarioForDay(scene, day).turns;
 }

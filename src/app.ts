@@ -109,22 +109,22 @@ function showHome() {
   tabbar.style.display = '';
   unmount = mountHome(ui, {
     onTheme: (theme: StageTheme) => backdrop.setTheme(theme),
-    onStart: (sceneId) => showLesson(sceneId),
+    onStart: (sceneId, scriptKey) => showLesson(sceneId, scriptKey),
     themeLabel: () => (uiTheme === 'light' ? 'Nền tối' : 'Nền sáng'),
     onToggleTheme: () => setUiTheme(uiTheme === 'light' ? 'dark' : 'light'),
   });
 }
 
-function showLesson(sceneId: string) {
+function showLesson(sceneId: string, scriptKey: string | null = null) {
   // Gọi trong thao tác chạm để mở khoá âm thanh trên iOS
-  if (!gameStore.getState().startLesson(sceneId)) return;
+  if (!gameStore.getState().startLesson(sceneId, scriptKey)) return;
   unmount?.();
   tabbar.style.display = 'none';
   backdrop.setCalm(0.45); // nền dịu hẳn khi đang đọc và nói
   unmount = mountLesson(ui, sceneId, {
     onExit: (again) => {
       gameStore.getState().closeLesson();
-      if (again) showLesson(sceneId);
+      if (again) showLesson(sceneId, scriptKey);
       else showHome();
     },
   });

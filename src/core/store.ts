@@ -251,7 +251,9 @@ export interface GameStore {
   /** Bản giao diện mới: đang ở luồng chỉ-bài-học (không đồng hồ, năng lượng, tiền) */
   lessonMode: boolean;
   rollLessonDay: () => void;
-  startLesson: (sceneId: string) => boolean;
+  /** Bài người học tự chọn (khóa của scriptList); null = bài theo ngày */
+  lessonScriptKey: string | null;
+  startLesson: (sceneId: string, scriptKey?: string | null) => boolean;
   closeLesson: () => void;
   finishScene: (
     turnStars: number[],
@@ -654,6 +656,7 @@ export const gameStore = createStore<GameStore>((set, get) => ({
   },
 
   lessonMode: false,
+  lessonScriptKey: null,
 
   /** Sang ngày thật mới: tăng ngày học (kịch bản xoay theo ngày), xoá dấu "đã làm hôm nay", tính chuỗi ngày. */
   rollLessonDay: () => {
@@ -670,7 +673,7 @@ export const gameStore = createStore<GameStore>((set, get) => ({
   },
 
   /** Vào bài ở bản mới: chỉ xét cấp MC và danh tiếng. Gọi từ một thao tác chạm để mở khoá âm thanh. */
-  startLesson: (sceneId) => {
+  startLesson: (sceneId, scriptKey = null) => {
     const scene = SCENES[sceneId];
     if (!scene) return false;
     const st = get().state;
@@ -689,13 +692,13 @@ export const gameStore = createStore<GameStore>((set, get) => ({
         // ignore
       }
     }
-    set({ lessonMode: true, activeSceneId: sceneId, stageEntry: { at: st.clock, late: 0 }, resultSummary: null });
+    set({ lessonMode: true, lessonScriptKey: scriptKey, activeSceneId: sceneId, stageEntry: { at: st.clock, late: 0 }, resultSummary: null });
     return true;
   },
 
   closeLesson: () => {
     Voice.stop();
-    set({ resultSummary: null, activeSceneId: null, lessonMode: false, faintPending: false });
+    set({ resultSummary: null, activeSceneId: null, lessonMode: false, lessonScriptKey: null, faintPending: false });
   },
 
   startScene: (sceneId, returnTo = 'hub') => {
