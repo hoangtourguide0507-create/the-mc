@@ -32,6 +32,7 @@ import { FUNCTION_WORDS } from './evaluator';
 import { applyQuestProgress } from './quests';
 import { chaNeed, levelTitle, MAX_LV, nextRep } from './career';
 import { Ambience, AudioBus, SFX, Voice } from '../audio/audioSystem';
+import { isNewLessonDay, lessonCharisma, lessonLock } from './lesson';
 
 export const STORAGE_KEY_V2 = 'mclife.v2';
 export const STORAGE_KEY_V1 = 'mclife.v1';
@@ -247,6 +248,11 @@ export interface GameStore {
 
   // Stage lifecycle
   startScene: (sceneId: string, returnTo?: ViewName) => boolean;
+  /** Bản giao diện mới: đang ở luồng chỉ-bài-học (không đồng hồ, năng lượng, tiền) */
+  lessonMode: boolean;
+  rollLessonDay: () => void;
+  startLesson: (sceneId: string) => boolean;
+  closeLesson: () => void;
   finishScene: (
     turnStars: number[],
     speakingXpTotal: number,
@@ -647,6 +653,51 @@ export const gameStore = createStore<GameStore>((set, get) => ({
     persistStateDebounced(st);
   },
 
+  lessonMode: false,
+
+  /** Sang ngày thật mới: tăng ngày học (kịch bản xoay theo ngày), xoá dấu "đã làm hôm nay", tính chuỗi ngày. */
+  rollLessonDay: () => {
+    const st = deepClone(get().state);
+    const today = dayKey();
+    if (isNewLessonDay(st.dayDate, today)) {
+      st.day += 1;
+      st.dayDate = today;
+      st.doneToday = {};
+      set({ state: st });
+      persistStateNow(st);
+    }
+    get().touchStreak();
+  },
+
+  /** Vào bài ở bản mới: chỉ xét cấp MC và danh tiếng. Gọi từ một thao tác chạm để mở khoá âm thanh. */
+  startLesson: (sceneId) => {
+    const scene = SCENES[sceneId];
+    if (!scene) return false;
+    const st = get().state;
+    if (lessonLock(scene, st.charisma.lv, st.rep)) {
+      SFX.play('error');
+      return false;
+    }
+    SFX.unlock();
+    AudioBus.reset();
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      try {
+        const u = new SpeechSynthesisUtterance('');
+        u.volume = 0;
+        window.speechSynthesis.speak(u);
+      } catch {
+        // ignore
+      }
+    }
+    set({ lessonMode: true, activeSceneId: sceneId, stageEntry: { at: st.clock, late: 0 }, resultSummary: null });
+    return true;
+  },
+
+  closeLesson: () => {
+    Voice.stop();
+    set({ resultSummary: null, activeSceneId: null, lessonMode: false, faintPending: false });
+  },
+
   startScene: (sceneId, returnTo = 'hub') => {
     const scene = SCENES[sceneId];
     if (!scene) return false;
@@ -733,6 +784,50 @@ export const gameStore = createStore<GameStore>((set, get) => ({
       turnStars.length > 0
         ? turnStars.reduce((a, b) => a + b, 0) / turnStars.length
         : 0;
+    if (get().lessonMode) {
+      // Luồng chỉ-bài-học: không tiền, không năng lượng, không chạy đồng hồ, không ngất
+      const repeatToday = Boolean(state.doneToday[activeSceneId]);
+      const charismaEarned = lessonCharisma(scene.reward.charisma, avg, {
+        isShow: scene.type === 'show',
+        repeatToday,
+        bonusCha: get().bonusOf('cha'),
+      });
+      const next = deepClone(state);
+      next.gigsDone[activeSceneId] = (next.gigsDone[activeSceneId] || 0) + 1;
+      next.doneToday[activeSceneId] = true;
+      if (scene.type === 'show') {
+        next.stats.shows += 1;
+        next.rep = nextRep(next.rep || { avg: 0, n: 0 }, avg);
+      } else {
+        next.stats.daily += 1;
+      }
+      const rounded = Math.round(avg);
+      next.stats.bestStars[activeSceneId] = Math.max(next.stats.bestStars[activeSceneId] || 0, rounded);
+      set({
+        state: next,
+        resultSummary: {
+          sceneId: activeSceneId,
+          avgStars: avg,
+          roundedStars: rounded,
+          cashEarned: 0,
+          charismaEarned,
+          energyEarned: 0,
+          xpEarned: speakingXpTotal + listeningXpTotal,
+          listeningXpEarned: listeningXpTotal,
+          beginAt: state.clock,
+          endAt: state.clock,
+          minutesLate: 0,
+          latePenaltyPct: 0,
+          objectiveMet: objectiveMetBy(avg),
+          returnTo: stageReturnTo,
+        },
+      });
+      get().gain({ charisma: charismaEarned });
+      get().evaluateQuests();
+      persistStateNow(get().state);
+      return;
+    }
+
     const mult = 0.6 + 0.15 * avg;
     const isRepeatDaily = scene.type === 'daily' && Boolean(state.doneToday[activeSceneId]);
 

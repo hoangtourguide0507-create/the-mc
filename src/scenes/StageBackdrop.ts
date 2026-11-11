@@ -144,25 +144,30 @@ export class StageBackdrop implements GameScene {
   private light = 0;
   private sway = 0.25;
   private portrait = true;
+  private mode: 'light' | 'dark' = 'light';
+  private bg = new THREE.Color('#EFE9DE');
+  private ambient = new THREE.AmbientLight('#ffffff', 2.2);
+  private floorMat = new THREE.MeshStandardMaterial({ color: '#E4DCCE', roughness: 0.9, metalness: 0 });
   /** 1 = sáng đủ (màn chính), thấp hơn = dịu lại khi đang đọc bài */
   private calm = 1;
   private calmTarget = 1;
   /** 0 khi máy bật "giảm chuyển động" */
   private motion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 0 : 1;
 
-  constructor(theme: StageTheme = 'lounge') {
-    this.scene.background = new THREE.Color('#15161A');
-    this.scene.fog = new THREE.Fog('#15161A', 16, 46);
-    this.scene.add(new THREE.AmbientLight('#2A2430', 0.9));
+  constructor(theme: StageTheme = 'lounge', mode: 'light' | 'dark' = 'light') {
+    this.mode = mode;
+    this.scene.background = this.bg;
+    this.scene.fog = new THREE.Fog(this.bg, 16, 46);
+    this.scene.add(this.ambient);
 
     const floor = new THREE.Mesh(
       new THREE.PlaneGeometry(80, 60),
-      new THREE.MeshStandardMaterial({ color: '#1A1B20', roughness: 0.5, metalness: 0.4 })
+      this.floorMat
     );
     floor.rotation.x = -Math.PI / 2;
     this.scene.add(floor);
 
-    this.wall = new THREE.Mesh(new THREE.PlaneGeometry(64, 30), new THREE.MeshBasicMaterial({ fog: false }));
+    this.wall = new THREE.Mesh(new THREE.PlaneGeometry(64, 30), new THREE.MeshBasicMaterial({ fog: false, transparent: true }));
     this.wall.position.set(0, 9, -10);
     this.scene.add(this.wall);
 
@@ -216,7 +221,36 @@ export class StageBackdrop implements GameScene {
     );
     this.scene.add(this.bokeh, this.props);
 
+    this.applyMode();
     this.applyTheme(theme);
+  }
+
+  /** Nền sáng (mặc định) hoặc nền tối. Đổi ngay, không chuyển cảnh. */
+  setMode(mode: 'light' | 'dark'): void {
+    if (mode === this.mode) return;
+    this.mode = mode;
+    this.applyMode();
+    this.applyTheme(this.theme);
+  }
+
+  private applyMode(): void {
+    const light = this.mode === 'light';
+    this.bg.set(light ? '#EFE9DE' : '#15161A');
+    (this.scene.fog as THREE.Fog).color.copy(this.bg);
+    this.ambient.color.set(light ? '#ffffff' : '#2A2430');
+    this.ambient.intensity = light ? 2.2 : 0.9;
+    this.floorMat.color.set(light ? '#E4DCCE' : '#1A1B20');
+    this.floorMat.roughness = light ? 0.9 : 0.5;
+    this.floorMat.metalness = light ? 0 : 0.4;
+    // Nền sáng: không cộng sáng (additive) vì sẽ cháy trắng; đèn và hạt chỉ là lớp màu rất nhạt
+    const blend = light ? THREE.NormalBlending : THREE.AdditiveBlending;
+    for (const b of this.beams) { b.material.blending = blend; b.material.needsUpdate = true; }
+    this.bokeh.material.blending = blend;
+    this.bokeh.material.needsUpdate = true;
+    this.floorGlow.material.blending = blend;
+    this.floorGlow.material.needsUpdate = true;
+    if (this.bloom) this.bloom.enabled = !light;
+    if (this.renderer) this.renderer.toneMapping = light ? THREE.NoToneMapping : THREE.ACESFilmicToneMapping;
   }
 
   get currentTheme(): StageTheme {
@@ -244,6 +278,7 @@ export class StageBackdrop implements GameScene {
       c.addPass(new OutputPass());
       this.composer = c;
     }
+    this.applyMode();
     this.resize(ctx.width, ctx.height);
   }
 
@@ -269,6 +304,7 @@ export class StageBackdrop implements GameScene {
       this.pending = null;
     }
     this.calm = damp(this.calm, this.calmTarget, 2, dt);
+    const lightMode = this.mode === 'light';
     const spec = THEMES[this.theme];
     this.sway = damp(this.sway, spec.sway, 2, dt);
 
@@ -277,16 +313,15 @@ export class StageBackdrop implements GameScene {
       if (!b.visible) continue;
       b.rotation.z = Math.sin(t * this.sway * this.motion + i * 1.7) * 0.42;
       b.rotation.x = 0.12 + Math.cos(t * this.sway * 0.7 * this.motion + i) * 0.14;
-      b.material.opacity = 0.09 * this.light * this.calm;
+      b.material.opacity = (lightMode ? 0.07 : 0.09) * this.light * this.calm;
     }
-    for (const s of this.spots) s.intensity = 70 * this.light * this.calm;
-    this.wall.material.opacity = 1;
-    this.wall.material.color.setScalar(this.light * 0.6 * this.calm);
-    this.floorGlow.material.opacity = 0.2 * this.light * this.calm;
-    this.bokeh.material.opacity = 0.28 * this.light * this.calm;
+    for (const s of this.spots) s.intensity = (lightMode ? 25 : 70) * this.light * this.calm;
+    this.wall.material.opacity = (lightMode ? 0.85 : 0.6) * this.light * this.calm;
+    this.floorGlow.material.opacity = (lightMode ? 0.12 : 0.2) * this.light * this.calm;
+    this.bokeh.material.opacity = (lightMode ? 0.18 : 0.28) * this.light * this.calm;
     this.props.traverse((o) => {
       const m = (o as THREE.Mesh).material as THREE.MeshBasicMaterial | undefined;
-      if (m && m.userData.glow) m.color.copy(m.userData.glow as THREE.Color).multiplyScalar(this.light * 0.7 * this.calm);
+      if (m && m.userData.glow) m.color.copy(this.bg).lerp(m.userData.glow as THREE.Color, this.light * 0.7 * this.calm);
     });
 
     const p = this.bokeh.geometry.attributes.position as THREE.BufferAttribute;
@@ -320,14 +355,18 @@ export class StageBackdrop implements GameScene {
     this.theme = theme;
     const spec = THEMES[theme];
     this.wall.material.map?.dispose();
-    this.wall.material.map = wallTexture(spec.wall[0], spec.wall[1]);
+    const lightMode = this.mode === 'light';
+    // Nền sáng: tường là quầng màu phấn của bối cảnh tan vào nền giấy
+    const center = lightMode ? pastel(spec.wall[0], this.bg, 0.55) : spec.wall[0];
+    const edge = lightMode ? `#${this.bg.getHexString()}` : spec.wall[1];
+    this.wall.material.map = wallTexture(center, edge);
     this.wall.material.needsUpdate = true;
-    this.floorGlow.material.color.set(spec.wall[0]).multiplyScalar(2.2);
-    this.bokeh.material.color.set(spec.bokeh);
+    this.floorGlow.material.color.set(center).multiplyScalar(lightMode ? 1 : 2.2);
+    this.bokeh.material.color.set(lightMode ? pastel(spec.wall[0], this.bg, 0.3) : spec.bokeh);
     this.beams.forEach((b, i) => {
       b.visible = i < spec.beams.length;
       if (b.visible) {
-        b.material.color.set(spec.beams[i]);
+        b.material.color.set(lightMode ? pastel(spec.beams[i], this.bg, 0.2) : spec.beams[i]);
         // Dàn đều các luồng đèn đang bật quanh tâm sân khấu
         b.position.x = (i - (spec.beams.length - 1) / 2) * (17 / Math.max(3, spec.beams.length));
       }
@@ -339,6 +378,11 @@ export class StageBackdrop implements GameScene {
     }
     spec.props(this.props);
   }
+}
+
+/** Pha màu `hex` về phía màu nền: t = 0 giữ nguyên, 1 = thành màu nền */
+function pastel(hex: string, bg: THREE.Color, t: number): string {
+  return `#${new THREE.Color(hex).lerp(bg, t).getHexString()}`;
 }
 
 /* ---------- Đạo cụ dựng bằng khối cơ bản ---------- */

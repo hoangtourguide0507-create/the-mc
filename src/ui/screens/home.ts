@@ -3,6 +3,7 @@
  * Khoá tình huống chỉ theo cấp MC (reqLv) và danh tiếng (minRep).
  */
 import { chaNeed, fmtRep, levelTitle, MAX_LV } from '../../core/career';
+import { lessonLock } from '../../core/lesson';
 import { gameStore } from '../../core/store';
 import { SCENES } from '../../data/content';
 import { watch } from '../../engine/watch';
@@ -25,12 +26,15 @@ const ORDER = ['coffee', 'market', 'backstage', 'wedding', 'beach', 'gala', 'int
 export interface HomeOptions {
   onTheme: (theme: StageTheme) => void;
   onStart: (sceneId: string) => void;
+  /** Nhãn nút đổi nền ("Nền tối" / "Nền sáng") và hàm đổi */
+  themeLabel: () => string;
+  onToggleTheme: () => void;
 }
 
 function lockReason(sc: SceneData, lv: number, rep: { avg: number; n: number }): string | null {
-  if (lv < sc.reqLv) return `Mở ở Lv.${sc.reqLv} · ${levelTitle(sc.reqLv)}`;
-  if (sc.minRep && (rep.n <= 0 || rep.avg < sc.minRep)) return `Cần danh tiếng ${sc.minRep.toFixed(1)} sao`;
-  return null;
+  const lock = lessonLock(sc, lv, rep);
+  if (!lock) return null;
+  return lock.kind === 'level' ? `Mở ở Lv.${lock.need} · ${levelTitle(lock.need)}` : `Cần danh tiếng ${lock.need.toFixed(1)} sao`;
 }
 
 /** Bỏ giờ diễn ở đầu mô tả ("18:30 · ..."): bản mới không còn đồng hồ trong ngày */
@@ -47,6 +51,11 @@ export function mountHome(root: HTMLElement, opts: HomeOptions): () => void {
   const career = h('section', { class: 'panel career' });
   const list = h('div', { class: 'col', style: { gap: '12px' } });
   let selected: string | null = null;
+  const themeBtn = h('button', { class: 'link' }, opts.themeLabel());
+  themeBtn.onclick = () => {
+    opts.onToggleTheme();
+    themeBtn.textContent = opts.themeLabel();
+  };
 
   const screen = h(
     'div',
@@ -54,7 +63,12 @@ export function mountHome(root: HTMLElement, opts: HomeOptions): () => void {
     h(
       'div',
       { class: 'col' },
-      h('header', { class: 'brand' }, h('h1', null, 'MC Life ', h('em', null, 'English Stage')), h('span', { class: 'eyebrow' }, 'Tiếng Anh sân khấu')),
+      h(
+        'header',
+        { class: 'brand' },
+        h('div', null, h('div', { class: 'eyebrow' }, 'Tiếng Anh sân khấu'), h('h1', null, 'MC Life ', h('em', null, 'English Stage'))),
+        themeBtn
+      ),
       h('div', { class: 'spacer-hero' }),
       career,
       h('div', { class: 'section-title eyebrow' }, 'Tình huống'),

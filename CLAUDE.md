@@ -12,8 +12,9 @@ Lưu ý: hai file đó còn ghi Vite 5, trong khi repo đang dùng Vite 8 (`pack
 - Code mới nằm ở `src/engine`, `src/scenes`, `src/ui`, `src/app.ts` và trang `v2.html`.
 - Store là `gameStore` trong `src/core/store.ts` (vanilla). Code React cũ dùng `src/core/storeReact.ts`.
 - Không thêm tính năng mới vào `src/components` hay các file `.tsx` trong `src/three`.
-- Phạm vi mới (2026-11-11): chỉ giữ bài học tiếng Anh và thang nghề. Bỏ thành phố, đồng hồ, năng lượng, tiền, shop, nhân vật 3D và phòng MC 3D. Phong cách sân khấu tối, đèn sang trọng, không Ghibli. 3D chỉ là nền `StageBackdrop`, nội dung là HTML phủ lên.
-- Lộ trình hiện ở GĐ1 và GĐ2 (nền móng và nền sân khấu, đã xong). Bản React cũ sẽ bị xoá ở GĐ7.
+- Phạm vi mới (2026-11-11): chỉ giữ bài học tiếng Anh và thang nghề. Bỏ thành phố, đồng hồ, năng lượng, tiền, shop, nhân vật 3D và phòng MC 3D. 3D chỉ là nền `StageBackdrop`, nội dung là HTML phủ lên. Không dùng phong cách Ghibli.
+- Phong cách: nền sáng là mặc định (giấy ấm, chữ nâu than). Nền tối là tuỳ chọn qua `<html data-theme="dark">`, lưu ở `localStorage['mclife.ui.theme']`. Giao diện dịu mắt cho phiên học dài: không đen trắng tuyệt đối, chữ từ 16px.
+- Lộ trình: GĐ1 đến GĐ4 đã xong (GĐ4 mới xong phần cốt lõi). GĐ5 đến GĐ7 chưa làm. Bản React cũ sẽ bị xoá ở GĐ7.
 
 ## Lệnh thường dùng
 - `npm ci` (cài đặt đúng theo lockfile), `npm run dev`, `npm run build` (gồm `tsc -b` và `vite build`).

@@ -58,6 +58,9 @@ jobs:
       - name: Run chunk data tests
         run: npm run test:chunks
 
+      - name: Run lesson flow tests
+        run: npm run test:lesson
+
       - name: Run learning logic tests
         run: npm run test:learning
 
