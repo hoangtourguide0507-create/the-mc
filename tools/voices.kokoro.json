@@ -128,6 +128,36 @@
       "voice": "bf_isabella:0.5+bf_lily:0.5",
       "lang": "en-gb",
       "speed": 1.02
+    },
+    "grace": {
+      "voice": "af_kore",
+      "lang": "en-us",
+      "speed": 1.0
+    },
+    "ben": {
+      "voice": "am_adam",
+      "lang": "en-us",
+      "speed": 1.02
+    },
+    "zoe": {
+      "voice": "af_river",
+      "lang": "en-us",
+      "speed": 1.04
+    },
+    "claire": {
+      "voice": "bf_alice:0.5+bf_isabella:0.5",
+      "lang": "en-gb",
+      "speed": 0.98
+    },
+    "ryan": {
+      "voice": "am_echo",
+      "lang": "en-us",
+      "speed": 1.0
+    },
+    "arthur": {
+      "voice": "bm_lewis",
+      "lang": "en-gb",
+      "speed": 1.0
     }
   },
   "_passerHelp": "Người qua đường: mỗi tình huống chọn cố định một giọng trong danh sách này (theo nội dung câu), để phố có nhiều giọng Mỹ và Anh khác nhau.",

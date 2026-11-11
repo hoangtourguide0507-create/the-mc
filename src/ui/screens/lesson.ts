@@ -145,7 +145,8 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
           reflexLeft = 0;
           reflexExpired = true;
         } else reflexLeft -= 1;
-        render();
+        // Chỉ cập nhật nhãn đồng hồ: dựng lại cả thẻ mỗi giây sẽ làm hụt cú chạm đang diễn ra
+        paintReflex();
       }, 1000);
     }, 350);
   }
@@ -444,6 +445,14 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
     );
   }
 
+  let reflexPill: HTMLElement | null = null;
+  function paintReflex() {
+    if (!reflexPill || reflexLeft === null) return;
+    const reacting = plan().kind === 'react';
+    reflexPill.className = `pill${reflexLeft <= 5 ? ' warn' : ''}`;
+    reflexPill.textContent = reacting ? (reflexLeft > 0 ? `Bấm mic trong ${reflexLeft}s` : 'Hết giờ: tối đa 2 sao') : `Phản xạ: ${reflexLeft}s`;
+  }
+
   function modeLabel(): string {
     const p = plan();
     const m = turn().mode;
@@ -497,6 +506,7 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
     const reacting = p.kind === 'react';
     const hintVisible = p.kind === 'recall' ? p.hint || hintAsked : stage <= 1 || hintAsked;
     const card = h('section', { class: 'panel card' });
+    reflexPill = null;
 
     const head = h('div', { class: 'head' }, h('span', { class: 'pill' }, modeLabel()));
     if (stage === 0 && (t.mode === 'scripted' || t.mode === 'catch') && !evalResult) {
@@ -505,13 +515,9 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
       );
     }
     if ((t.mode === 'quiz' || reacting) && reflexLeft !== null && !(reacting && evalResult)) {
-      head.append(
-        h(
-          'span',
-          { class: `pill${reflexLeft <= 5 ? ' warn' : ''}` },
-          reacting ? (reflexLeft > 0 ? `Bấm mic trong ${reflexLeft}s` : 'Hết giờ: tối đa 2 sao') : `Phản xạ: ${reflexLeft}s`
-        )
-      );
+      reflexPill = h('span', { class: 'pill' });
+      paintReflex();
+      head.append(reflexPill);
     }
     card.append(head);
 
