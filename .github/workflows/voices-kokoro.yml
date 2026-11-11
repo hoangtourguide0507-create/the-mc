@@ -26,7 +26,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 350
     steps:
+      # Check out the branch head, not the commit that triggered the run: a run that waited in the
+      # queue must see the clips the previous run committed, or it renders them all again and then
+      # conflicts on manifest.kokoro.json.
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
 
       - uses: actions/setup-node@v4
         with:
@@ -67,7 +72,17 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
             git commit -m "Render Kokoro voice clips"
-            git pull --rebase origin "$GITHUB_REF_NAME"
+            # Code pushed meanwhile never touches these files, so the rebase is clean. If another
+            # audio commit did land, rebuild the manifest from the clip files on disk and retry.
+            if ! git pull --rebase origin "$GITHUB_REF_NAME"; then
+              git rebase --abort
+              git reset -q "origin/$GITHUB_REF_NAME"
+              git checkout "origin/$GITHUB_REF_NAME" -- public/audio/kokoro
+              git add public/audio/kokoro
+              python3 tools/render-kokoro.py --phases none
+              git add public/audio/manifest.kokoro.json
+              git commit -m "Render Kokoro voice clips"
+            fi
             git push
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
