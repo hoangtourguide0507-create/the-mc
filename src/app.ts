@@ -1,16 +1,17 @@
 /**
  * Điểm vào của bản three.js thuần (không React).
  * 3D chỉ làm nền: một sân khấu tối đổi bối cảnh theo tình huống; nội dung học là HTML phủ lên.
- * Bản React cũ vẫn chạy ở index.html cho tới khi chuyển xong.
  */
 import './ui/base.css';
 import { Ambience, SpeechEngine, Voice } from './audio/audioSystem';
 import { gameStore } from './core/store';
 import { Engine } from './engine/Engine';
+import { LiveStage } from './scenes/LiveStage';
 import { StageBackdrop, type StageTheme } from './scenes/StageBackdrop';
 import { h } from './ui/dom';
 import { watch } from './engine/watch';
-import { mountHome } from './ui/screens/home';
+import { mountHome, sceneTheme } from './ui/screens/home';
+import { SCENES } from './data/content';
 import { mountLesson } from './ui/screens/lesson';
 import { mountNotebook } from './ui/screens/notebook';
 import { mountPage } from './ui/screens/page';
@@ -38,6 +39,8 @@ document.documentElement.dataset.theme = uiTheme;
 const engine = new Engine(canvas);
 const backdrop = new StageBackdrop('lounge', uiTheme);
 engine.register('backdrop', () => backdrop);
+// Sân khấu của màn diễn chỉ dựng khi vào bài đầu tiên
+let live: LiveStage | null = null;
 void engine.show('backdrop');
 engine.start();
 
@@ -46,6 +49,7 @@ function setUiTheme(next: UiTheme) {
   document.documentElement.dataset.theme = next;
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', next === 'light' ? '#F1ECE3' : '#15161A');
   backdrop.setMode(next);
+  live?.setMode(next);
   try {
     localStorage.setItem(THEME_KEY, next);
   } catch {
@@ -120,6 +124,7 @@ function showTab(tab: TabId) {
   activeTab = tab;
   tabbar.style.display = '';
   tabButtons.forEach((b, i) => (TAB_IDS[i] === tab ? b.setAttribute('aria-current', 'page') : b.removeAttribute('aria-current')));
+  void engine.show('backdrop');
   backdrop.setTheme('lounge');
   // Màn chính cho thấy sân khấu; các tab đọc nhiều thì làm dịu nền
   backdrop.setCalm(tab === 'home' ? 1 : 0.45);
@@ -157,8 +162,13 @@ function showLesson(sceneId: string, scriptKey: string | null = null) {
   if (!gameStore.getState().startLesson(sceneId, scriptKey)) return;
   unmount?.();
   tabbar.style.display = 'none';
-  backdrop.setCalm(0.45); // nền dịu hẳn khi đang đọc và nói
+  // Vào show: đổi sang sân khấu có khán giả; màn LED ghi tên sự kiện
+  const stage = (live ??= new LiveStage(uiTheme));
+  engine.register('live', () => stage);
+  stage.setShow(sceneTheme(sceneId), SCENES[sceneId]?.title ?? '');
+  void engine.show('live');
   unmount = mountLesson(ui, sceneId, {
+    live: stage,
     onExit: (again) => {
       gameStore.getState().closeLesson();
       if (again) showLesson(sceneId, scriptKey);
@@ -173,5 +183,5 @@ showTab('home');
 
 // QA: ?qa=1 mở store, engine và nền sân khấu ra window để chụp ảnh tự động
 if (new URLSearchParams(window.location.search).has('qa')) {
-  Object.assign(window as any, { __mc: gameStore, __engine: engine, __backdrop: backdrop });
+  Object.assign(window as any, { __mc: gameStore, __engine: engine, __backdrop: backdrop, __live: () => live });
 }

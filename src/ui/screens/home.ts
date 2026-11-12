@@ -40,6 +40,11 @@ const ORDER = Object.values(SCENES)
   .sort((a, b) => Number(a.type === 'show') - Number(b.type === 'show') || a.reqLv - b.reqLv || (a.minRep ?? 0) - (b.minRep ?? 0))
   .map((s) => s.id);
 
+/** Bối cảnh sân khấu của một tình huống (dùng cho nền màn chính và màn diễn) */
+export function sceneTheme(sceneId: string): StageTheme {
+  return SCENE_INFO[sceneId]?.theme ?? 'lounge';
+}
+
 export interface HomeOptions {
   onTheme: (theme: StageTheme) => void;
   onStart: (sceneId: string, scriptKey: string) => void;

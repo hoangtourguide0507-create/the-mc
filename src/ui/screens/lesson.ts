@@ -12,17 +12,21 @@ import { clamp } from '../../core/clock';
 import { evaluateScripted, evaluateTurnCandidates } from '../../core/evaluator';
 import { evaluateRecallCandidates, planTurn, supportStage } from '../../core/recall';
 import { applyChunkAttempt, focusChunk, mergeAttempts } from '../../core/retry';
+import { applyImprove, applyMiss, applySkip, applyTurn, moodOf, multiplier, newShow, verdict, type TurnOutcome } from '../../core/show';
 import { gameStore } from '../../core/store';
 import { viSupport } from '../../core/support';
 import { CHUNKS_BY_SCRIPT } from '../../data/chunks';
 import { NPCS, SCENES, scenarioForDay, scriptList } from '../../data/content';
 import { SCENE_OBJECTIVES } from '../../data/objectives';
 import type { EvalResult, StageMicPhase } from '../../types/game';
+import type { LiveStage } from '../../scenes/LiveStage';
 import { append, clear, h } from '../dom';
 
 export interface LessonOptions {
   /** Rời bài hoặc xong bài; `again` = người học muốn luyện lại ngay bài này */
   onExit: (again: boolean) => void;
+  /** Sân khấu 3D phản ứng theo buổi diễn (không có thì chỉ chạy phần HTML) */
+  live?: LiveStage;
 }
 
 export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOptions): () => void {
@@ -54,6 +58,10 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
   let showFallback = false;
   let finished = false;
   let disposed = false;
+  /** Buổi diễn sống: thanh khán giả, chuỗi liên tiếp, điểm diễn */
+  let show = newShow();
+  let turnClean = true;
+  const live = opts.live;
 
   /* ---------- Trạng thái từng lượt ---------- */
   let revealed = false;
@@ -97,14 +105,79 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
   const micEl = h('div', { class: 'l-mic' });
   const heardText = h('i');
   const manual = h('input', { type: 'text', placeholder: 'Gõ câu tiếng Anh thay cho mic', autocomplete: 'off', autocapitalize: 'off' });
-  const screen = h('div', { class: 'lesson' }, topEl, bodyEl, micEl);
+  // Nửa trên là sân khấu 3D (trong suốt), phủ lên đó là thanh trên, thanh khán giả và bong bóng thoại.
+  // Nửa dưới là thẻ nhắc lời và thanh mic.
+  const heatFill = h('i');
+  const moodEl = h('span', { class: 'mood' });
+  const streakEl = h('span', { class: 'streak' });
+  const scoreEl = h('b', { class: 'pts' }, '0');
+  const meterEl = h('div', { class: 'l-meter' }, h('div', { class: 'top' }, moodEl, streakEl, scoreEl), h('div', { class: 'heat' }, heatFill));
+  const fxEl = h('div', { class: 'l-fx', ariaHidden: 'true' });
+  const bubbleEl = h('div', { class: 'l-bubble' });
+  const stageEl = h('div', { class: 'l-stage' }, topEl, meterEl, fxEl, bubbleEl);
+  const sheetEl = h('div', { class: 'l-sheet' }, bodyEl, micEl);
+  const screen = h('div', { class: 'lesson live' }, stageEl, sheetEl);
   root.append(screen);
+
+  const MOOD_LABEL = { cold: 'Khán phòng nguội', warm: 'Khán giả theo dõi', hot: 'Khán phòng sôi động' } as const;
+  function paintMeter() {
+    const mood = moodOf(show.heat);
+    meterEl.dataset.mood = mood;
+    heatFill.style.width = `${show.heat}%`;
+    moodEl.textContent = MOOD_LABEL[mood];
+    streakEl.textContent = show.streak >= 2 ? `Chuỗi ${show.streak} · ×${multiplier(show.streak).toFixed(1)}` : '';
+    streakEl.classList.toggle('on', show.streak >= 2);
+    scoreEl.textContent = show.score.toLocaleString('vi-VN');
+  }
+  /** Chữ nổi bay lên trên sân khấu (điểm cộng, mất chuỗi) */
+  function pop(text: string, tone: 'good' | 'bad' = 'good') {
+    const el = h('span', { class: `pop ${tone}` }, text);
+    fxEl.append(el);
+    window.setTimeout(() => el.remove(), 1400);
+  }
+  /** Ghi một kết quả vào buổi diễn và cho khán phòng phản ứng */
+  function react(o: TurnOutcome, cheer: 0 | 1 | 2 | 3) {
+    const before = show.streak;
+    show = o.state;
+    paintMeter();
+    live?.setHeat(show.heat / 100);
+    if (cheer > 0) {
+      live?.cheer(cheer as 1 | 2 | 3);
+      SFX.play(cheer === 3 ? 'applause' : 'clap');
+      if (o.points > 0) pop(`+${o.points}${show.streak >= 2 ? `  ×${multiplier(show.streak).toFixed(1)}` : ''}`);
+      if (cheer === 3) navigator.vibrate?.(30);
+    } else {
+      live?.murmur();
+      SFX.play('murmur');
+      navigator.vibrate?.([20, 40, 20]);
+    }
+    if (o.streakBroken) pop(`Mất chuỗi ${before}`, 'bad');
+    meterEl.classList.remove('bump');
+    void meterEl.offsetWidth;
+    meterEl.classList.add('bump');
+  }
+  /** Từ nào trong thẻ nhắc đã nghe thấy thì sáng lên ngay khi đang nói */
+  function paintLive(txt: string) {
+    const heard = txt.toLowerCase().replace(/[^a-z0-9' ]/g, ' ').split(/\s+/).filter(Boolean);
+    let from = 0;
+    bodyEl.querySelectorAll<HTMLElement>('.say .w').forEach((el) => {
+      const clean = (el.textContent || '').toLowerCase().replace(/[^a-z0-9']/g, '');
+      const at = clean ? heard.indexOf(clean, from) : -1;
+      if (at >= 0) {
+        el.classList.add('lit');
+        from = at + 1;
+      }
+    });
+  }
+  paintMeter();
+  live?.setHeat(show.heat / 100);
 
   const offViseme = Voice.onViseme((v) => {
     const on = v !== 'rest';
     if (on === npcSpeaking) return;
     npcSpeaking = on;
     screen.querySelector('.wave')?.classList.toggle('on', on);
+    live?.setTalking(on ? 'guest' : null);
   });
 
   /* ---------- Vào một lượt: đặt lại trạng thái, 350ms sau NPC nói ---------- */
@@ -127,6 +200,8 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
     quizWrong = [];
     reflexExpired = false;
     hintAsked = false;
+    turnClean = true;
+    live?.setFocus('guest');
     manual.value = '';
     const t = turn();
     const p = plan();
@@ -175,6 +250,8 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
     const t = turn();
     if (res.stars === 0) {
       SFX.play('error');
+      turnClean = false;
+      react(applyMiss(show), 0);
       micPhase = 'idle';
       toast('Chưa nghe rõ hoặc chưa khớp mẫu câu. Thử lại nhé.', 'warn');
       render();
@@ -187,6 +264,9 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
 
     const bonusXp = s.bonusOf('xp');
     const prev = turnStars[turnIdx] || 0;
+    // Buổi diễn: kết quả đầu tiên của lượt quyết định chuỗi; nói lại chỉ gỡ điểm
+    if (prev === 0) react(applyTurn(show, res.stars as 1 | 2 | 3, turnClean && mistakes === 0), res.stars as 1 | 2 | 3);
+    else if (res.stars > prev) react(applyImprove(show, prev, res.stars), 1);
     let xp = 0;
     // 1. Speaking XP: khi vượt số sao tốt nhất của lượt (không áp dụng cho chọn đáp án)
     if (!isQuiz && res.stars > prev) {
@@ -325,6 +405,8 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
     } else {
       SFX.play('error');
       mistakes += 1;
+      turnClean = false;
+      react(applyMiss(show), 0);
       quizWrong = [...quizWrong, idx];
       flashShake(`q:${idx}`);
       toast('Đáp án chưa khớp với điều vừa nghe.', 'error', 1800);
@@ -356,6 +438,8 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
     const my = ++attempt;
     micPhase = 'arming';
     interim = '';
+    live?.setFocus('mc');
+    live?.setTalking('mc');
     render();
     const res = await SpeechEngine.listen({
       onInterim: (txt) => {
@@ -365,8 +449,10 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
         interim = txt;
         if (first) render();
         else heardText.textContent = `“${txt}”`;
+        paintLive(txt);
       },
     });
+    if (attempt === my) live?.setTalking(null);
     if (attempt !== my || disposed) return;
     if (res.reason === 'aborted') {
       micPhase = 'idle';
@@ -393,6 +479,7 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
       return toast('Cần ít nhất 1 sao, hoặc bấm Bỏ qua.', 'warn');
     }
     SFX.play('tap');
+    if (skip && (turnStars[turnIdx] || 0) < 1) react(applySkip(show), 0);
     if (turnIdx + 1 < turns.length) {
       turnIdx += 1;
       return beginTurn();
@@ -411,6 +498,12 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
     if (added > 0) toast(`${added} cụm mới vào phần Khởi động ngày mai`, 'success', 3200);
     s.finishScene([...turnStars], speakingXp, listeningXp);
     finished = true;
+    // Khép show: khán phòng phản ứng theo độ nóng cuối cùng
+    live?.setFocus('wide');
+    live?.setTalking(null);
+    const end = show.heat >= 70 ? 3 : show.heat >= 45 ? 2 : 1;
+    live?.cheer(end, show.heat >= 85);
+    SFX.play(end === 3 ? 'applause' : 'clap');
     render();
   }
 
@@ -474,21 +567,15 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
     const t = turn();
     return h(
       'section',
-      { class: 'panel card' },
+      { class: 'panel card bubble' },
       h(
         'div',
         { class: 'head' },
         h('span', { class: 'who' }, t.channel === 'inear' ? 'Tai nghe · ' : 'Nghe · ', h('b', null, npcName())),
-        !revealed ? h('span', { class: 'pill' }, 'Ẩn chữ: ×2 XP nghe') : null
+        h('span', { class: `wave${npcSpeaking ? ' on' : ''}` }, ...[1, 2, 3, 4, 5, 6, 7].map(() => h('i')))
       ),
-      !revealed
-        ? h(
-            'button',
-            { class: 'hidden-line', onclick: () => playNpc(false) },
-            h('span', { class: `wave${npcSpeaking ? ' on' : ''}` }, ...[1, 2, 3, 4, 5, 6, 7].map(() => h('i'))),
-            'Chạm để nghe lại'
-          )
-        : h('p', { class: 'npc-line' }, `“${t.npc}”`),
+      // Chưa hiện chữ thì bong bóng chỉ có tên và sóng âm: nghe trước, đọc sau (×2 XP nghe)
+      revealed ? h('p', { class: 'npc-line' }, `“${t.npc}”`) : null,
       revealed && translated && support.npcToggle ? h('p', { class: 'vi' }, t.npcVi) : null,
       h(
         'div',
@@ -496,7 +583,7 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
         h('button', { class: 'btn quiet', onclick: () => playNpc(false) }, 'Nghe lại'),
         h('button', { class: 'btn quiet', onclick: () => playNpc(true) }, 'Nghe chậm'),
         !revealed
-          ? h('button', { class: 'btn quiet', onclick: () => { SFX.play('page'); revealed = true; render(); } }, 'Hiện chữ')
+          ? h('button', { class: 'btn quiet', title: 'Giữ ẩn chữ để được ×2 XP nghe', onclick: () => { SFX.play('page'); revealed = true; render(); } }, 'Hiện chữ')
           : support.npcToggle
           ? h('button', { class: 'btn quiet', onclick: () => { SFX.play('tap'); translated = !translated; render(); } }, translated ? 'Ẩn dịch' : 'Dịch')
           : null
@@ -586,7 +673,7 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
               )
             );
           }
-        } else for (const w of (t.cue || '').split(/\s+/)) line.append(h('span', null, w));
+        } else for (const w of (t.cue || '').split(/\s+/)) line.append(h('span', { class: 'w' }, w));
         card.append(line);
         const chunk = practiceChunk();
         if (chunk) {
@@ -721,14 +808,24 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
     clear(topEl);
     clear(micEl);
     micEl.style.display = 'none';
+    clear(bubbleEl);
     clear(bodyEl);
+    screen.classList.add('done');
+    const v = verdict(show.heat);
     bodyEl.append(
       h(
         'section',
         { class: 'panel result' },
         h('span', { class: 'eyebrow' }, dayScript.title || baseScene.title),
         h('div', { class: 'big-stars' }, starsEl(r?.roundedStars ?? 0)),
-        h('h2', null, r?.objectiveMet ? 'Đạt mục tiêu bài học' : 'Hoàn thành, chưa đạt mục tiêu'),
+        h('h2', null, v.title),
+        h('p', { class: 'vi' }, `${v.line} ${r?.objectiveMet ? 'Đã đạt mục tiêu bài học.' : 'Chưa đạt mục tiêu bài học.'}`),
+        h(
+          'div',
+          { class: 'grid' },
+          h('div', { class: 'cell' }, h('b', null, show.score.toLocaleString('vi-VN')), h('span', null, 'Điểm diễn')),
+          h('div', { class: 'cell' }, h('b', null, String(show.bestStreak)), h('span', null, 'Chuỗi dài nhất'))
+        ),
         h(
           'div',
           { class: 'grid' },
@@ -749,8 +846,11 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
     renderTop();
     const keep = bodyEl.scrollTop;
     clear(bodyEl);
-    bodyEl.append(listenCard(), taskCard());
+    clear(bubbleEl);
+    bubbleEl.append(listenCard());
+    bodyEl.append(taskCard());
     bodyEl.scrollTop = keep;
+    if (micPhase === 'rec' && interim) paintLive(interim);
     renderMic();
     // Đưa khung luyện cụm vào tầm nhìn để người học thấy ngay việc cần làm
     bodyEl.querySelector('[data-chunk]')?.scrollIntoView({ block: 'nearest' });

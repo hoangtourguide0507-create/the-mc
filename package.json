@@ -23,7 +23,8 @@
     "test:chunks": "node tests/chunks.test.mjs",
     "test:lesson": "node tests/lesson.test.mjs",
     "test:events": "node tests/events.test.mjs",
-    "voices:kokoro": "python3 tools/render-kokoro.py"
+    "voices:kokoro": "python3 tools/render-kokoro.py",
+    "test:show": "node tests/show.test.mjs"
   },
   "dependencies": {
     "@huggingface/transformers": "^4.3.2",

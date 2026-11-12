@@ -244,9 +244,45 @@ class SoundSystem {
     osc.stop(now + dur + 0.02);
   }
 
+  /** Nhiễu trắng qua bộ lọc thông dải: dùng cho tiếng vỗ tay và xì xào của khán phòng */
+  private noise(dur: number, freq: number, vol: number, claps = 0) {
+    if (!this.unlocked || this.muted || !this.ctx || !this.master) return;
+    const ctx = this.ctx;
+    const len = Math.floor(ctx.sampleRate * dur);
+    const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) {
+      const t = i / len;
+      // Vỗ tay: nhiều nhịp ngắn chồng nhau; xì xào: nền đều
+      const grain = claps > 0 ? Math.pow(Math.abs(Math.sin(t * claps * Math.PI + Math.sin(i * 0.0007) * 3)), 6) + 0.25 : 1;
+      d[i] = (Math.random() * 2 - 1) * grain * Math.sin(Math.PI * Math.min(1, t * 1.15)) ;
+    }
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const bp = ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.value = freq;
+    bp.Q.value = 0.7;
+    const g = ctx.createGain();
+    g.gain.value = vol;
+    src.connect(bp);
+    bp.connect(g);
+    g.connect(this.master);
+    src.start();
+  }
+
   play(name: string) {
     if (!this.unlocked || this.muted) return;
     switch (name) {
+      case 'applause':
+        this.noise(2.2, 2400, 0.5, 26);
+        break;
+      case 'clap':
+        this.noise(1.0, 2200, 0.3, 10);
+        break;
+      case 'murmur':
+        this.noise(0.9, 380, 0.22);
+        break;
       case 'tap':
         this.tone(520, 0.045, 'sine', 0.18, 0, 320);
         break;
