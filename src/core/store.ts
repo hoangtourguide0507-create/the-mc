@@ -32,7 +32,8 @@ import { FUNCTION_WORDS } from './evaluator';
 import { applyQuestProgress } from './quests';
 import { chaNeed, levelTitle, MAX_LV, nextRep } from './career';
 import { Ambience, AudioBus, SFX, Voice } from '../audio/audioSystem';
-import { isNewLessonDay, lessonCharisma, lessonLock } from './lesson';
+import { isNewLessonDay, lessonCharisma, lessonLock, countsForRep } from './lesson';
+import { performBonus } from './show';
 
 export const STORAGE_KEY_V2 = 'mclife.v2';
 export const STORAGE_KEY_V1 = 'mclife.v1';
@@ -258,7 +259,9 @@ export interface GameStore {
   finishScene: (
     turnStars: number[],
     speakingXpTotal: number,
-    listeningXpTotal: number
+    listeningXpTotal: number,
+    /** Buổi diễn sống: `perform` = chế độ Diễn (tính danh tiếng), `heat` = độ nóng khán phòng cuối show */
+    live?: { perform: boolean; heat: number }
   ) => void;
   closeResultSummary: () => void;
   addWeakWordsFromTokens: (sceneId: string, cueText: string, tokens: EvaluatedToken[]) => void;
@@ -777,7 +780,7 @@ export const gameStore = createStore<GameStore>((set, get) => ({
     return true;
   },
 
-  finishScene: (turnStars, speakingXpTotal, listeningXpTotal) => {
+  finishScene: (turnStars, speakingXpTotal, listeningXpTotal, live) => {
     const { activeSceneId, stageEntry, stageReturnTo, state } = get();
     if (!activeSceneId) return;
     const scene = SCENES[activeSceneId];
@@ -790,17 +793,21 @@ export const gameStore = createStore<GameStore>((set, get) => ({
     if (get().lessonMode) {
       // Luồng chỉ-bài-học: không tiền, không năng lượng, không chạy đồng hồ, không ngất
       const repeatToday = Boolean(state.doneToday[activeSceneId]);
-      const charismaEarned = lessonCharisma(scene.reward.charisma, avg, {
-        isShow: scene.type === 'show',
-        repeatToday,
-        bonusCha: get().bonusOf('cha'),
-      });
+      const perform = Boolean(live?.perform);
+      const charismaEarned = Math.round(
+        lessonCharisma(scene.reward.charisma, avg, {
+          isShow: scene.type === 'show',
+          repeatToday,
+          bonusCha: get().bonusOf('cha'),
+        }) * (perform ? performBonus(live?.heat ?? 0) : 1)
+      );
       const next = deepClone(state);
       next.gigsDone[activeSceneId] = (next.gigsDone[activeSceneId] || 0) + 1;
       next.doneToday[activeSceneId] = true;
       if (scene.type === 'show') {
         next.stats.shows += 1;
-        next.rep = nextRep(next.rep || { avg: 0, n: 0 }, avg);
+        // Danh tiếng chỉ đổi khi Diễn; Tập thì luyện thoải mái, không ảnh hưởng
+        if (countsForRep(scene.type, perform)) next.rep = nextRep(next.rep || { avg: 0, n: 0 }, avg);
       } else {
         next.stats.daily += 1;
       }

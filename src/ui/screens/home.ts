@@ -47,7 +47,8 @@ export function sceneTheme(sceneId: string): StageTheme {
 
 export interface HomeOptions {
   onTheme: (theme: StageTheme) => void;
-  onStart: (sceneId: string, scriptKey: string) => void;
+  /** `perform` = Diễn thật (mỗi lượt một lần, tính danh tiếng); không thì là Tập */
+  onStart: (sceneId: string, scriptKey: string, perform: boolean) => void;
   /** Nhãn nút đổi nền ("Nền tối" / "Nền sáng") và hàm đổi */
   themeLabel: () => string;
   onToggleTheme: () => void;
@@ -71,7 +72,9 @@ function stars(n: number): HTMLElement {
 
 export function mountHome(root: HTMLElement, opts: HomeOptions): () => void {
   const career = h('section', { class: 'panel career' });
-  const list = h('div', { class: 'col', style: { gap: '12px' } });
+  // Hàng poster vuốt ngang; danh sách bài của poster đang chọn nằm bên dưới
+  const list = h('div', { class: 'posters' });
+  const scriptsBox = h('div', { class: 'col', style: { gap: '12px' } });
   let selected: string | null = null;
   const filters = h('div', { class: 'filters', role: 'group', ariaLabel: 'Lọc theo nhóm sự kiện' });
   const paintFilters = () => {
@@ -119,7 +122,8 @@ export function mountHome(root: HTMLElement, opts: HomeOptions): () => void {
       career,
       h('div', { class: 'section-title eyebrow' }, 'Tình huống'),
       filters,
-      list
+      list,
+      scriptsBox
     )
   );
   root.append(screen);
@@ -146,6 +150,7 @@ export function mountHome(root: HTMLElement, opts: HomeOptions): () => void {
   function renderList() {
     const { charisma, rep, stats, learn } = gameStore.getState().state;
     clear(list);
+    clear(scriptsBox);
     const group = GROUPS.find((g) => g.id === activeGroup);
     for (const id of ORDER) {
       const sc = SCENES[id];
@@ -157,41 +162,50 @@ export function mountHome(root: HTMLElement, opts: HomeOptions): () => void {
       const card = h(
         'button',
         {
-          class: `panel show${locked ? ' locked' : ''}`,
+          class: `poster${locked ? ' locked' : ''}`,
+          dataset: { theme: info.theme },
           ariaPressed: String(open),
           onclick: () => {
             selected = open ? null : id;
             opts.onTheme(selected ? info.theme : 'lounge');
+            const keep = list.scrollLeft;
             renderList();
+            list.scrollLeft = keep;
+            if (selected) scriptsBox.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
           },
         },
-        h('span', { class: 'tag' }, `${info.kind} · ${sc.level}`),
-        stars(stats.bestStars[id] ?? 0),
+        h('span', { class: 'tag' }, info.kind),
         h('span', { class: 'name' }, sc.title),
         h('span', { class: 'sub' }, plainSub(sc.sub)),
-        h('span', { class: 'count' }, `${scriptList(id).length} bài`),
-        locked ? h('span', { class: 'lock' }, locked) : null
+        h('span', { class: 'foot' }, stars(stats.bestStars[id] ?? 0), h('span', null, locked ?? `${sc.level} · ${scriptList(id).length} bài`))
       );
       list.append(card);
       if (open && !locked) {
-        // Danh sách bài của tình huống: chọn bài nào cũng được, luyện lại bao nhiêu lần cũng được
+        // Mỗi bài có hai cách chơi. Diễn mở sau khi đã Tập bài đó ít nhất một lần.
         const scripts = scriptList(id);
         const box = h('div', { class: 'panel scripts' });
+        box.append(h('p', { class: 'hint' }, 'Tập: nói lại thoải mái, có gợi ý. Diễn: mỗi lượt một lần, không gợi ý, tính danh tiếng.'));
         scripts.forEach((sc, i) => {
           const seen = learn.exposure[sc.key] || 0;
           box.append(
             h(
-              'button',
-              { class: 'script', onclick: () => opts.onStart(id, sc.key) },
+              'div',
+              { class: 'script' },
               h('span', { class: 'num' }, String(i + 1)),
               h('span', { class: 'st' }, sc.title, h('small', null, `${sc.turns.length} lượt · ${seen > 0 ? `đã luyện ${seen} lần` : 'chưa luyện'}`)),
-              h('span', { class: 'go' }, seen > 0 ? 'Luyện lại' : 'Bắt đầu')
+              h(
+                'span',
+                { class: 'acts' },
+                h('button', { class: 'btn quiet', onclick: () => opts.onStart(id, sc.key, false) }, 'Tập'),
+                h('button', { class: 'btn', disabled: seen < 1, title: seen < 1 ? 'Tập bài này một lần trước khi Diễn' : '', onclick: () => opts.onStart(id, sc.key, true) }, 'Diễn')
+              )
             )
           );
         });
-        list.append(box);
+        scriptsBox.append(box);
       }
     }
+    if (!selected) scriptsBox.append(h('p', { class: 'empty' }, 'Chạm một poster để xem các bài của sự kiện đó.'));
   }
 
   const offs = [

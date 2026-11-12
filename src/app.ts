@@ -131,7 +131,7 @@ function showTab(tab: TabId) {
   if (tab === 'home') {
     unmount = mountHome(ui, {
       onTheme: (theme: StageTheme) => backdrop.setTheme(theme),
-      onStart: (sceneId, scriptKey) => showLesson(sceneId, scriptKey),
+      onStart: (sceneId, scriptKey, perform) => showLesson(sceneId, scriptKey, perform),
       themeLabel: () => (uiTheme === 'light' ? 'Nền tối' : 'Nền sáng'),
       onToggleTheme: () => setUiTheme(uiTheme === 'light' ? 'dark' : 'light'),
     });
@@ -157,7 +157,7 @@ function showTab(tab: TabId) {
   ui.append(tabbar, toast);
 }
 
-function showLesson(sceneId: string, scriptKey: string | null = null) {
+function showLesson(sceneId: string, scriptKey: string | null = null, perform = false) {
   // Gọi trong thao tác chạm để mở khoá âm thanh trên iOS
   if (!gameStore.getState().startLesson(sceneId, scriptKey)) return;
   unmount?.();
@@ -169,9 +169,11 @@ function showLesson(sceneId: string, scriptKey: string | null = null) {
   void engine.show('live');
   unmount = mountLesson(ui, sceneId, {
     live: stage,
+    perform,
+    theme: sceneTheme(sceneId),
     onExit: (again) => {
       gameStore.getState().closeLesson();
-      if (again) showLesson(sceneId, scriptKey);
+      if (again) showLesson(sceneId, scriptKey, perform);
       else showTab('home');
     },
   });

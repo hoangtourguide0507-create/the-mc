@@ -274,6 +274,11 @@ class SoundSystem {
   play(name: string) {
     if (!this.unlocked || this.muted) return;
     switch (name) {
+      case 'alarm':
+        this.tone(740, 0.12, 'square', 0.12, 0);
+        this.tone(554, 0.12, 'square', 0.12, 0.14);
+        this.tone(740, 0.12, 'square', 0.12, 0.28);
+        break;
       case 'applause':
         this.noise(2.2, 2400, 0.5, 26);
         break;

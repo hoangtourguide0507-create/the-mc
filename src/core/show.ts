@@ -93,3 +93,25 @@ export function verdict(heat: number): { title: string; line: string } {
   if (heat >= 30) return { title: 'Khán phòng hơi nguội', line: 'Vài lượt ngập ngừng làm khán giả mất tập trung.' };
   return { title: 'Khán giả bắt đầu xem điện thoại', line: 'Luyện lại bài này ở tốc độ chậm rồi diễn lại nhé.' };
 }
+
+/**
+ * Sự cố bất ngờ giữa show: MC ứng biến một câu.
+ * `inTime` = bấm mic trước khi hết đồng hồ. Cứu được sự cố thì nối chuỗi; hỏng thì cắt chuỗi.
+ */
+export function applyIncident(s: ShowState, stars: 0 | 1 | 2 | 3, inTime: boolean): TurnOutcome {
+  if (stars === 3 && inTime) {
+    const streak = s.streak + 1;
+    return settle(s, s.heat + 12, streak, Math.round(400 * multiplier(streak)));
+  }
+  if (stars >= 2) return settle(s, s.heat + 4, s.streak, 200);
+  if (stars === 1) return settle(s, s.heat - 5, 0, 50);
+  return settle(s, s.heat - 12, 0, 0);
+}
+
+/** Thưởng điểm thang nghề cho chế độ Diễn theo độ nóng cuối show (Tập luôn ×1). */
+export function performBonus(heat: number): number {
+  return heat >= 85 ? 1.5 : heat >= 70 ? 1.25 : 1;
+}
+
+/** Số lần được nói cho một lượt ở chế độ Diễn: một lần chính thức, thêm một lần nếu máy không nghe ra gì. */
+export const PERFORM_TRIES = 2;

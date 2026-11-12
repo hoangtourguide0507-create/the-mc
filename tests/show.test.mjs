@@ -7,8 +7,12 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const outfile = path.join(os.tmpdir(), `mc-show-${process.pid}.mjs`);
-await build({ entryPoints: [path.join(root, 'src/core/show.ts')], bundle: true, format: 'esm', platform: 'node', outfile, logLevel: 'silent' });
-const S = await import(pathToFileURL(outfile).href);
+const entry = path.join(os.tmpdir(), `mc-show-entry-${process.pid}.ts`);
+const { writeFileSync } = await import('node:fs');
+const q = (rel) => JSON.stringify(path.join(root, rel));
+writeFileSync(entry, `export * as S from ${q('src/core/show.ts')};\nexport * as I from ${q('src/core/incident.ts')};\nexport { INCIDENTS } from ${q('src/data/incidents.ts')};\nexport * as L from ${q('src/core/lesson.ts')};`);
+await build({ entryPoints: [entry], bundle: true, format: 'esm', platform: 'node', outfile, logLevel: 'silent' });
+const { S, I, INCIDENTS, L } = await import(pathToFileURL(outfile).href);
 
 // 1) Bắt đầu: khán phòng ở giữa, chưa có chuỗi
 let s = S.newShow();
@@ -72,4 +76,65 @@ assert.equal(S.moodOf(70), 'hot');
 assert.notEqual(S.verdict(100).title, S.verdict(0).title);
 for (const h of [0, 29, 30, 44, 45, 69, 70, 84, 85, 100]) assert.ok(S.verdict(h).title.length > 0);
 
+// 8) Sự cố: cứu được thì nối chuỗi, hỏng thì cắt chuỗi và nguội mạnh
+const base = S.applyTurn(S.applyTurn(S.newShow(), 3, true).state, 3, true).state;
+const saved = S.applyIncident(base, 3, true);
+assert.equal(saved.state.streak, 3);
+assert.equal(saved.points, Math.round(400 * 1.6));
+assert.equal(S.applyIncident(base, 3, false).state.streak, 2, 'đủ ý nhưng trễ giờ: giữ chuỗi, không nối');
+assert.equal(S.applyIncident(base, 3, false).points, 200);
+const failed = S.applyIncident(base, 0, true);
+assert.equal(failed.state.streak, 0);
+assert.equal(failed.heatDelta, -12);
+assert.equal(failed.streakBroken, true);
+assert.equal(S.performBonus(90), 1.5);
+assert.equal(S.performBonus(70), 1.25);
+assert.equal(S.performBonus(69), 1);
+
+// 9) Dữ liệu sự cố: id không trùng, câu mẫu đạt 3 sao, câu trống 0 sao, mỗi nhóm đủ dùng
+const ids = new Set();
+const perGroup = {};
+for (const inc of INCIDENTS) {
+  assert.ok(!ids.has(inc.id), `trùng id ${inc.id}`);
+  ids.add(inc.id);
+  perGroup[inc.group] = (perGroup[inc.group] || 0) + 1;
+  assert.ok(inc.need.length >= 2, `${inc.id}: cần ít nhất 2 ý`);
+  const r = I.evaluateIncident(inc, [inc.sample]);
+  assert.equal(r.stars, 3, `${inc.id}: câu mẫu chỉ đạt ${r.stars} sao, thiếu ${r.missing.join(', ')}`);
+  assert.equal(I.evaluateIncident(inc, ['']).stars, 0);
+  assert.equal(I.evaluateIncident(inc, ['hello there my friend how are you']).stars, 0, `${inc.id}: câu lạc đề không được có sao`);
+}
+for (const g of ['any', 'wedding', 'formal', 'brand', 'party']) assert.ok(perGroup[g] >= 6, `nhóm ${g} có ${perGroup[g]} sự cố`);
+// Chấm theo ý: thiếu một nửa ý thì 2 sao; chọn bản nghe tốt nhất
+const mic = INCIDENTS.find((x) => x.id === 'any-mic');
+assert.equal(I.evaluateIncident(mic, ['sorry about that everyone']).stars, 2);
+assert.equal(I.evaluateIncident(mic, ['sorry continue']).stars, 2, 'đủ ý nhưng quá ngắn: tối đa 2 sao');
+assert.equal(I.evaluateIncident(mic, ['blah', mic.sample]).stars, 3);
+
+// 10) Xếp sự cố vào show: không sau lượt cuối, không liền nhau, không trùng, ưu tiên đúng thể loại
+let seed = 7;
+const rng = () => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648);
+for (let run = 0; run < 200; run++) {
+  const turns = 6 + (run % 3);
+  const plan = I.planIncidents(INCIDENTS, 'wedding', turns, 2, rng);
+  assert.equal(plan.size, 2);
+  const at = [...plan.keys()].sort((a, b) => a - b);
+  assert.ok(at[0] >= 0 && at[1] <= turns - 2, 'không chen sau lượt cuối');
+  assert.ok(at[1] - at[0] >= 2, 'hai sự cố không liền nhau');
+  const picked = [...plan.values()];
+  assert.notEqual(picked[0].id, picked[1].id);
+  for (const p of picked) assert.ok(p.group === 'wedding' || p.group === 'any');
+}
+assert.equal(I.planIncidents(INCIDENTS, 'any', 1, 2, rng).size, 0, 'bài một lượt thì không có sự cố');
+assert.equal(I.planIncidents(INCIDENTS, 'formal', 3, 1, rng).size, 1);
+assert.equal(I.incidentGroupOf('wedding'), 'wedding');
+assert.equal(I.incidentGroupOf('gala'), 'party');
+assert.equal(I.incidentGroupOf('lounge'), 'any');
+
+// 11) Danh tiếng chỉ tính khi Diễn
+assert.equal(L.countsForRep('show', true), true);
+assert.equal(L.countsForRep('show', false), false);
+assert.equal(L.countsForRep('daily', true), false);
+
+console.log(`show.test: ${INCIDENTS.length} sự cố hợp lệ.`);
 console.log('show.test: thanh khán giả, chuỗi liên tiếp và điểm diễn đều đúng.');

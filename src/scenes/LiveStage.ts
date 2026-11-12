@@ -21,12 +21,12 @@ interface Look {
 }
 
 const LOOKS: Record<StageTheme, Look> = {
-  lounge: { accent: '#C9A86A', drape: '#EFE6D6', guest: '#8C6F4E', decor: bulbsDecor },
+  lounge: { accent: '#C9A86A', drape: '#EFE6D6', guest: '#8C6F4E', decor: loungeDecor },
   conference: { accent: '#7FA3D9', drape: '#E6EBF2', guest: '#4F6788', decor: bannersDecor },
-  runway: { accent: '#A9A6B8', drape: '#ECEAF0', guest: '#6E6A7C', decor: bannersDecor },
-  concert: { accent: '#B79AD0', drape: '#EDE6F2', guest: '#7B6496', decor: bulbsDecor },
+  runway: { accent: '#A9A6B8', drape: '#ECEAF0', guest: '#6E6A7C', decor: runwayDecor },
+  concert: { accent: '#B79AD0', drape: '#EDE6F2', guest: '#7B6496', decor: concertDecor },
   wedding: { accent: '#E3A99A', drape: '#F6EAE2', guest: '#B9837A', decor: weddingDecor },
-  gala: { accent: '#D9B15E', drape: '#F3E9D2', guest: '#8A6A2F', decor: bulbsDecor },
+  gala: { accent: '#D9B15E', drape: '#F3E9D2', guest: '#8A6A2F', decor: galaDecor },
 };
 
 const ROWS = 5;
@@ -79,6 +79,7 @@ export class LiveStage implements GameScene {
   private ovation = 0;
   private murmurE = 0;
   private shake = 0;
+  private alarmE = 0;
   private focus: Speaker = 'wide';
   private talking: Speaker | null = null;
   private look = new THREE.Vector3(0, 2.1, -6);
@@ -210,7 +211,7 @@ export class LiveStage implements GameScene {
   /** Về trạng thái đầu show: khán phòng ở mức giữa, không vỗ tay, không pháo giấy. */
   reset(): void {
     this.heat = this.heatTarget = 0.5;
-    this.cheerE = this.ovation = this.murmurE = this.shake = 0;
+    this.cheerE = this.ovation = this.murmurE = this.shake = this.alarmE = 0;
     this.confLife = 0;
     this.focus = 'wide';
     this.talking = null;
@@ -239,6 +240,12 @@ export class LiveStage implements GameScene {
   murmur(): void {
     this.murmurE = 1;
     this.shake = Math.max(this.shake, 0.5 * this.motion);
+  }
+
+  /** Sự cố bất ngờ: rung máy quay và ánh đèn ngả đỏ trong chốc lát */
+  alarm(): void {
+    this.alarmE = 1;
+    this.shake = Math.max(this.shake, 1 * this.motion);
   }
 
   /** Máy quay hướng về người đang nói */
@@ -273,6 +280,8 @@ export class LiveStage implements GameScene {
     this.ovation = Math.max(0, this.ovation - dt * 0.12);
     this.murmurE = Math.max(0, this.murmurE - dt * 0.9);
     this.shake = Math.max(0, this.shake - dt * 2.2);
+    this.alarmE = Math.max(0, this.alarmE - dt * 0.5);
+    this.hemi.color.setRGB(1, 1 - this.alarmE * 0.22, 1 - this.alarmE * 0.28);
     const m = this.motion;
 
     // Khán giả
@@ -481,6 +490,79 @@ function bannersDecor(g: THREE.Group, look: Look): void {
   const lectern = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.1, 0.5), new THREE.MeshLambertMaterial({ color: '#D8C7A8' }));
   lectern.position.set(-3.4, 1.15, -5.6);
   g.add(lectern);
+  for (const x of [-7.4, 7.4]) {
+    const scr = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 3.2), new THREE.MeshBasicMaterial({ color: look.accent, fog: false }));
+    scr.position.set(x, 3.2, -8.8);
+    scr.rotation.y = x < 0 ? 0.35 : -0.35;
+    g.add(scr);
+  }
+  bulbsDecor(g, look);
+}
+
+function slab(g: THREE.Group, w: number, h: number, d: number, color: string, x: number, y: number, z: number): THREE.Mesh {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshLambertMaterial({ color }));
+  m.position.set(x, y, z);
+  g.add(m);
+  return m;
+}
+
+/** Khởi động, tổng duyệt: hai chậu cây và dây đèn, không khí thân mật */
+function loungeDecor(g: THREE.Group, look: Look): void {
+  for (const x of [-5.2, 5.2]) {
+    slab(g, 0.6, 0.6, 0.6, '#D8C7A8', x, 0.9, -5.2);
+    for (let i = 0; i < 7; i++) ball(g, 0.3, i % 2 ? '#A9C2A0' : '#8FB08A', x + (rand(i + x) - 0.5) * 0.7, 1.5 + rand(i * 5 + x) * 0.9, -5.2 + (rand(i * 9) - 0.5) * 0.5);
+  }
+  bulbsDecor(g, look);
+}
+
+/** Thời trang, thương hiệu: sàn catwalk chạy xuống giữa khán phòng, hai băng-rôn */
+function runwayDecor(g: THREE.Group, look: Look): void {
+  slab(g, 2.2, 0.5, 7.5, '#FBF7EF', 0, 0.25, -0.6);
+  for (const x of [-1.12, 1.12]) slab(g, 0.05, 0.04, 7.5, look.accent, x, 0.51, -0.6);
+  for (const x of [-5.4, 5.4]) {
+    const b = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 3.6), new THREE.MeshLambertMaterial({ color: look.accent }));
+    b.position.set(x, 2.5, -7.6);
+    g.add(b);
+  }
+  bulbsDecor(g, look);
+}
+
+/** Giải trí: giàn đèn màu trên cao và hai màn hình bên */
+function concertDecor(g: THREE.Group, look: Look): void {
+  slab(g, 16, 0.22, 0.22, '#CFC6D8', 0, 7.6, -5.5);
+  const colors = [look.accent, '#F2B8C6', '#A9D3DC', '#F4E3A6'];
+  for (let i = -5; i <= 5; i++) {
+    const m = new THREE.Mesh(new THREE.SphereGeometry(0.2, 10, 8), new THREE.MeshBasicMaterial({ color: colors[(i + 5) % colors.length], fog: false }));
+    m.position.set(i * 1.5, 7.3, -5.5);
+    g.add(m);
+  }
+  for (const x of [-6.6, 6.6]) {
+    const scr = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 4), new THREE.MeshBasicMaterial({ color: look.accent, fog: false }));
+    scr.position.set(x, 3.4, -8.6);
+    scr.rotation.y = x < 0 ? 0.3 : -0.3;
+    g.add(scr);
+  }
+}
+
+/** Gala, tiệc: đèn chùm giữa trần và bàn tiệc tròn hai bên */
+function galaDecor(g: THREE.Group, look: Look): void {
+  for (let ring = 0; ring < 3; ring++) {
+    const n = 10 + ring * 6;
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2;
+      const m = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 6), new THREE.MeshBasicMaterial({ color: ring % 2 ? look.accent : '#FFF1CF', fog: false }));
+      m.position.set(Math.cos(a) * (0.5 + ring * 0.5), 7.6 - ring * 0.45, -4 + Math.sin(a) * (0.5 + ring * 0.5));
+      g.add(m);
+    }
+  }
+  for (const x of [-5.6, 5.6]) {
+    const top = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 0.08, 28), new THREE.MeshLambertMaterial({ color: '#FBF7EF' }));
+    top.position.set(x, 0.95, -2.6);
+    const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.3, 0.9, 12), new THREE.MeshLambertMaterial({ color: '#D8C7A8' }));
+    leg.position.set(x, 0.45, -2.6);
+    g.add(top, leg);
+    ball(g, 0.16, look.accent, x, 1.15, -2.6);
+  }
   bulbsDecor(g, look);
 }
 

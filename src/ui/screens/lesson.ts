@@ -12,7 +12,9 @@ import { clamp } from '../../core/clock';
 import { evaluateScripted, evaluateTurnCandidates } from '../../core/evaluator';
 import { evaluateRecallCandidates, planTurn, supportStage } from '../../core/recall';
 import { applyChunkAttempt, focusChunk, mergeAttempts } from '../../core/retry';
-import { applyImprove, applyMiss, applySkip, applyTurn, moodOf, multiplier, newShow, verdict, type TurnOutcome } from '../../core/show';
+import { INCIDENT_SECONDS, evaluateIncident, incidentGroupOf, planIncidents, type Incident, type IncidentResult } from '../../core/incident';
+import { PERFORM_TRIES, applyImprove, applyIncident, applyMiss, applySkip, applyTurn, moodOf, multiplier, newShow, performBonus, verdict, type TurnOutcome } from '../../core/show';
+import { INCIDENTS } from '../../data/incidents';
 import { gameStore } from '../../core/store';
 import { viSupport } from '../../core/support';
 import { CHUNKS_BY_SCRIPT } from '../../data/chunks';
@@ -27,6 +29,10 @@ export interface LessonOptions {
   onExit: (again: boolean) => void;
   /** Sân khấu 3D phản ứng theo buổi diễn (không có thì chỉ chạy phần HTML) */
   live?: LiveStage;
+  /** Chế độ Diễn: mỗi lượt nói một lần, không gợi ý, tính danh tiếng. Mặc định là Tập. */
+  perform?: boolean;
+  /** Bối cảnh sân khấu, dùng để chọn sự cố đúng thể loại */
+  theme?: string;
 }
 
 export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOptions): () => void {
@@ -62,6 +68,14 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
   let show = newShow();
   let turnClean = true;
   const live = opts.live;
+  const perform = Boolean(opts.perform);
+  /** Sự cố bất ngờ: Tập có 1, Diễn có 2; chen vào sau lượt có chỉ số là khoá của Map */
+  const incidents = planIncidents(INCIDENTS, incidentGroupOf(opts.theme || 'lounge'), turns.length, perform ? 2 : 1, Math.random);
+  let inc: { data: Incident; phase: 'ask' | 'rec' | 'done'; left: number; inTime: boolean; res: IncidentResult | null } | null = null;
+  let incTimer = 0;
+  /** Số lần đã nói ở lượt hiện tại (để khoá lượt khi Diễn) */
+  let tries = 0;
+  const performLocked = () => perform && ((evalResult?.stars ?? 0) > 0 || tries >= PERFORM_TRIES);
 
   /* ---------- Trạng thái từng lượt ---------- */
   let revealed = false;
@@ -200,6 +214,7 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
     quizWrong = [];
     reflexExpired = false;
     hintAsked = false;
+    tries = 0;
     turnClean = true;
     live?.setFocus('guest');
     manual.value = '';
@@ -247,13 +262,14 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
   /* ---------- Chấm sao và XP cho lượt hiện tại ---------- */
   function awardTurn(res: EvalResult, isQuiz = false) {
     evalResult = res;
+    if (!isQuiz) tries += 1;
     const t = turn();
     if (res.stars === 0) {
       SFX.play('error');
       turnClean = false;
       react(applyMiss(show), 0);
-      micPhase = 'idle';
-      toast('Chưa nghe rõ hoặc chưa khớp mẫu câu. Thử lại nhé.', 'warn');
+      micPhase = performLocked() ? 'done' : 'idle';
+      toast(performLocked() ? 'Lượt này chưa đạt. Show vẫn phải tiếp tục.' : perform ? 'Chưa nghe rõ. Bạn còn một lần nói cho lượt này.' : 'Chưa nghe rõ hoặc chưa khớp mẫu câu. Thử lại nhé.', 'warn');
       render();
       return;
     }
@@ -314,7 +330,8 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
     awardTurn(cumulative ? mergeAttempts(evalResult, res) : res);
   }
 
-  const practiceChunk = () => (evalResult && evalResult.tokens.length > 0 ? focusChunk(evalResult.tokens) : null);
+  // Diễn thì không có luyện lại từng cụm
+  const practiceChunk = () => (!perform && evalResult && evalResult.tokens.length > 0 ? focusChunk(evalResult.tokens) : null);
 
   async function playChunkWords() {
     const chunk = practiceChunk();
@@ -426,6 +443,7 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
       SFX.play('error');
       return toast('Chạm chọn đủ các từ còn trống trước khi mở mic.', 'warn');
     }
+    if (performLocked()) return toast('Khi Diễn, mỗi lượt chỉ nói một lần. Bấm Tiếp.', 'info', 2200);
     if (chunkRec) return SpeechEngine.stop(); // đang thu riêng một cụm: nút chính chỉ dừng lượt thu đó
     if (micPhase === 'arming') {
       SpeechEngine.abort();
@@ -474,12 +492,150 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
   }
 
   function nextTurn(skip: boolean) {
-    if (!skip && (turnStars[turnIdx] || 0) < 1) {
+    if (!skip && (turnStars[turnIdx] || 0) < 1 && !performLocked()) {
       SFX.play('error');
       return toast('Cần ít nhất 1 sao, hoặc bấm Bỏ qua.', 'warn');
     }
     SFX.play('tap');
-    if (skip && (turnStars[turnIdx] || 0) < 1) react(applySkip(show), 0);
+    if ((turnStars[turnIdx] || 0) < 1) react(applySkip(show), 0);
+    const hit = incidents.get(turnIdx);
+    if (hit) {
+      incidents.delete(turnIdx);
+      return startIncident(hit);
+    }
+    advance();
+  }
+
+  /* ---------- Sự cố bất ngờ: một câu ứng biến, chỉ một lần nói, có đồng hồ ---------- */
+  function stopIncClock() {
+    if (incTimer) window.clearInterval(incTimer);
+    incTimer = 0;
+  }
+
+  function startIncident(data: Incident) {
+    attempt += 1;
+    Voice.stop();
+    SpeechEngine.abort();
+    stopReflex();
+    inc = { data, phase: 'ask', left: INCIDENT_SECONDS, inTime: true, res: null };
+    interim = '';
+    manual.value = '';
+    live?.alarm();
+    live?.setFocus('mc');
+    SFX.play('alarm');
+    navigator.vibrate?.([60, 60, 60]);
+    render();
+    incTimer = window.setInterval(() => {
+      if (!inc || inc.phase === 'done') return stopIncClock();
+      if (inc.left <= 1) {
+        inc.left = 0;
+        inc.inTime = false;
+        stopIncClock();
+      } else inc.left -= 1;
+      paintIncClock();
+    }, 1000);
+  }
+
+  function judgeIncident(candidates: string[]) {
+    if (!inc || inc.phase === 'done') return;
+    stopIncClock();
+    const r = evaluateIncident(inc.data, candidates);
+    inc.res = r;
+    inc.phase = 'done';
+    react(applyIncident(show, r.stars, inc.inTime), r.stars === 3 && inc.inTime ? 3 : r.stars >= 2 ? 2 : 0);
+    if (r.stars > 0) {
+      const xp = r.stars * 4;
+      speakingXp += xp;
+      store().gain({ xp });
+    }
+    render();
+  }
+
+  async function incidentMic() {
+    if (!inc || inc.phase === 'done') return;
+    if (inc.phase === 'rec') return SpeechEngine.stop();
+    stopIncClock(); // đã kịp bấm mic
+    const my = ++attempt;
+    inc.phase = 'rec';
+    interim = '';
+    live?.setTalking('mc');
+    render();
+    const res = await SpeechEngine.listen({
+      onInterim: (txt) => {
+        if (attempt !== my) return;
+        interim = txt;
+        heardText.textContent = `“${txt}”`;
+      },
+    });
+    if (attempt === my) live?.setTalking(null);
+    if (attempt !== my || disposed || !inc) return;
+    if (res.reason === 'aborted' || res.reason === 'error' || (!res.transcript && res.reason === 'no-speech')) {
+      inc.phase = 'ask';
+      showFallback = true;
+      if (res.reason !== 'aborted') toast('Không nghe rõ. Nói lại, hoặc gõ thay mic.', 'warn', 2800);
+      return render();
+    }
+    judgeIncident(res.alternatives.length > 0 ? res.alternatives : [res.transcript]);
+  }
+
+  let incPill: HTMLElement | null = null;
+  function paintIncClock() {
+    if (!incPill || !inc) return;
+    incPill.className = `pill${inc.left <= 5 ? ' warn' : ''}`;
+    incPill.textContent = inc.inTime ? `Bấm mic trong ${inc.left}s` : 'Hết giờ: khán giả đã nhận ra';
+  }
+
+  function renderIncident() {
+    if (!inc) return;
+    const it = inc;
+    renderTop();
+    clear(bubbleEl);
+    clear(bodyEl);
+    clear(micEl);
+    bubbleEl.append(
+      h('section', { class: 'panel card bubble alert' }, h('div', { class: 'head' }, h('span', { class: 'pill warn' }, 'Sự cố bất ngờ')), h('p', { class: 'npc-line' }, it.data.alert))
+    );
+    incPill = null;
+    const card = h('section', { class: 'panel card' });
+    const head = h('div', { class: 'head' }, h('span', { class: 'pill' }, 'Ứng biến một câu'));
+    if (it.phase !== 'done') {
+      incPill = h('span', { class: 'pill' });
+      head.append(incPill);
+      paintIncClock();
+    }
+    card.append(head, h('p', { class: 'npc-line' }, it.data.task));
+    if (it.res) {
+      const r = it.res;
+      append(card, [
+        h('div', { class: 'chips' }, ...r.matched.map((k) => h('span', { class: 'kw hit' }, `Có ý: ${k}`)), ...r.missing.map((k) => h('span', { class: 'kw' }, `Thiếu ý: ${k}`))),
+        h('span', { class: 'who' }, 'Một cách nói (chạm để nghe)'),
+        h('button', { class: 'opt picked', onclick: () => void Voice.speak(it.data.sample, { npcId: 'coach', preferredURI: store().state.voiceURI }) }, it.data.sample),
+        h('div', { class: 'heard' }, h('span', null, 'Máy nghe được: ', h('i', null, `“${r.transcript}”`)), h('span', { class: 'score' }, r.stars === 3 && !it.inTime ? 'Trễ giờ ' : '', starsEl(r.stars))),
+      ]);
+    } else if (interim) {
+      heardText.textContent = `“${interim}”`;
+      card.append(h('div', { class: 'heard' }, h('span', null, 'Máy nghe được: ', heardText)));
+    }
+    bodyEl.append(card);
+    if (it.phase === 'done') {
+      micEl.append(
+        h('button', { class: 'btn main', style: { width: '100%' }, onclick: () => { inc = null; SFX.play('tap'); advance(); } }, 'Tiếp tục show')
+      );
+      return;
+    }
+    micEl.append(
+      h('button', { class: `btn main${it.phase === 'rec' ? ' rec' : ''}`, style: { width: '100%' }, onclick: () => void incidentMic() }, it.phase === 'rec' ? 'Dừng và chấm' : 'Chạm để ứng biến'),
+      h('div', { class: 'row' }, h('button', { class: 'btn quiet', ariaLabel: 'Gõ thay mic', onclick: () => { showFallback = !showFallback; render(); } }, 'Gõ'), h('span', { class: 'grow' }))
+    );
+    if (showFallback) {
+      micEl.append(
+        h('form', { onsubmit: (e: Event) => { e.preventDefault(); if (manual.value.trim()) judgeIncident([manual.value]); } }, manual, h('button', { class: 'btn', type: 'submit', style: { width: 'auto' } }, 'Chấm'))
+      );
+    }
+  }
+
+  /** Sang lượt kế tiếp, hoặc khép show nếu đã hết lượt */
+  function advance() {
     if (turnIdx + 1 < turns.length) {
       turnIdx += 1;
       return beginTurn();
@@ -496,7 +652,7 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
       chunkIds: (CHUNKS_BY_SCRIPT[scriptKey] || []).map((c) => c.id),
     });
     if (added > 0) toast(`${added} cụm mới vào phần Khởi động ngày mai`, 'success', 3200);
-    s.finishScene([...turnStars], speakingXp, listeningXp);
+    s.finishScene([...turnStars], speakingXp, listeningXp, { perform, heat: show.heat });
     finished = true;
     // Khép show: khán phòng phản ứng theo độ nóng cuối cùng
     live?.setFocus('wide');
@@ -531,7 +687,7 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
       h(
         'div',
         { class: 'info' },
-        h('div', { class: 'ttl' }, dayScript.title || baseScene.title),
+        h('div', { class: 'ttl' }, h('span', { class: `mode${perform ? ' live' : ''}` }, perform ? 'Diễn' : 'Tập'), dayScript.title || baseScene.title),
         h(
           'div',
           { class: 'prog' },
@@ -582,7 +738,9 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
         { class: 'chips' },
         h('button', { class: 'btn quiet', onclick: () => playNpc(false) }, 'Nghe lại'),
         h('button', { class: 'btn quiet', onclick: () => playNpc(true) }, 'Nghe chậm'),
-        !revealed
+        perform
+          ? null
+          : !revealed
           ? h('button', { class: 'btn quiet', title: 'Giữ ẩn chữ để được ×2 XP nghe', onclick: () => { SFX.play('page'); revealed = true; render(); } }, 'Hiện chữ')
           : support.npcToggle
           ? h('button', { class: 'btn quiet', onclick: () => { SFX.play('tap'); translated = !translated; render(); } }, translated ? 'Ẩn dịch' : 'Dịch')
@@ -601,7 +759,7 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
     reflexPill = null;
 
     const head = h('div', { class: 'head' }, h('span', { class: 'pill' }, modeLabel()));
-    if (stage === 0 && (t.mode === 'scripted' || t.mode === 'catch') && !evalResult) {
+    if (!perform && stage === 0 && (t.mode === 'scripted' || t.mode === 'catch') && !evalResult) {
       head.append(
         h('button', { class: 'link', onclick: () => { selfTalk = !selfTalk; beginTurn(); } }, selfTalk ? 'Hiện lại thẻ' : 'Thử không nhìn thẻ')
       );
@@ -623,6 +781,8 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
           card.append(
             hintVisible
               ? h('div', { class: 'note-box' }, h('span', { class: 'big' }, t.cueVi))
+              : perform
+              ? ''
               : h('button', { class: 'btn quiet', onclick: () => { hintAsked = true; render(); } }, 'Xin gợi ý tiếng Việt (tối đa 2 sao)')
           );
         }
@@ -692,7 +852,7 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
             )
           );
         }
-        if (t.cueVi && support.cueVi) card.append(h('p', { class: 'vi' }, t.cueVi));
+        if (t.cueVi && support.cueVi && !perform) card.append(h('p', { class: 'vi' }, t.cueVi));
       }
     }
 
@@ -713,7 +873,7 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
           ...(t.bonusKeywords || []).map((g) => h('span', { class: 'kw' }, `Thưởng: ${g.slice(0, 2).join(' / ')}`))
         )
       );
-      if (t.sample) card.append(h('p', { class: 'vi' }, `Gợi ý mẫu: “${t.sample}”`));
+      if (t.sample && (!perform || evalResult)) card.append(h('p', { class: 'vi' }, `Gợi ý mẫu: “${t.sample}”`));
     }
 
     if (!selfSpeak && t.mode === 'quiz') {
@@ -729,7 +889,7 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
     if (evalResult?.grammarIssues?.length) {
       card.append(h('div', { class: 'note-box focus' }, 'Gợi ý sửa:', ...evalResult.grammarIssues.map((g) => h('span', null, `“${g.wrong}” → “${g.fix}”`))));
     }
-    if (support.tip && t.tip) card.append(h('div', { class: 'note-box' }, t.tip));
+    if (support.tip && t.tip && !perform) card.append(h('div', { class: 'note-box' }, t.tip));
 
     if (interim || evalResult) {
       heardText.textContent = `“${evalResult ? evalResult.transcript : interim}”`;
@@ -751,12 +911,15 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
     const p = plan();
     const selfSpeak = p.kind !== 'authored';
     const isQuiz = t.mode === 'quiz' && !selfSpeak;
-    const got = (turnStars[turnIdx] || 0) >= 1;
+    const locked = performLocked();
+    const got = (turnStars[turnIdx] || 0) >= 1 || locked;
     const last = turnIdx + 1 >= turns.length;
 
     if (!isQuiz) {
       const label =
-        micPhase === 'locked'
+        locked
+          ? 'Đã diễn lượt này'
+          : micPhase === 'locked'
           ? 'Bắt từ trước đã'
           : micPhase === 'arming'
           ? 'Đang mở mic…'
@@ -768,24 +931,26 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
             : 'Đọc lại cả câu để lấy 3 sao'
           : 'Chạm để nói';
       micEl.append(
-        h('button', { class: `btn main${micPhase === 'rec' ? ' rec' : micPhase === 'arming' || micPhase === 'locked' ? ' wait' : got ? ' quiet' : ''}`, style: { width: '100%' }, onclick: () => void micPress() }, label)
+        h('button', { class: `btn main${micPhase === 'rec' ? ' rec' : micPhase === 'arming' || micPhase === 'locked' ? ' wait' : got ? ' quiet' : ''}`, style: { width: '100%' }, disabled: locked, onclick: () => void micPress() }, label)
       );
     }
     const row = h('div', { class: 'row' });
     if (!isQuiz) {
-      row.append(
+      if (!perform) row.append(
         h('button', { class: 'btn quiet', disabled: selfSpeak && !evalResult, title: selfSpeak && !evalResult ? 'Nói thử trước, rồi mới nghe câu mẫu' : '', onclick: () => playSample(false) }, 'Mẫu'),
-        h('button', { class: 'btn quiet', disabled: selfSpeak && !evalResult, ariaLabel: 'Nghe câu mẫu chậm', onclick: () => playSample(true) }, 'Chậm'),
+        h('button', { class: 'btn quiet', disabled: selfSpeak && !evalResult, ariaLabel: 'Nghe câu mẫu chậm', onclick: () => playSample(true) }, 'Chậm')
+      );
+      row.append(
         h('button', { class: 'btn quiet', ariaLabel: 'Gõ thay mic', ariaPressed: String(showFallback), onclick: () => { showFallback = !showFallback; renderMic(); } }, 'Gõ')
       );
     }
     row.append(
       h('span', { class: 'grow' }),
-      h('button', { class: 'link', onclick: () => nextTurn(true) }, 'Bỏ qua'),
+      perform ? '' : h('button', { class: 'link', onclick: () => nextTurn(true) }, 'Bỏ qua'),
       h('button', { class: `btn${got ? '' : ' quiet'}`, style: { width: 'auto' }, disabled: !got, onclick: () => nextTurn(false) }, last ? 'Kết thúc' : 'Tiếp')
     );
     micEl.append(row);
-    if (showFallback && !isQuiz) {
+    if (showFallback && !isQuiz && !locked) {
       micEl.append(
         h(
           'form',
@@ -821,6 +986,13 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
         h('h2', null, v.title),
         h('p', { class: 'vi' }, `${v.line} ${r?.objectiveMet ? 'Đã đạt mục tiêu bài học.' : 'Chưa đạt mục tiêu bài học.'}`),
         h(
+          'p',
+          { class: 'vi' },
+          perform
+            ? `Bạn đã Diễn: danh tiếng được tính${performBonus(show.heat) > 1 ? `, điểm thang nghề ×${performBonus(show.heat)}` : ''}.`
+            : 'Đây là buổi Tập: chưa tính danh tiếng. Chọn Diễn để tính.'
+        ),
+        h(
           'div',
           { class: 'grid' },
           h('div', { class: 'cell' }, h('b', null, show.score.toLocaleString('vi-VN')), h('span', null, 'Điểm diễn')),
@@ -834,7 +1006,7 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
           h('div', { class: 'cell' }, h('b', null, (r?.avgStars ?? 0).toFixed(1)), h('span', null, 'Sao trung bình')),
           h('div', { class: 'cell' }, h('b', null, `Lv.${charisma.lv}`), h('span', null, 'Cấp hiện tại'))
         ),
-        h('button', { class: 'btn', onclick: () => opts.onExit(true) }, 'Luyện lại bài này'),
+        h('button', { class: 'btn', onclick: () => opts.onExit(true) }, perform ? 'Diễn lại bài này' : 'Tập lại bài này'),
         h('button', { class: 'btn quiet', style: { width: '100%' }, onclick: () => opts.onExit(false) }, 'Về danh sách')
       )
     );
@@ -843,6 +1015,7 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
   function render() {
     if (disposed) return;
     if (finished) return renderResult();
+    if (inc) return renderIncident();
     renderTop();
     const keep = bodyEl.scrollTop;
     clear(bodyEl);
@@ -856,10 +1029,33 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
     bodyEl.querySelector('[data-chunk]')?.scrollIntoView({ block: 'nearest' });
   }
 
-  beginTurn();
+  /* ---------- Mở màn: rèm kéo ra, tên sự kiện, rồi mới vào lượt đầu ---------- */
+  const calm = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  const intro = h(
+    'button',
+    { class: 'l-intro', ariaLabel: 'Bỏ qua mở màn' },
+    h('i', { class: 'drape left' }),
+    h('i', { class: 'drape right' }),
+    h('span', { class: 'card' }, h('span', { class: 'eyebrow' }, perform ? 'Diễn thật · một lần mỗi lượt' : 'Buổi tập'), h('b', null, dayScript.title || baseScene.title), h('small', null, `${turns.length} lượt · có sự cố bất ngờ`))
+  );
+  let introTimer = 0;
+  const openShow = () => {
+    if (!intro.isConnected) return;
+    window.clearTimeout(introTimer);
+    intro.remove();
+    if (!disposed) beginTurn();
+  };
+  intro.onclick = openShow;
+  screen.append(intro);
+  renderTop();
+  SFX.play('correct');
+  live?.cheer(1);
+  introTimer = window.setTimeout(openShow, calm ? 600 : 2100);
 
   return () => {
     disposed = true;
+    stopIncClock();
+    window.clearTimeout(introTimer);
     attempt += 1;
     stopReflex();
     window.clearTimeout(speakTimer);

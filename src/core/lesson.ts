@@ -40,3 +40,8 @@ export function lessonCharisma(
 export function isNewLessonDay(dayDate: string, today: string): boolean {
   return dayDate !== today;
 }
+
+/** Danh tiếng chỉ thay đổi khi DIỄN một show; Tập và các bài khởi động không tính. */
+export function countsForRep(sceneType: string, perform: boolean): boolean {
+  return sceneType === 'show' && perform;
+}
