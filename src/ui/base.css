@@ -50,8 +50,9 @@ html, body {
   -webkit-user-select: none; user-select: none; touch-action: manipulation;
   -webkit-font-smoothing: antialiased;
 }
-#stage3d { position: fixed; inset: 0; width: 100vw; height: 100dvh; display: block; }
-#ui { position: fixed; inset: 0; z-index: 10; }
+/* --app-h do app.ts đặt khi iOS báo hụt chiều cao (web app ở Màn hình chính) */
+#stage3d { position: fixed; left: 0; top: 0; width: 100vw; height: var(--app-h, 100dvh); display: block; }
+#ui { position: fixed; left: 0; top: 0; right: 0; height: var(--app-h, 100%); z-index: 10; }
 button, input { font: inherit; color: inherit; }
 button { cursor: pointer; }
 button:disabled { cursor: default; opacity: 0.45; }
@@ -210,14 +211,15 @@ button:disabled { cursor: default; opacity: 0.45; }
 .lesson.live > * { max-width: none; }
 .l-stage { position: relative; flex: 1 1 0; min-height: 34%; display: flex; flex-direction: column; pointer-events: none; }
 .l-stage > * { pointer-events: auto; width: 100%; max-width: 640px; margin-left: auto; margin-right: auto; }
-.l-stage .l-top { background: linear-gradient(180deg, var(--veil), transparent); padding-bottom: 14px; }
-.l-meter { padding: 0 16px; display: grid; gap: 6px; }
-.l-meter .top { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; color: var(--ink); text-shadow: 0 1px 0 var(--bg); }
+/* Thanh trên và thanh khán giả là một tấm đặc: chữ nằm trên nền phẳng, không đè lên cảnh 3D */
+.l-stage .l-top { background: var(--panel); padding-bottom: 6px; max-width: none; }
+.l-meter { padding: 0 16px 12px; display: grid; gap: 6px; background: var(--panel); border-bottom: 1px solid var(--line); border-radius: 0 0 20px 20px; box-shadow: var(--shadow); max-width: none !important; }
+.l-meter .top { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; color: var(--ink); }
 .l-meter .mood { flex: 1; }
 .l-meter .pts { font: 700 18px/1 var(--display); color: var(--accent); min-width: 56px; text-align: right; }
 .l-meter .streak { display: none; padding: 3px 10px; border-radius: 99px; background: var(--primary); color: var(--primary-ink); font-size: 12px; }
 .l-meter .streak.on { display: inline-block; animation: pop-in 0.35s cubic-bezier(0.2, 1.6, 0.4, 1); }
-.l-meter .heat { height: 10px; border-radius: 99px; background: var(--panel); border: 1px solid var(--line); overflow: hidden; }
+.l-meter .heat { height: 10px; border-radius: 99px; background: var(--panel-2); border: 1px solid var(--line); overflow: hidden; }
 .l-meter .heat i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, #c9a86a, #d98f6a); transition: width 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), background 0.4s; }
 .l-meter[data-mood='cold'] .heat i { background: #9aa7b4; }
 .l-meter[data-mood='hot'] .heat i { background: linear-gradient(90deg, #d9a95e, #d9744f); }
@@ -242,6 +244,9 @@ button:disabled { cursor: default; opacity: 0.45; }
 .l-sheet .tok { min-height: 36px; padding: 2px 6px; }
 .l-sheet .note-box:not(.focus) { background: none; padding: 0 2px; font-size: 13.5px; font-style: italic; }
 .l-sheet .l-mic .btn.main { min-height: 56px; }
+.l-sheet .chip { min-height: 44px; padding: 6px 14px; }
+.l-sheet .blank { min-width: 56px; }
+.l-sheet .l-mic .row .btn.quiet { min-height: 44px; }
 .say .w { transition: color 0.15s, background 0.15s; border-radius: 6px; padding: 0 2px; color: var(--muted); }
 .say .w.lit { color: var(--ok-ink); background: var(--ok-bg); }
 .lesson.live .tok { animation: pop-in 0.3s backwards; }

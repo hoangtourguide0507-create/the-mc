@@ -186,6 +186,21 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
   paintMeter();
   live?.setHeat(show.heat / 100);
 
+  /** Báo cho sân khấu 3D biết vùng không bị giao diện che, để máy quay đưa người và khán giả vào đúng vùng đó */
+  function reportFrame() {
+    if (!live || disposed) return;
+    const box = screen.getBoundingClientRect();
+    if (box.height < 1) return;
+    const top = (bubbleEl.childElementCount ? bubbleEl : meterEl).getBoundingClientRect().bottom - box.top;
+    const bottom = sheetEl.getBoundingClientRect().top - box.top;
+    if (bottom - top < 40) return;
+    live.setFrame((top + bottom) / 2 / box.height, (bottom - top) / box.height);
+  }
+  const frameWatch = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(reportFrame);
+  frameWatch?.observe(sheetEl);
+  frameWatch?.observe(bubbleEl);
+  frameWatch?.observe(screen);
+
   const offViseme = Voice.onViseme((v) => {
     const on = v !== 'rest';
     if (on === npcSpeaking) return;
@@ -1054,6 +1069,7 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
 
   return () => {
     disposed = true;
+    frameWatch?.disconnect();
     stopIncClock();
     window.clearTimeout(introTimer);
     attempt += 1;

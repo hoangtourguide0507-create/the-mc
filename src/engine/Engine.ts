@@ -156,8 +156,9 @@ export class Engine {
     const h = Math.max(1, this.canvas.clientHeight || window.innerHeight);
     this.width = w;
     this.height = h;
-    // Giới hạn DPR: màn Retina 3x tốn gấp 2,25 lần điểm ảnh so với 2x mà khó thấy khác biệt
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    // Vẽ đủ điểm ảnh tới 3x: cảnh sân khấu sáng có nhiều cạnh thẳng, vẽ ở 2x rồi phóng lên iPhone 3x trông bị mờ.
+    // Cảnh nào nặng (có hậu kỳ) thì tự giới hạn trong composer của nó.
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 3));
     this.renderer.setSize(w, h, false);
     if (this.active) {
       this.applyAspect(this.active);

@@ -36,6 +36,22 @@ try {
 }
 document.documentElement.dataset.theme = uiTheme;
 
+/* ---------- iOS (web app ở Màn hình chính): vùng hiển thị bị hụt đúng bằng thanh trạng thái ----------
+ * Với thanh trạng thái trong suốt, iOS báo chiều cao cửa sổ thấp hơn màn hình thật, để lại một dải trống ở đáy.
+ * Khi phát hiện đúng tình huống đó thì đặt chiều cao ứng dụng bằng chiều cao màn hình. */
+function fitAppHeight() {
+  const standalone = (navigator as { standalone?: boolean }).standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+  const portrait = window.innerHeight >= window.innerWidth;
+  const full = portrait ? Math.max(window.screen.height, window.screen.width) : Math.min(window.screen.height, window.screen.width);
+  const gap = full - window.innerHeight;
+  // Chỉ can thiệp khi hụt một khoảng cỡ thanh trạng thái (20 đến 70px); các trường hợp khác để trình duyệt tự lo
+  if (standalone && gap >= 20 && gap <= 70) document.documentElement.style.setProperty('--app-h', `${full}px`);
+  else document.documentElement.style.removeProperty('--app-h');
+}
+fitAppHeight();
+window.addEventListener('resize', fitAppHeight);
+window.addEventListener('orientationchange', fitAppHeight);
+
 const engine = new Engine(canvas);
 const backdrop = new StageBackdrop('lounge', uiTheme);
 engine.register('backdrop', () => backdrop);

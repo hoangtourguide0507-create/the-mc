@@ -11,7 +11,8 @@
     "rhythm",
     "phrasebook",
     "streettalk",
-    "words"
+    "words",
+    "incidents"
   ],
   "roles": {
     "leo": {

@@ -34,7 +34,8 @@ export async function loadContent() {
   await writeFile(
     entry,
     `export * from ${src('content.ts')};\nexport { PRON_DRILLS, coachFor } from ${src('pronunciation.ts')};\n` +
-      `export { CHUNKS } from ${src('chunks.ts')};\nexport { RHYTHM_DRILLS, rhythmPlain } from ${src('rhythm.ts')};\n`
+      `export { CHUNKS } from ${src('chunks.ts')};\nexport { RHYTHM_DRILLS, rhythmPlain } from ${src('rhythm.ts')};\n` +
+      `export { INCIDENTS } from ${src('incidents.ts')};\n`
   );
   await build({ entryPoints: [entry], bundle: true, format: 'esm', platform: 'node', outfile, logLevel: 'silent' });
   try {
@@ -100,6 +101,8 @@ export function collect(C) {
     add('chunks', 'coach', ch.sample);
   }
   for (const d of C.RHYTHM_DRILLS || []) add('rhythm', 'coach', C.rhythmPlain(d));
+  // Câu mẫu của sự cố bất ngờ (màn diễn)
+  for (const inc of C.INCIDENTS || []) add('incidents', 'coach', inc.sample);
 
   // 6. Sổ tay và từ đơn (chạm vào từ để nghe)
   for (const p of C.STARTER || []) add('phrasebook', 'coach', p.en);

@@ -84,15 +84,21 @@ export class LiveStage implements GameScene {
   private talking: Speaker | null = null;
   private look = new THREE.Vector3(0, 2.1, -6);
   private dolly = 0;
-  private offsetY = 0.1;
   private camZ = 15;
+  private w = 1;
+  private h = 1;
+  /** Vùng trống giữa bong bóng thoại và thẻ nhắc lời, tính theo tỉ lệ chiều cao màn hình: tâm và độ cao */
+  private frameC = 0.4;
+  private frameR = 0.35;
+  private curC = 0.4;
+  private curFov = 58;
   private renderer: THREE.WebGLRenderer | null = null;
   private motion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 0 : 1;
 
   constructor(mode: 'light' | 'dark' = 'light') {
     this.mode = mode;
     this.scene.background = this.bg;
-    this.scene.fog = new THREE.Fog(this.bg, 24, 52);
+    this.scene.fog = new THREE.Fog(this.bg, 34, 80);
     this.sun.position.set(3, 9, 8);
     this.scene.add(this.hemi, this.sun);
 
@@ -224,6 +230,15 @@ export class LiveStage implements GameScene {
     this.setShowKeep();
   }
 
+  /**
+   * Báo vùng màn hình không bị giao diện che (tỉ lệ 0..1 theo chiều cao): `center` là tâm, `size` là độ cao.
+   * Máy quay tự dịch khung và chỉnh góc mở để cả người trên sân khấu lẫn khán giả nằm gọn trong vùng đó.
+   */
+  setFrame(center: number, size: number): void {
+    this.frameC = Math.max(0.1, Math.min(0.9, center));
+    this.frameR = Math.max(0.15, Math.min(1, size));
+  }
+
   /** Độ nóng khán phòng, 0..1 */
   setHeat(v: number): void {
     this.heatTarget = Math.max(0, Math.min(1, v));
@@ -265,13 +280,10 @@ export class LiveStage implements GameScene {
   }
 
   resize(w: number, h: number): void {
-    const portrait = h > w;
-    this.camera.fov = portrait ? 58 : 40;
-    // Nửa dưới màn hình là thẻ nhắc lời: dịch khung hình lên để sân khấu nằm ở nửa trên
-    this.offsetY = portrait ? 0.1 : 0.12;
-    this.camZ = portrait ? 15 : 10.5;
-    this.camera.setViewOffset(w, h, 0, Math.round(h * this.offsetY), w, h);
-    this.camera.updateProjectionMatrix();
+    this.w = w;
+    this.h = h;
+    this.camZ = h > w ? 15 : 10.5;
+    this.applyFrame(1);
   }
 
   update(dt: number, t: number): void {
@@ -282,6 +294,7 @@ export class LiveStage implements GameScene {
     this.shake = Math.max(0, this.shake - dt * 2.2);
     this.alarmE = Math.max(0, this.alarmE - dt * 0.5);
     this.hemi.color.setRGB(1, 1 - this.alarmE * 0.22, 1 - this.alarmE * 0.28);
+    this.applyFrame(1 - Math.exp(-4 * dt));
     const m = this.motion;
 
     // Khán giả
@@ -359,12 +372,27 @@ export class LiveStage implements GameScene {
       3.6 + Math.cos(t * 53) * sh,
       this.camZ - this.dolly * 1.1
     );
-    this.camera.lookAt(this.look.x, 1.7, -6);
+    this.camera.lookAt(this.look.x, 1.25, -4.5);
   }
 
   dispose(): void {
     disposeTree(this.scene);
     this.led.material.map?.dispose();
+  }
+
+  /** Dịch khung hình và chỉnh góc mở theo vùng trống; `k` là hệ số làm mượt (1 = đặt ngay) */
+  private applyFrame(k: number): void {
+    // Cần thấy khoảng 6,6 đơn vị chiều cao (từ đầu khán giả hàng gần tới đỉnh đầu người trên sân khấu)
+    // ở khoảng cách chừng 19 đơn vị, và 9 đơn vị bề ngang để không cắt hai người đứng hai bên.
+    const dist = this.camZ + 4.5;
+    const needV = 6.6 / this.frameR;
+    const needH = 9 / Math.max(0.3, this.w / this.h);
+    const fov = THREE.MathUtils.clamp(THREE.MathUtils.radToDeg(2 * Math.atan(Math.max(needV, needH) / 2 / dist)), 34, 82);
+    this.curFov += (fov - this.curFov) * k;
+    this.curC += (this.frameC - this.curC) * k;
+    this.camera.fov = this.curFov;
+    this.camera.setViewOffset(this.w, this.h, 0, Math.round(this.h * (0.5 - this.curC)), this.w, this.h);
+    this.camera.updateProjectionMatrix();
   }
 
   private setShowKeep(): void {
