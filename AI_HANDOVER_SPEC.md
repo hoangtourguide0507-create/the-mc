@@ -1,3 +1,5 @@
+> **Lưu ý:** tài liệu này mô tả bản React + react-three-fiber cũ, đã bị xoá khỏi repo (2026-11-12). Kiến trúc hiện tại: xem `CLAUDE.md` và `docs/VANILLA_THREE_MIGRATION.md`.
+
 # TÀI LIỆU BÀN GIAO KỸ THUẬT CHO AI (AI HANDOVER & MASTER SPECIFICATION)
 **Dự án**: `MC Life · English Stage (3D WebGL Edition)`  
 **Thư mục gốc**: `mc-life-3d/`  

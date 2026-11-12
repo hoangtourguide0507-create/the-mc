@@ -4,17 +4,16 @@
 Lưu ý: hai file đó còn ghi Vite 5, trong khi repo đang dùng Vite 8 (`package.json`).
 
 ## Stack
-- Vite 8, React 18, TypeScript 5 (strict), Three.js r169 với `@react-three/fiber` và `drei`, Zustand, Tailwind 3.
+- Vite 8, TypeScript 5 (strict), three.js r169 thuần, Zustand (vanilla), CSS thuần (`src/ui/base.css`). Không còn React, react-three-fiber hay Tailwind.
 - Giao diện và nội dung học viên bằng tiếng Việt, nội dung tiếng Anh cho luyện nói.
 
-## Đang chuyển sang three.js thuần
-- Kế hoạch và quy tắc: `docs/VANILLA_THREE_MIGRATION.md`. Đọc trước khi viết code 3D hoặc UI mới.
-- Code mới nằm ở `src/engine`, `src/scenes`, `src/ui`, `src/app.ts` và trang `v2.html`.
-- Store là `gameStore` trong `src/core/store.ts` (vanilla). Code React cũ dùng `src/core/storeReact.ts`.
-- Không thêm tính năng mới vào `src/components` hay các file `.tsx` trong `src/three`.
+## Kiến trúc three.js thuần (đã xong chuyển đổi)
+- Quy tắc: `docs/VANILLA_THREE_MIGRATION.md`. Đọc trước khi viết code 3D hoặc UI mới.
+- Code nằm ở `src/engine`, `src/scenes`, `src/ui`, `src/app.ts`; trang vào là `index.html`.
+- Store là `gameStore` trong `src/core/store.ts` (vanilla).
 - Phạm vi mới (2026-11-11): chỉ giữ bài học tiếng Anh và thang nghề. Bỏ thành phố, đồng hồ, năng lượng, tiền, shop, nhân vật 3D và phòng MC 3D. 3D chỉ là nền `StageBackdrop`, nội dung là HTML phủ lên. Không dùng phong cách Ghibli.
 - Phong cách: nền sáng là mặc định (giấy ấm, chữ nâu than). Nền tối là tuỳ chọn qua `<html data-theme="dark">`, lưu ở `localStorage['mclife.ui.theme']`. Giao diện dịu mắt cho phiên học dài: không đen trắng tuyệt đối, chữ từ 16px.
-- Lộ trình: GĐ1 đến GĐ6 đã xong bản đầu. GĐ5 gồm ba tab: Luyện tập (`src/ui/screens/training/`: khởi động, phát âm, nhịp, phản xạ nhanh, năng lực), Sổ tay (`notebook.ts`), Nhiệm vụ (`quests.ts`); khung trang chung ở `src/ui/screens/page.ts`, nút mic dùng chung ở `src/ui/answer.ts`, điều hướng tab ở `showTab` trong `src/app.ts`. Mỗi màn xuất `mountXxx(root): () => void` và có file CSS riêng cùng tên. Còn lại GĐ7: xoá bản React cũ và đổi `v2.html` thành `index.html`.
+- Lộ trình: GĐ1 đến GĐ6 đã xong bản đầu. GĐ5 gồm ba tab: Luyện tập (`src/ui/screens/training/`: khởi động, phát âm, nhịp, phản xạ nhanh, năng lực), Sổ tay (`notebook.ts`), Nhiệm vụ (`quests.ts`); khung trang chung ở `src/ui/screens/page.ts`, nút mic dùng chung ở `src/ui/answer.ts`, điều hướng tab ở `showTab` trong `src/app.ts`. Mỗi màn xuất `mountXxx(root): () => void` và có file CSS riêng cùng tên. GĐ7 đã xong: bản React cũ đã xoá, `v2.html` đã thành `index.html`.
 - "Phản xạ nhanh" thay cho trò chuyện với người đi đường: không gọi `openStreetTalk` (sẽ mở hộp thoại của bản React), nhưng vẫn gọi `markStreetTalkUsed` để nhiệm vụ loại `street` được tính.
 
 ## Lệnh thường dùng
@@ -40,13 +39,11 @@ Lưu ý: hai file đó còn ghi Vite 5, trong khi repo đang dùng Vite 8 (`pack
 - Trong `src/three/artStyle.ts` có vá shader nội bộ của three.js (`lights_physical_pars_fragment`). Sau mỗi lần nâng `three`, cần kiểm tra vá còn áp dụng: cảnh báo `[artStyle] Không vá được shader` trong console là dấu hiệu lỗi.
 
 ## Quy tắc khi sửa code
-- **React hooks phải nằm trước mọi câu lệnh `return null` sớm** trong component. Hộp thoại dùng hook `useDialog` (`src/components/useDialog.ts`) để có Esc, bấm nền và thuộc tính trợ năng.
-- Màn hình show (`StageView.tsx`): thanh mic ghim ở đáy và nằm ngoài vùng cuộn; HUD thu thành một dải mỏng (`STAGE_TOP_PAD` trong `HUD.tsx`). Đừng đặt nội dung cuộn chung với thanh mic.
-- Ba màn hình 3D được `React.lazy` trong `App.tsx`; đừng import tĩnh `three` vào `App.tsx` hay `main.tsx`.
-- Nút tương tác phải có `min-h-[44px]` (vùng chạm tối thiểu) nếu chữ nhỏ.
+- Màn bài học (`src/ui/screens/lesson.ts`): thanh mic ghim ở đáy và nằm ngoài vùng cuộn. Đừng đặt nội dung cuộn chung với thanh mic.
+- Nút tương tác cao tối thiểu 44px (vùng chạm); `.btn` đã đặt 52px trong `base.css`.
 - Chấm lượt đọc theo thẻ và bắt từ là **cộng dồn** (`src/core/retry.ts`, `npm run test:retry`): từ đã đúng ở một lần đọc thì giữ là đúng, điểm không bao giờ tụt; phần còn sai được tách thành một cụm ngắn để đọc riêng (`focusChunk`, `applyChunkAttempt`). Lượt điền ô và ứng biến vẫn chấm từng lần.
 - **Giảm dần hỗ trợ** (`src/core/recall.ts`): số lần đã hoàn thành một kịch bản nằm ở `state.learn.exposure`. Lần 1 chơi như kịch bản; lần 2 lượt đọc thẻ/bắt từ thành "tự nói" với gợi ý tiếng Việt và lượt chọn đáp án thành phản xạ nói có đồng hồ; từ lần 3 không còn gợi ý. Lượt tự nói chấm bằng `evaluateRecall` (tỉ lệ từ mang ý của câu mẫu), không dùng `evaluateScripted`.
-- **Phòng luyện** (`TrainingSheet.tsx`, nút 🎯 ở phòng MC): Khởi động ôn "cụm mang về" (`src/data/chunks.ts`, hai cụm mỗi kịch bản, hộp Leitner trong `src/core/chunks.ts`); Nhịp ngắt nghỉ (`src/data/rhythm.ts`, `checkPauses` trong `phonology.ts` đếm quãng lặng, chưa kiểm tra vị trí); Năng lực và kiểm tra tuần (`src/core/cando.ts`). Test: `npm run test:learning`, `npm run test:chunks`. Viết kịch bản mới thì phải thêm cụm cho nó trong `chunks.ts`.
+- **Tab Luyện tập** (`src/ui/screens/training/`): Khởi động ôn "cụm mang về" (`src/data/chunks.ts`, hai cụm mỗi kịch bản, hộp Leitner trong `src/core/chunks.ts`); Nhịp ngắt nghỉ (`src/data/rhythm.ts`, `checkPauses` trong `phonology.ts` đếm quãng lặng, chưa kiểm tra vị trí); Năng lực và kiểm tra tuần (`src/core/cando.ts`). Test: `npm run test:learning`, `npm run test:chunks`. Viết kịch bản mới thì phải thêm cụm cho nó trong `chunks.ts`.
 - Thêm test cho mọi thay đổi logic trong `src/core/`. Logic chấm điểm nằm ở `evaluator.ts`, mở khoá nội dung nằm ở `difficulty.ts` và `quests.ts`.
 - Nội dung theo ngày: ngày 1 dùng kịch bản gốc trong `content.ts`; từ ngày 2 mỗi cảnh xoay vòng qua các **bộ tình huống** trong `src/data/scenarios/<cảnh>.ts` (50 bộ, mỗi bộ là một tình huống khác hẳn), cuối vòng là một ngày bộ sinh (`dailyGen.ts`, `showGen.ts`). Chọn bộ ở `scenarioForDay` trong `content.ts`. Viết bộ mới bằng các hàm `say`, `grab`, `fill`, `pick`, `improv` trong `scenarios/helpers.ts`. Ràng buộc (`npm run test:scenarios`): số lượt bằng kịch bản gốc của cảnh (nhiệm vụ đánh số theo vị trí lượt), từ cần bắt phải có trong câu NPC, câu mẫu phải đạt 3★ với `evaluator.ts`, mỗi bộ có ít nhất 3 kiểu bài.
 - **Gói sự kiện** (`src/data/events/`, `npm run test:events`): mỗi thể loại sự kiện là một file tự chứa tình huống, nhân vật, mục tiêu CEFR và 2 cụm mang về (mẫu: `launch.ts`; khai báo ở `index.ts`). Hiện có 16 gói: khai trương, ra mắt sản phẩm, tiệc tất niên, team building, giao lưu thần tượng, triển lãm, sự kiện thương hiệu, thời trang, tiệc cưới sang trọng, lễ ký kết, sự kiện quốc tế, lễ cưới truyền thống, hội nghị khách hàng, họp báo, đấu giá từ thiện, lễ trao giải. Bốn gói triển lãm, sự kiện thương hiệu, tiệc cưới sang trọng và lễ cưới truyền thống bám theo công việc thật của người học. Nhân vật mới phải có giọng trong `tools/voices.kokoro.json`. Mỗi gói có thêm 8 bài bổ sung trong `<id>.more.ts` và `<id>.more2.ts` (kiểu `EventScript`, cùng số lượt với bài gốc, khai báo trong `MORE` ở `index.ts`). Màn chính cho người học tự chọn bài bất kỳ của một tình huống (`scriptList` trong `content.ts`, `startLesson(sceneId, scriptKey)`), không còn phụ thuộc ngày. Kiểm riêng: `node tests/events.test.mjs src/data/events/<tên>.ts [src/data/events/<tên>.more.ts]`.

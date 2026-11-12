@@ -1,3 +1,5 @@
+> **Lưu ý:** tài liệu này mô tả bản React + react-three-fiber cũ, đã bị xoá khỏi repo (2026-11-12). Kiến trúc hiện tại: xem `CLAUDE.md` và `docs/VANILLA_THREE_MIGRATION.md`.
+
 # MC Life · English Stage (3D WebGL Edition)
 
 Phiên bản **3D WebGL (React + Three.js / React Three Fiber + TypeScript + Tailwind CSS)** của **MC Life · English Stage** với phong cách mỹ thuật **Toy-Clay Diorama × Neon Stage Glassmorphism**.
