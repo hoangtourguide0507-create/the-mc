@@ -50,6 +50,8 @@ export interface HomeOptions {
   /** `perform` = Diễn thật (mỗi lượt một lần, tính danh tiếng); không thì là Tập */
   onStart: (sceneId: string, scriptKey: string, perform: boolean) => void;
   /** Nhãn nút đổi nền ("Nền tối" / "Nền sáng") và hàm đổi */
+  /** Dòng chú thích nhỏ ở cuối màn (phiên bản và số đo khung nhìn) */
+  footnote?: () => string;
   themeLabel: () => string;
   onToggleTheme: () => void;
 }
@@ -123,7 +125,8 @@ export function mountHome(root: HTMLElement, opts: HomeOptions): () => void {
       h('div', { class: 'section-title eyebrow' }, 'Tình huống'),
       filters,
       list,
-      scriptsBox
+      scriptsBox,
+      h('p', { class: 'footnote' }, opts.footnote?.() ?? '')
     )
   );
   root.append(screen);

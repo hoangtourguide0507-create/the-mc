@@ -39,14 +39,19 @@ document.documentElement.dataset.theme = uiTheme;
 /* ---------- iOS (web app ở Màn hình chính): vùng hiển thị bị hụt đúng bằng thanh trạng thái ----------
  * Với thanh trạng thái trong suốt, iOS báo chiều cao cửa sổ thấp hơn màn hình thật, để lại một dải trống ở đáy.
  * Khi phát hiện đúng tình huống đó thì đặt chiều cao ứng dụng bằng chiều cao màn hình. */
+/** Số đo khung nhìn, hiện ở cuối màn chính để chẩn đoán lỗi bố cục trên máy thật */
+export const viewportInfo = { text: '' };
 function fitAppHeight() {
+  const root = document.documentElement;
   const standalone = (navigator as { standalone?: boolean }).standalone === true || window.matchMedia('(display-mode: standalone)').matches;
   const portrait = window.innerHeight >= window.innerWidth;
   const full = portrait ? Math.max(window.screen.height, window.screen.width) : Math.min(window.screen.height, window.screen.width);
   const gap = full - window.innerHeight;
-  // Chỉ can thiệp khi hụt một khoảng cỡ thanh trạng thái (20 đến 70px); các trường hợp khác để trình duyệt tự lo
-  if (standalone && gap >= 20 && gap <= 70) document.documentElement.style.setProperty('--app-h', `${full}px`);
-  else document.documentElement.style.removeProperty('--app-h');
+  // Web app toàn màn hình không có thanh công cụ nào, nên mọi khoảng hụt so với màn hình đều là lỗi đo của iOS
+  const fix = standalone && gap >= 1 && gap <= 140;
+  if (fix) root.style.setProperty('--app-h', `${full}px`);
+  else root.style.removeProperty('--app-h');
+  viewportInfo.text = `Bản ${__APP_BUILD__} · màn ${window.screen.width}×${window.screen.height} · cửa sổ ${window.innerWidth}×${window.innerHeight} · ${standalone ? 'web app' : 'trình duyệt'}${fix ? ' · đã bù ' + gap : ''}`;
 }
 fitAppHeight();
 window.addEventListener('resize', fitAppHeight);
@@ -81,6 +86,25 @@ function onHide() {
   Ambience.stop();
 }
 window.addEventListener('pagehide', onHide);
+
+/* ---------- Tự lấy bản mới ----------
+ * Web app ghim ở Màn hình chính thường mở lại trang cũ còn trong bộ nhớ. Mỗi lần quay lại ứng dụng,
+ * so tên file JS của bản đang chạy với bản trên máy chủ; khác nhau và không đang trong bài thì tải lại. */
+async function refreshIfStale() {
+  if (!import.meta.env.PROD || gameStore.getState().activeSceneId) return;
+  try {
+    const mine = /assets\/index-[\w-]+\.js/.exec(document.querySelector<HTMLScriptElement>('script[type="module"]')?.src ?? '')?.[0];
+    const html = await (await fetch(`${window.location.pathname}?t=${Date.now()}`, { cache: 'no-store' })).text();
+    const latest = /assets\/index-[\w-]+\.js/.exec(html)?.[0];
+    if (mine && latest && mine !== latest && !gameStore.getState().activeSceneId) window.location.reload();
+  } catch {
+    // mất mạng: giữ bản đang chạy
+  }
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') void refreshIfStale();
+});
+void refreshIfStale();
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') onHide();
   else if (!gameStore.getState().activeSceneId) gameStore.getState().rollLessonDay();
@@ -148,6 +172,7 @@ function showTab(tab: TabId) {
     unmount = mountHome(ui, {
       onTheme: (theme: StageTheme) => backdrop.setTheme(theme),
       onStart: (sceneId, scriptKey, perform) => showLesson(sceneId, scriptKey, perform),
+      footnote: () => viewportInfo.text,
       themeLabel: () => (uiTheme === 'light' ? 'Nền tối' : 'Nền sáng'),
       onToggleTheme: () => setUiTheme(uiTheme === 'light' ? 'dark' : 'light'),
     });

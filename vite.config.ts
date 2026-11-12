@@ -6,6 +6,8 @@ const onActions = process.env.GITHUB_ACTIONS === 'true';
 
 export default defineConfig({
   base: onActions ? '/the-mc/' : '/',
+  // Dấu thời gian lúc build, hiện ở cuối màn chính để biết máy đang chạy bản nào
+  define: { __APP_BUILD__: JSON.stringify(new Date().toISOString().slice(5, 16).replace('T', ' ')) },
   server: {
     port: 5173,
     host: true,
