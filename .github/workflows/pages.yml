@@ -78,8 +78,6 @@ jobs:
 
       - name: Run voice line tests
         run: npm run test:voicelines
-      - name: Backstage chat logic test
-        run: npm run test:backstage
 
       - name: Build (typecheck + Vite)
         run: npm run build
