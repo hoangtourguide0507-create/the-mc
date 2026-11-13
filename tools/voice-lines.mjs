@@ -35,7 +35,7 @@ export async function loadContent() {
     entry,
     `export * from ${src('content.ts')};\nexport { PRON_DRILLS, coachFor } from ${src('pronunciation.ts')};\n` +
       `export { CHUNKS } from ${src('chunks.ts')};\nexport { RHYTHM_DRILLS, rhythmPlain } from ${src('rhythm.ts')};\n` +
-      `export { INCIDENTS } from ${src('incidents.ts')};\n`
+      `export { INCIDENTS } from ${src('incidents.ts')};\nexport { TALKS } from ${src('talks.ts')};\n`
   );
   await build({ entryPoints: [entry], bundle: true, format: 'esm', platform: 'node', outfile, logLevel: 'silent' });
   try {
@@ -103,6 +103,20 @@ export function collect(C) {
   for (const d of C.RHYTHM_DRILLS || []) add('rhythm', 'coach', C.rhythmPlain(d));
   // Câu mẫu của sự cố bất ngờ (màn diễn)
   for (const inc of C.INCIDENTS || []) add('incidents', 'coach', inc.sample);
+
+  // Trò chuyện rẽ nhánh: câu hỏi, câu hỏi lại, câu đáp theo từng ý, lời kết (giọng nhân vật) và câu mẫu (coach)
+  for (const t of C.TALKS || []) {
+    const role = t.npcId === 'couple' ? `couple:${t.speaker || 'emma'}` : t.npcId;
+    for (const n of t.nodes) {
+      add('talk', role, n.ask);
+      add('talk', role, n.nudge);
+      for (const r of n.replies) {
+        add('talk', role, r.react);
+        add('talk', 'coach', r.say);
+      }
+    }
+    add('talk', role, t.end);
+  }
 
   // 6. Sổ tay và từ đơn (chạm vào từ để nghe)
   for (const p of C.STARTER || []) add('phrasebook', 'coach', p.en);

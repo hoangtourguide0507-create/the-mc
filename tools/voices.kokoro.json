@@ -12,7 +12,8 @@
     "phrasebook",
     "streettalk",
     "words",
-    "incidents"
+    "incidents",
+    "talk"
   ],
   "roles": {
     "leo": {

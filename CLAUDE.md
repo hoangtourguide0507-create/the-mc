@@ -20,6 +20,10 @@ Lưu ý: hai file đó còn ghi Vite 5, trong khi repo đang dùng Vite 8 (`pack
   - **Tập và Diễn**: `mountLesson(..., { perform })`. Diễn: mỗi lượt một lần nói (thêm một lần nếu 0 sao, `PERFORM_TRIES`), không gợi ý, không câu mẫu, không bỏ qua; chỉ Diễn mới đổi danh tiếng (`countsForRep` trong `lesson.ts`, `finishScene(..., { perform, heat })`). Nút Diễn mở sau khi đã Tập bài đó một lần.
   - Màn chính là hàng poster vuốt ngang (`.poster` trong `base.css`, màu theo `data-theme`); danh sách bài của poster đang chọn nằm bên dưới.
   - Chưa làm: nhạc nền theo thể loại, điểm diễn chưa cộng vào XP.
+- **Trò chuyện** (2026-11-13, tab Luyện tập, thay cho Hậu trường đã gỡ): hội thoại rẽ nhánh viết sẵn, không dùng AI. Người học tự nghĩ câu; máy dò ý theo nhóm từ khoá (`matchReply`) để chọn câu nhân vật đáp. Ý cụ thể thì đi tiếp (2 điểm lần đầu, 1 điểm sau khi bị hỏi lại); trả lời mơ hồ (`stay`) thì bị hỏi vặn; không rõ ý thì nhân vật hỏi lại và hiện gợi ý; quá 3 lần thì tự đi tiếp.
+  - Luật ở `src/core/talk.ts`, nội dung ở `src/data/talks.ts` (6 cuộc, mỗi cuộc 5 lượt), màn ở `src/ui/screens/training/talk.ts`. Test: `npm run test:talk`.
+  - Viết cuộc mới: mọi câu mẫu `say` phải được nhận đúng ý của chính nó, ý cụ thể hơn khai báo trước, mỗi lượt có một nhánh mơ hồ, câu cụt lủn ("Yes.") không được đi tiếp (test kiểm).
+  - Giọng: mọi câu của nhân vật và câu mẫu nằm ở phase `talk` trong `tools/voice-lines.mjs` và `tools/voices.kokoro.json`, được `voices-kokoro.yml` render sẵn. Phase này không nằm trong cấu hình ElevenLabs.
 - "Phản xạ nhanh" thay cho trò chuyện với người đi đường: không gọi `openStreetTalk` (sẽ mở hộp thoại của bản React), nhưng vẫn gọi `markStreetTalkUsed` để nhiệm vụ loại `street` được tính.
 
 ## Lệnh thường dùng

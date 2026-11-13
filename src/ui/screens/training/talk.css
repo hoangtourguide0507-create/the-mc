@@ -1,0 +1,51 @@
+/* Trò chuyện rẽ nhánh. Màu lấy từ biến của base.css. */
+.talk { display: grid; gap: 12px; }
+.talk > *, .tk-card > * { min-width: 0; }
+.tk-card { padding: 18px; display: grid; gap: 12px; }
+.tk-h { margin: 0; font: 700 22px/1.3 var(--display); color: var(--ink); }
+.tk-lead { margin: 0; font-size: 16px; line-height: 1.5; color: var(--ink); }
+.tk-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.tk-row > .btn { width: auto; flex: 1 1 140px; }
+.tk-row > .btn.tk-mini { flex: 0 0 auto; }
+.tk-between { justify-content: space-between; flex-wrap: nowrap; }
+.talk .link { padding: 8px 0; }
+
+.tk-persona { text-align: left; padding: 16px 18px; display: grid; gap: 6px; color: var(--ink); cursor: pointer; font: inherit; }
+.tk-persona:active { transform: translateY(1px); }
+.tk-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.tk-meta { font-size: 12px; font-weight: 600; color: var(--muted); white-space: nowrap; }
+.tk-name { font: 700 20px/1.3 var(--display); }
+.tk-goal { font-size: 14.5px; line-height: 1.45; color: var(--ink); opacity: 0.85; }
+
+.tk-head { padding: 12px 14px; display: grid; gap: 8px; }
+.tk-title { display: grid; min-width: 0; flex: 1; }
+.tk-title strong { font-size: 17px; }
+.tk-title .vi { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.tk-log { display: grid; gap: 10px; }
+.tk-bubble { border-radius: 18px; padding: 12px 14px; display: grid; gap: 8px; max-width: 92%; }
+.tk-bubble.npc { background: var(--panel); border: 1px solid var(--line); justify-self: start; border-bottom-left-radius: 6px; }
+.tk-bubble.me { background: var(--accent-soft); justify-self: end; border-bottom-right-radius: 6px; }
+.tk-who { display: flex; align-items: center; gap: 10px; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
+.tk-text { margin: 0; font-size: 17px; line-height: 1.5; color: var(--ink); }
+.btn.quiet.tk-mini { min-height: 44px; padding: 6px 12px; font-size: 14px; }
+.tk-note { display: grid; gap: 6px; }
+.tk-ok { font-size: 14px; font-weight: 600; color: var(--accent); }
+.tk-warn { font-size: 14px; font-weight: 600; color: var(--near-ink); }
+.tk-fix { font-size: 14.5px; color: var(--ink); }
+.tk-model { border-radius: 14px; padding: 10px 12px; background: var(--panel); display: grid; gap: 6px; justify-items: start; }
+.tk-model-label { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.tk-model-text { margin: 0; font-size: 16.5px; font-weight: 600; line-height: 1.45; color: var(--ink); }
+.tk-end { scroll-margin-bottom: calc(96px + env(safe-area-inset-bottom)); }
+
+.tk-dock { padding: 14px; display: grid; gap: 10px; scroll-margin-bottom: calc(96px + env(safe-area-inset-bottom)); }
+.tk-task { margin: 0; font-size: 16px; line-height: 1.45; color: var(--ink); }
+.tk-type { display: flex; gap: 8px; }
+.tk-type input { flex: 1; min-width: 0; min-height: 48px; padding: 10px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel-2); color: var(--ink); font-size: 16px; }
+
+.tk-bigstars { font-size: 34px; }
+.tk-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; text-align: center; }
+.tk-stats > div { background: var(--panel-2); border-radius: 14px; padding: 12px 6px; display: grid; gap: 2px; }
+.tk-stats strong { font-size: 24px; color: var(--ink); }
+.tk-dock, .tk-head, .tk-log { grid-template-columns: minmax(0, 1fr); }
+.tk-dock > *, .tk-dock .answer > * { min-width: 0; max-width: 100%; }

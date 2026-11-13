@@ -78,6 +78,8 @@ jobs:
 
       - name: Run voice line tests
         run: npm run test:voicelines
+      - name: Branching talk test
+        run: npm run test:talk
 
       - name: Build (typecheck + Vite)
         run: npm run build
