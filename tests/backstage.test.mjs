@@ -152,4 +152,10 @@ assert.deepEqual(LV.splitSentences('No punctuation here'), ['No punctuation here
 assert.equal(LV.voiceFor('nadia').voice, 'bf_emma', 'giọng trộn lấy thành phần đầu');
 assert.equal(LV.voiceFor('khong-co').voice, 'bf_emma');
 
+// 9) Kiểm tra âm thanh có tiếng (để biết GPU có tạo ra âm câm không)
+assert.equal(LV.audible(new Float32Array(2400)), false, 'toàn số 0 là câm');
+assert.equal(LV.audible(Float32Array.from({ length: 2400 }, (_, i) => Math.sin(i / 5) * 0.2)), true);
+assert.equal(LV.audible(Float32Array.from([0.3, NaN, 0.2])), false, 'NaN là lỗi');
+assert.equal(LV.audible([]), false);
+
 console.log('backstage: OK');

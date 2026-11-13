@@ -5,7 +5,7 @@
  */
 import './backstage.css';
 import { SFX } from '../../../audio/audioSystem';
-import { loadLiveVoice, onLiveVoiceStatus, speakLive, stopLiveVoice, type LiveVoiceStatus } from '../../../audio/liveVoice';
+import { liveVoiceBackend, liveVoiceError, loadLiveVoice, onLiveVoiceStatus, speakLive, stopLiveVoice, type LiveVoiceStatus } from '../../../audio/liveVoice';
 import { AiError, chatCompletion, errorMessageVi, getApiKey, looksLikeKey, setApiKey } from '../../../core/aiClient';
 import {
   MAX_MY_TURNS,
@@ -131,7 +131,7 @@ export function mountBackstage(root: HTMLElement): () => void {
       box.append(
         h(
           'button',
-          { class: 'panel bs-persona', onclick: () => { SFX.play('page'); go({ name: 'chat', persona: p }); } },
+          { class: 'panel bs-persona', onclick: () => { SFX.unlock(); SFX.play('page'); go({ name: 'chat', persona: p }); } },
           h('span', { class: 'bs-persona-top' }, h('span', { class: 'pill' }, p.kind), h('span', { class: 'bs-cefr' }, p.cefr)),
           h('span', { class: 'bs-persona-name' }, p.name),
           h('span', { class: 'vi' }, p.roleVi),
@@ -172,16 +172,19 @@ export function mountBackstage(root: HTMLElement): () => void {
 
     const bar = answerBar({ label: 'Chạm để nói', onAnswer: (c) => send(c[0] ?? '') });
     // Bấm mic thì dừng giọng NPC đang đọc
-    bar.el.addEventListener('click', () => stopLiveVoice(), true);
+    bar.el.addEventListener('click', () => { SFX.unlock(); stopLiveVoice(); }, true);
 
+    const retryVoice = h('button', { class: 'btn quiet bs-mini', style: { display: 'none' }, onclick: () => void loadLiveVoice().catch(() => {}) }, 'Thử tải lại giọng');
     const paintVoice = () => {
+      const b = liveVoiceBackend();
       voiceLine.textContent =
         voiceStatus === 'loading'
-          ? `Đang tải giọng nhân vật lần đầu (${voicePct}%). Chữ vẫn hiện để bạn đọc trước.`
+          ? `Đang tải giọng nhân vật lần đầu: ${voicePct}% (${b?.device === 'webgpu' ? (b.dtype === 'fp16' ? 'khoảng 165 MB, chạy bằng GPU' : 'khoảng 330 MB, chạy bằng GPU') : 'khoảng 90 MB'}). Nên dùng Wi-Fi. Chữ vẫn hiện để bạn đọc trước.`
           : voiceStatus === 'error'
-            ? 'Không tải được giọng. Bạn vẫn luyện được bằng chữ.'
+            ? `Không tải được giọng (${liveVoiceError() || 'lỗi không rõ'}). Bạn vẫn luyện được bằng chữ.`
             : '';
       voiceLine.style.display = voiceLine.textContent ? '' : 'none';
+      retryVoice.style.display = voiceStatus === 'error' ? '' : 'none';
     };
     voiceListeners.add(paintVoice);
     paintVoice();
@@ -210,18 +213,19 @@ export function mountBackstage(root: HTMLElement): () => void {
         h(
           'div',
           { class: 'bs-row' },
-          h('button', { class: 'btn quiet bs-mini', onclick: () => void speakLive(text, p.voiceRole) }, 'Nghe lại'),
+          h('button', { class: 'btn quiet bs-mini', onclick: () => { SFX.unlock(); void speakLive(text, p.voiceRole); } }, 'Nghe lại'),
           showBtn,
           viEl ? h('button', { class: 'btn quiet bs-mini', onclick: () => { viEl.style.display = ''; shown = true; paint(); } }, 'Dịch') : null
         )
       );
+      const gen = h('span', { class: 'bs-gen' }, 'Đang tạo giọng…');
+      el.querySelector('.bs-who')?.append(gen);
       log.append(el);
       reveal();
-      if (voiceStatus === 'ready' || voiceStatus === 'loading' || voiceStatus === 'idle') {
-        void speakLive(text, p.voiceRole).then((ok) => {
-          if (!ok && !shown) { shown = true; paint(); }
-        });
-      }
+      void speakLive(text, p.voiceRole, () => gen.remove()).then((ok) => {
+        gen.remove();
+        if (!ok && !shown) { shown = true; paint(); }
+      });
     };
 
     const myBubble = (turn: ChatTurn) => {
@@ -237,7 +241,7 @@ export function mountBackstage(root: HTMLElement): () => void {
               h('div', { class: 'bs-fix-label' }, 'Nói tự nhiên hơn'),
               h('p', { class: 'bs-fix-text' }, c.fixed),
               c.noteVi ? h('p', { class: 'vi' }, c.noteVi) : null,
-              h('button', { class: 'btn quiet bs-mini', onclick: () => void speakLive(c.fixed, 'coach') }, 'Nghe câu sửa')
+              h('button', { class: 'btn quiet bs-mini', onclick: () => { SFX.unlock(); void speakLive(c.fixed, 'coach'); } }, 'Nghe câu sửa')
             )
           : h('div', { class: 'bs-ok' }, '✓ Câu ổn')
       );
@@ -313,7 +317,8 @@ export function mountBackstage(root: HTMLElement): () => void {
           turnsPill
         ),
         h('div', { class: 'bs-goal' }, 'Mục tiêu: ', p.goalVi),
-        voiceLine
+        voiceLine,
+        retryVoice
       ),
       log,
       (dock = h(
@@ -376,7 +381,7 @@ export function mountBackstage(root: HTMLElement): () => void {
               h('p', { class: 'bs-orig' }, c.original),
               h('p', { class: 'bs-fix-text' }, c.fixed),
               c.noteVi ? h('p', { class: 'vi' }, c.noteVi) : null,
-              h('button', { class: 'btn quiet bs-mini', onclick: () => void speakLive(c.fixed, 'coach') }, 'Nghe')
+              h('button', { class: 'btn quiet bs-mini', onclick: () => { SFX.unlock(); void speakLive(c.fixed, 'coach'); } }, 'Nghe')
             )
           )
         )
@@ -386,7 +391,7 @@ export function mountBackstage(root: HTMLElement): () => void {
       h(
         'div',
         { class: 'bs-row' },
-        h('button', { class: 'btn', onclick: () => go({ name: 'chat', persona: p }) }, 'Nói lại vai này'),
+        h('button', { class: 'btn', onclick: () => { SFX.unlock(); go({ name: 'chat', persona: p }); } }, 'Nói lại vai này'),
         h('button', { class: 'btn quiet', onclick: () => go({ name: 'list' }) }, 'Chọn vai khác')
       )
     );
