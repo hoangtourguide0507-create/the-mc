@@ -14,7 +14,8 @@ with sync_playwright() as p:
       const out = {};
       const t0 = performance.now();
       try {
-        const lv = await import('/src/audio/liveVoice.ts');
+        const lv = window.__liveVoice;
+        if (!lv) throw new Error('no __liveVoice hook');
         const tts = await lv.loadLiveVoice();
         out.loadMs = Math.round(performance.now() - t0);
         for (const v of ['bf_emma', 'af_nova', 'bm_daniel']) {

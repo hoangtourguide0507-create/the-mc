@@ -126,3 +126,8 @@ export async function speakLive(text: string, role: string, onStart?: () => void
   }
   return true;
 }
+
+// Chẩn đoán: mở game với ?qa=1 để gọi giọng từ console (window.__liveVoice)
+if (typeof window !== 'undefined' && /[?&]qa=1\b/.test(window.location.search)) {
+  (window as unknown as Record<string, unknown>).__liveVoice = { loadLiveVoice, speakLive, voiceFor, liveVoiceStatus };
+}
