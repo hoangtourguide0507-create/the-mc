@@ -1,0 +1,19 @@
+name: Diag Kokoro in browser
+on:
+  push:
+    branches: ['diag/**']
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci --ignore-scripts
+      - run: pip install playwright
+      - name: Start dev server
+        run: (npx vite --port 5173 > /tmp/vite.log 2>&1 &) && sleep 8 && cat /tmp/vite.log
+      - name: Probe
+        run: python3 tools/diag/kokoro_probe.py http://localhost:5173/?qa=1
