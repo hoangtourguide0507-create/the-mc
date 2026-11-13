@@ -180,4 +180,17 @@ assert.equal(
   'xong'
 );
 
+// 12) Chọn nơi chạy giọng: iPhone/iPad luôn CPU; GPU từng hỏng hoặc trang chết giữa chừng thì CPU
+const cpu = { device: 'wasm', dtype: 'q8' };
+assert.deepEqual(LV.chooseBackend({ ios: true, mark: '', hasGpu: true, f16: true }), cpu);
+assert.deepEqual(LV.chooseBackend({ ios: false, mark: 'trying', hasGpu: true, f16: true }), cpu);
+assert.deepEqual(LV.chooseBackend({ ios: false, mark: 'bad', hasGpu: true, f16: false }), cpu);
+assert.deepEqual(LV.chooseBackend({ ios: false, mark: '', hasGpu: false, f16: false }), cpu);
+assert.deepEqual(LV.chooseBackend({ ios: false, mark: 'ok', hasGpu: true, f16: true }), { device: 'webgpu', dtype: 'fp16' });
+assert.deepEqual(LV.chooseBackend({ ios: false, mark: '', hasGpu: true, f16: false }), { device: 'webgpu', dtype: 'fp32' });
+assert.equal(LV.isIOS('Mozilla/5.0 (iPhone; CPU iPhone OS 26_1 like Mac OS X)', 5), true);
+assert.equal(LV.isIOS('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', 5), true, 'iPad tự nhận là Mac');
+assert.equal(LV.isIOS('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', 0), false);
+assert.equal(LV.isIOS('Mozilla/5.0 (Windows NT 10.0; Win64; x64)', 0), false);
+
 console.log('backstage: OK');

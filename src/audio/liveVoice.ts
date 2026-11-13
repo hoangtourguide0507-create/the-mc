@@ -1,7 +1,8 @@
 /**
  * Giọng Kokoro chạy ngay trong trình duyệt, cho câu thoại mới do AI viết (chế độ Hậu trường).
  * Cùng bộ giọng với clip Kokoro render sẵn của NPC, nên mỗi vai vẫn giữ một giọng.
- * - Máy có WebGPU (iPhone iOS 26+, Chrome máy tính): chạy trên GPU, nhanh hơn nhiều; tải lần đầu ~165 MB (fp16) hoặc ~330 MB (fp32).
+ * - iPhone/iPad: luôn chạy WASM trên CPU (GPU làm Safari hết bộ nhớ, trang tự tải lại).
+ * - Máy tính có WebGPU: chạy trên GPU, nhanh hơn nhiều; tải lần đầu ~165 MB (fp16) hoặc ~330 MB (fp32).
  * - GPU ra âm câm hoặc quá chậm ở câu thử thì tự về WASM.
  * - Không có WebGPU: chạy WASM trên CPU, mô hình q8 ~90 MB, chậm (vài giây cho mỗi câu).
  * - Trình duyệt tự cache mô hình cho các lần sau.
@@ -66,17 +67,46 @@ export function liveVoiceBackend(): Backend | null {
   return backend;
 }
 
-/** Chọn WebGPU nếu máy có, ngược lại WASM */
+const GPU_MARK = 'mclife.voice.gpu';
+function gpuMark(): string {
+  try { return localStorage.getItem(GPU_MARK) ?? ''; } catch { return ''; }
+}
+function setGpuMark(v: 'trying' | 'ok' | 'bad') {
+  try { localStorage.setItem(GPU_MARK, v); } catch { /* không lưu được thì thôi */ }
+}
+
+/**
+ * Quy tắc chọn nơi chạy giọng (hàm thuần, có test):
+ * - iPhone/iPad: luôn CPU. Khởi động Kokoro trên GPU làm Safari hết bộ nhớ và tự tải lại trang.
+ * - Lần trước thử GPU mà hỏng, hoặc trang chết giữa chừng (dấu 'trying' còn lại): CPU.
+ * - Còn lại: GPU nếu có, bản fp16 khi GPU hỗ trợ.
+ */
+export function chooseBackend(o: { ios: boolean; mark: string; hasGpu: boolean; f16: boolean }): Backend {
+  if (o.ios || !o.hasGpu || o.mark === 'bad' || o.mark === 'trying') return { device: 'wasm', dtype: 'q8' };
+  return { device: 'webgpu', dtype: o.f16 ? 'fp16' : 'fp32' };
+}
+
+export function isIOS(ua: string, touchPoints: number): boolean {
+  // iPad đời mới tự nhận là Mac, phân biệt bằng màn hình cảm ứng
+  return /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && touchPoints > 1);
+}
+
+/** Chọn WebGPU nếu máy chạy được, ngược lại WASM */
 export async function pickBackend(): Promise<Backend> {
-  try {
-    const gpu = (navigator as Navigator & { gpu?: { requestAdapter(): Promise<{ features: Set<string> } | null> } }).gpu;
-    const adapter = gpu ? await gpu.requestAdapter() : null;
-    // GPU hỗ trợ số thực 16-bit (chip Apple) thì dùng bản fp16, nhẹ bằng nửa bản fp32
-    if (adapter) return { device: 'webgpu', dtype: adapter.features?.has('shader-f16') ? 'fp16' : 'fp32' };
-  } catch {
-    // không có GPU dùng được
+  const ios = isIOS(navigator.userAgent, navigator.maxTouchPoints ?? 0);
+  let hasGpu = false;
+  let f16 = false;
+  if (!ios) {
+    try {
+      const gpu = (navigator as Navigator & { gpu?: { requestAdapter(): Promise<{ features: Set<string> } | null> } }).gpu;
+      const adapter = gpu ? await gpu.requestAdapter() : null;
+      hasGpu = !!adapter;
+      f16 = !!adapter?.features?.has('shader-f16');
+    } catch {
+      // không có GPU dùng được
+    }
   }
-  return { device: 'wasm', dtype: 'q8' };
+  return chooseBackend({ ios, mark: gpuMark(), hasGpu, f16 });
 }
 
 /** Giọng Kokoro của một vai. Giọng trộn ("a:0.5+b:0.5") lấy thành phần đầu, vì bản trình duyệt không trộn giọng. */
@@ -168,6 +198,7 @@ export function loadLiveVoice(): Promise<KokoroLike> {
       let tts: KokoroLike;
       if (backend.device === 'webgpu') {
         const gpu = backend;
+        setGpuMark('trying');
         try {
           tts = await withStallGuard(async (t) => {
             tick = t;
@@ -178,7 +209,9 @@ export function loadLiveVoice(): Promise<KokoroLike> {
             if (!audible(warm.audio)) throw new Error('GPU tạo ra âm thanh câm');
             return m;
           }, GPU_STALL_MS, 'GPU khởi động quá lâu');
+          setGpuMark('ok');
         } catch (gpuErr) {
+          setGpuMark('bad');
           console.warn('[liveVoice] WebGPU lỗi, chuyển sang WASM', gpuErr);
           tick = () => {};
           backend = { device: 'wasm', dtype: 'q8' };
