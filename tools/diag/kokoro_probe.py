@@ -10,6 +10,15 @@ JS = """async (b) => {
   const t0 = performance.now();
   try {
     if (b === 'auto') { out.picked = await lv.pickBackend(); return out; }
+    if (b.startsWith('full')) {
+      try { await lv.loadLiveVoice(); } catch (e) { out.error = String(e); }
+      out.loadMs = Math.round(performance.now() - t0);
+      out.status = lv.liveVoiceStatus(); out.backend = lv.liveVoiceBackend(); out.err = lv.liveVoiceError();
+      const t1 = performance.now();
+      out.spoke = await lv.speakLive('Hi Thien An, it is Emma. Have you got a few minutes?', 'couple:emma');
+      out.speakMs = Math.round(performance.now() - t1);
+      return out;
+    }
     const [device, dtype] = b.split(':');
     const tts = await lv.loadKokoro({ device, dtype });
     out.loadMs = Math.round(performance.now() - t0);
@@ -24,7 +33,7 @@ JS = """async (b) => {
 }"""
 with sync_playwright() as p:
     for b in sys.argv[2:]:
-        br = p.chromium.launch(executable_path='/usr/bin/google-chrome', args=ARGS)
+        br = p.chromium.launch(executable_path='/usr/bin/google-chrome', args=ARGS if b != 'full-nogpu' else ARGS[:2])
         pg = br.new_page(); logs = []
         pg.on('console', lambda m: logs.append(f'{m.type}: {m.text[:300]}'))
         pg.goto(url, wait_until='load'); pg.wait_for_timeout(2500)

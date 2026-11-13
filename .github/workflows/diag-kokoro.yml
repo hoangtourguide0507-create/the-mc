@@ -17,4 +17,4 @@ jobs:
       - name: Start preview server
         run: (npx vite preview --port 5173 > /tmp/vite.log 2>&1 &) && sleep 5 && cat /tmp/vite.log
       - name: Probe
-        run: python3 tools/diag/kokoro_probe.py "http://localhost:5173/?qa=1" auto wasm:q8 webgpu:fp32 webgpu:fp16
+        run: python3 tools/diag/kokoro_probe.py "http://localhost:5173/?qa=1" auto full full-nogpu

@@ -52,3 +52,5 @@
 .bs-stats strong { font-size: 24px; color: var(--ink); }
 .backstage > *, .bs-card > * { min-width: 0; }
 .backstage .link { white-space: normal; text-align: left; padding: 8px 0; }
+.bs-gen { margin-left: 8px; font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--muted); animation: bs-pulse 1.2s ease-in-out infinite; }
+@keyframes bs-pulse { 50% { opacity: 0.4; } }

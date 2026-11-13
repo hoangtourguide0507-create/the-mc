@@ -1,7 +1,8 @@
 /**
  * Giọng Kokoro chạy ngay trong trình duyệt, cho câu thoại mới do AI viết (chế độ Hậu trường).
  * Cùng bộ giọng với clip Kokoro render sẵn của NPC, nên mỗi vai vẫn giữ một giọng.
- * - Máy có WebGPU (iPhone iOS 26+, Chrome máy tính): chạy trên GPU, nhanh hơn nhiều; tải lần đầu ~330 MB (fp32).
+ * - Máy có WebGPU (iPhone iOS 26+, Chrome máy tính): chạy trên GPU, nhanh hơn nhiều; tải lần đầu ~165 MB (fp16) hoặc ~330 MB (fp32).
+ * - GPU ra âm câm hoặc quá chậm ở câu thử thì tự về WASM.
  * - Không có WebGPU: chạy WASM trên CPU, mô hình q8 ~90 MB, chậm (vài giây cho mỗi câu).
  * - Trình duyệt tự cache mô hình cho các lần sau.
  * - Đọc từng câu: câu đầu phát ngay khi tạo xong, các câu sau tạo trong lúc câu trước đang phát.
@@ -15,8 +16,22 @@ const MODEL_ID = 'onnx-community/Kokoro-82M-v1.0-ONNX';
 export type LiveVoiceStatus = 'idle' | 'loading' | 'ready' | 'error';
 
 interface KokoroLike {
-  generate(text: string, opts: { voice: string; speed?: number }): Promise<{ toBlob(): Blob }>;
+  generate(text: string, opts: { voice: string; speed?: number }): Promise<{ toBlob(): Blob; audio: Float32Array }>;
 }
+
+/** Âm thanh có tiếng thật không (không câm, không NaN) */
+export function audible(samples: ArrayLike<number>): boolean {
+  if (!samples || samples.length === 0) return false;
+  let sum = 0;
+  for (let i = 0; i < samples.length; i++) {
+    const x = samples[i];
+    if (!Number.isFinite(x)) return false;
+    sum += x * x;
+  }
+  return Math.sqrt(sum / samples.length) > 0.005;
+}
+
+const WARMUP_LIMIT_MS = 20000;
 
 export type Backend = { device: 'webgpu' | 'wasm'; dtype: 'fp32' | 'fp16' | 'q8' };
 
@@ -55,8 +70,10 @@ export function liveVoiceBackend(): Backend | null {
 /** Chọn WebGPU nếu máy có, ngược lại WASM */
 export async function pickBackend(): Promise<Backend> {
   try {
-    const gpu = (navigator as Navigator & { gpu?: { requestAdapter(): Promise<unknown> } }).gpu;
-    if (gpu && (await gpu.requestAdapter())) return { device: 'webgpu', dtype: 'fp32' };
+    const gpu = (navigator as Navigator & { gpu?: { requestAdapter(): Promise<{ features: Set<string> } | null> } }).gpu;
+    const adapter = gpu ? await gpu.requestAdapter() : null;
+    // GPU hỗ trợ số thực 16-bit (chip Apple) thì dùng bản fp16, nhẹ bằng nửa bản fp32
+    if (adapter) return { device: 'webgpu', dtype: adapter.features?.has('shader-f16') ? 'fp16' : 'fp32' };
   } catch {
     // không có GPU dùng được
   }
@@ -121,7 +138,15 @@ export function loadLiveVoice(): Promise<KokoroLike> {
       let tts: KokoroLike;
       try {
         tts = await loadKokoro(backend, onProgress);
-        await tts.generate('Hi.', voiceFor('coach'));
+        if (backend.device === 'webgpu') {
+          // Thử một câu: GPU phải ra tiếng thật và đủ nhanh, không thì về CPU
+          const warm = await Promise.race([
+            tts.generate('Hello there.', voiceFor('coach')),
+            new Promise<null>((r) => setTimeout(() => r(null), WARMUP_LIMIT_MS)),
+          ]);
+          if (!warm) throw new Error('GPU tạo giọng quá chậm');
+          if (!audible(warm.audio)) throw new Error('GPU tạo ra âm thanh câm');
+        }
       } catch (gpuErr) {
         if (backend.device !== 'webgpu') throw gpuErr;
         // GPU lỗi (thiếu bộ nhớ, trình điều khiển...): quay về CPU
@@ -183,5 +208,5 @@ export async function speakLive(text: string, role: string, onStart?: () => void
 
 // Chẩn đoán: mở game với ?qa=1 để gọi giọng từ console (window.__liveVoice)
 if (typeof window !== 'undefined' && /[?&]qa=1\b/.test(window.location.search)) {
-  (window as unknown as Record<string, unknown>).__liveVoice = { loadLiveVoice, loadKokoro, pickBackend, speakLive, voiceFor, liveVoiceStatus, liveVoiceError };
+  (window as unknown as Record<string, unknown>).__liveVoice = { loadLiveVoice, loadKokoro, pickBackend, speakLive, voiceFor, liveVoiceStatus, liveVoiceError, liveVoiceBackend };
 }
