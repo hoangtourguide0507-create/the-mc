@@ -31,7 +31,6 @@ export function audible(samples: ArrayLike<number>): boolean {
   return Math.sqrt(sum / samples.length) > 0.005;
 }
 
-const WARMUP_LIMIT_MS = 20000;
 
 export type Backend = { device: 'webgpu' | 'wasm'; dtype: 'fp32' | 'fp16' | 'q8' };
 
@@ -124,35 +123,71 @@ export async function loadKokoro(b: Backend, onProgress?: (pct: number) => void)
   return tts as unknown as KokoroLike;
 }
 
+/** GPU không nhúc nhích quá lâu (kẹt khi khởi động trên một số iPhone) thì bỏ, chuyển sang CPU */
+export const GPU_STALL_MS = 40000;
+let fellBack = false;
+
+/** Giai đoạn đang chạy, để màn hình nói đúng chuyện gì đang xảy ra */
+export function liveVoicePhase(): 'download' | 'start' | 'fallback' {
+  if (fellBack && progress < 99) return 'fallback';
+  return progress >= 99 ? 'start' : 'download';
+}
+
+/** Chạy một việc; nếu quá `ms` kể từ lần gọi tick() gần nhất mà chưa xong thì báo lỗi */
+export function withStallGuard<T>(run: (tick: () => void) => Promise<T>, ms: number, message: string): Promise<T> {
+  let last = Date.now();
+  return new Promise<T>((resolve, reject) => {
+    const timer = setInterval(() => {
+      if (Date.now() - last > ms) {
+        clearInterval(timer);
+        reject(new Error(message));
+      }
+    }, Math.min(1000, ms));
+    run(() => { last = Date.now(); }).then(
+      (v) => { clearInterval(timer); resolve(v); },
+      (e) => { clearInterval(timer); reject(e); }
+    );
+  });
+}
+
 export function loadLiveVoice(): Promise<KokoroLike> {
   if (loading) return loading;
   lastError = '';
+  fellBack = false;
+  progress = 0;
   emit('loading');
   loading = (async () => {
+    let tick = () => {};
     const onProgress = (pct: number) => {
+      if (pct !== progress) tick();
       progress = pct;
       listeners.forEach((fn) => fn(status, progress));
     };
     try {
       backend = await pickBackend();
       let tts: KokoroLike;
-      try {
-        tts = await loadKokoro(backend, onProgress);
-        if (backend.device === 'webgpu') {
-          // Thử một câu: GPU phải ra tiếng thật và đủ nhanh, không thì về CPU
-          const warm = await Promise.race([
-            tts.generate('Hello there.', voiceFor('coach')),
-            new Promise<null>((r) => setTimeout(() => r(null), WARMUP_LIMIT_MS)),
-          ]);
-          if (!warm) throw new Error('GPU tạo giọng quá chậm');
-          if (!audible(warm.audio)) throw new Error('GPU tạo ra âm thanh câm');
+      if (backend.device === 'webgpu') {
+        const gpu = backend;
+        try {
+          tts = await withStallGuard(async (t) => {
+            tick = t;
+            const m = await loadKokoro(gpu, onProgress);
+            t();
+            // Thử một câu: GPU phải ra tiếng thật, không thì về CPU
+            const warm = await m.generate('Hello there.', voiceFor('coach'));
+            if (!audible(warm.audio)) throw new Error('GPU tạo ra âm thanh câm');
+            return m;
+          }, GPU_STALL_MS, 'GPU khởi động quá lâu');
+        } catch (gpuErr) {
+          console.warn('[liveVoice] WebGPU lỗi, chuyển sang WASM', gpuErr);
+          tick = () => {};
+          backend = { device: 'wasm', dtype: 'q8' };
+          fellBack = true;
+          progress = 0;
+          listeners.forEach((fn) => fn(status, progress));
+          tts = await loadKokoro(backend, onProgress);
         }
-      } catch (gpuErr) {
-        if (backend.device !== 'webgpu') throw gpuErr;
-        // GPU lỗi (thiếu bộ nhớ, trình điều khiển...): quay về CPU
-        console.warn('[liveVoice] WebGPU lỗi, chuyển sang WASM', gpuErr);
-        backend = { device: 'wasm', dtype: 'q8' };
-        progress = 0;
+      } else {
         tts = await loadKokoro(backend, onProgress);
       }
       emit('ready');

@@ -168,4 +168,16 @@ assert.equal(wav.getUint32(24, true), 24000);
 assert.equal(wav.getUint32(40, true), 10);
 assert.deepEqual([44, 46, 48, 50, 52].map((o) => wav.getInt16(o, true)), [0, 32767, -32767, 16384, 32767], 'cắt ngọn ngoài [-1, 1]');
 
+// 11) Chốt chống kẹt: việc xong kịp thì trả kết quả; đứng im quá hạn thì báo lỗi; còn tick thì chưa tính là kẹt
+assert.equal(await LV.withStallGuard(async () => 'ok', 200, 'kẹt'), 'ok');
+await assert.rejects(LV.withStallGuard(() => new Promise(() => {}), 60, 'kẹt'), /kẹt/);
+await assert.rejects(LV.withStallGuard(async () => { throw new Error('hỏng'); }, 200, 'kẹt'), /hỏng/);
+assert.equal(
+  await LV.withStallGuard(async (tick) => {
+    for (let i = 0; i < 5; i++) { await new Promise((r) => setTimeout(r, 40)); tick(); }
+    return 'xong';
+  }, 100, 'kẹt'),
+  'xong'
+);
+
 console.log('backstage: OK');

@@ -5,7 +5,7 @@
  */
 import './backstage.css';
 import { SFX } from '../../../audio/audioSystem';
-import { liveVoiceBackend, liveVoiceDiag, liveVoiceError, loadLiveVoice, onLiveVoiceStatus, speakLive, stopLiveVoice, type LiveVoiceStatus } from '../../../audio/liveVoice';
+import { liveVoiceBackend, liveVoiceDiag, liveVoicePhase, liveVoiceError, loadLiveVoice, onLiveVoiceStatus, speakLive, stopLiveVoice, type LiveVoiceStatus } from '../../../audio/liveVoice';
 import { AiError, chatCompletion, errorMessageVi, getApiKey, looksLikeKey, setApiKey } from '../../../core/aiClient';
 import {
   MAX_MY_TURNS,
@@ -127,6 +127,8 @@ export function mountBackstage(root: HTMLElement): () => void {
         )
       )
     );
+    // Tải sẵn giọng trong lúc người học chọn vai
+    void loadLiveVoice().catch(() => {});
     for (const p of PERSONAS) {
       box.append(
         h(
@@ -179,7 +181,11 @@ export function mountBackstage(root: HTMLElement): () => void {
       const b = liveVoiceBackend();
       voiceLine.textContent =
         voiceStatus === 'loading'
-          ? `Đang tải giọng nhân vật lần đầu: ${voicePct}% (${b?.device === 'webgpu' ? (b.dtype === 'fp16' ? 'khoảng 165 MB, chạy bằng GPU' : 'khoảng 330 MB, chạy bằng GPU') : 'khoảng 90 MB'}). Nên dùng Wi-Fi. Chữ vẫn hiện để bạn đọc trước.`
+          ? liveVoicePhase() === 'start'
+            ? 'Đã tải xong, đang khởi động giọng. Lần đầu có thể mất tới 1 phút, bạn cứ đọc chữ trước.'
+            : liveVoicePhase() === 'fallback'
+              ? `GPU của máy không chạy được giọng, đang chuyển sang cách chạy chậm hơn: ${voicePct}% (khoảng 90 MB).`
+              : `Đang tải giọng nhân vật lần đầu: ${voicePct}% (${b?.device === 'webgpu' ? (b.dtype === 'fp16' ? 'khoảng 165 MB' : 'khoảng 330 MB') : 'khoảng 90 MB'}). Nên dùng Wi-Fi. Chữ vẫn hiện để bạn đọc trước.`
           : voiceStatus === 'error'
             ? `Không tải được giọng (${liveVoiceError() || 'lỗi không rõ'}). Bạn vẫn luyện được bằng chữ.`
             : liveVoiceDiag()
