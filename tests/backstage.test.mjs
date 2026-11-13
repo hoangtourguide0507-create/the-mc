@@ -32,7 +32,7 @@ await build({
   outfile: lvOut,
   logLevel: 'silent',
   external: ['kokoro-js', '@huggingface/transformers'],
-  plugins: [{ name: 'stub-audio', setup(b) { b.onResolve({ filter: /audioSystem$/ }, () => ({ path: 'stub', namespace: 'stub' })); b.onLoad({ filter: /.*/, namespace: 'stub' }, () => ({ contents: 'export const ClipAudio = { play: async () => "ended", stop() {} };' })); } }],
+  plugins: [{ name: 'stub-audio', setup(b) { b.onResolve({ filter: /audioSystem$/ }, () => ({ path: 'stub', namespace: 'stub' })); b.onLoad({ filter: /.*/, namespace: 'stub' }, () => ({ contents: 'export const ClipAudio = { play: async () => "ended", stop() {} }; export const SFX = { ctx: null };' })); } }],
 });
 const LV = await import(pathToFileURL(lvOut).href);
 
@@ -157,5 +157,15 @@ assert.equal(LV.audible(new Float32Array(2400)), false, 'toàn số 0 là câm')
 assert.equal(LV.audible(Float32Array.from({ length: 2400 }, (_, i) => Math.sin(i / 5) * 0.2)), true);
 assert.equal(LV.audible(Float32Array.from([0.3, NaN, 0.2])), false, 'NaN là lỗi');
 assert.equal(LV.audible([]), false);
+
+// 10) WAV 16-bit PCM (iPhone không phát WAV số thực 32-bit)
+const wav = new DataView(LV.encodeWav16(Float32Array.from([0, 1, -1, 0.5, 2]), 24000));
+assert.equal(wav.byteLength, 44 + 10);
+assert.equal(String.fromCharCode(wav.getUint8(0), wav.getUint8(1), wav.getUint8(2), wav.getUint8(3)), 'RIFF');
+assert.equal(wav.getUint16(20, true), 1, 'định dạng PCM');
+assert.equal(wav.getUint16(34, true), 16, '16 bit');
+assert.equal(wav.getUint32(24, true), 24000);
+assert.equal(wav.getUint32(40, true), 10);
+assert.deepEqual([44, 46, 48, 50, 52].map((o) => wav.getInt16(o, true)), [0, 32767, -32767, 16384, 32767], 'cắt ngọn ngoài [-1, 1]');
 
 console.log('backstage: OK');

@@ -5,7 +5,7 @@
  */
 import './backstage.css';
 import { SFX } from '../../../audio/audioSystem';
-import { liveVoiceBackend, liveVoiceError, loadLiveVoice, onLiveVoiceStatus, speakLive, stopLiveVoice, type LiveVoiceStatus } from '../../../audio/liveVoice';
+import { liveVoiceBackend, liveVoiceDiag, liveVoiceError, loadLiveVoice, onLiveVoiceStatus, speakLive, stopLiveVoice, type LiveVoiceStatus } from '../../../audio/liveVoice';
 import { AiError, chatCompletion, errorMessageVi, getApiKey, looksLikeKey, setApiKey } from '../../../core/aiClient';
 import {
   MAX_MY_TURNS,
@@ -182,7 +182,9 @@ export function mountBackstage(root: HTMLElement): () => void {
           ? `Đang tải giọng nhân vật lần đầu: ${voicePct}% (${b?.device === 'webgpu' ? (b.dtype === 'fp16' ? 'khoảng 165 MB, chạy bằng GPU' : 'khoảng 330 MB, chạy bằng GPU') : 'khoảng 90 MB'}). Nên dùng Wi-Fi. Chữ vẫn hiện để bạn đọc trước.`
           : voiceStatus === 'error'
             ? `Không tải được giọng (${liveVoiceError() || 'lỗi không rõ'}). Bạn vẫn luyện được bằng chữ.`
-            : '';
+            : liveVoiceDiag()
+              ? `Giọng: ${liveVoiceDiag()}`
+              : '';
       voiceLine.style.display = voiceLine.textContent ? '' : 'none';
       retryVoice.style.display = voiceStatus === 'error' ? '' : 'none';
     };
