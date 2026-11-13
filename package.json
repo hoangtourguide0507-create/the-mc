@@ -24,17 +24,24 @@
     "test:lesson": "node tests/lesson.test.mjs",
     "test:events": "node tests/events.test.mjs",
     "voices:kokoro": "python3 tools/render-kokoro.py",
-    "test:show": "node tests/show.test.mjs"
+    "test:show": "node tests/show.test.mjs",
+    "test:backstage": "node tests/backstage.test.mjs"
   },
   "dependencies": {
     "@huggingface/transformers": "^4.3.2",
     "three": "^0.169.0",
-    "zustand": "^5.0.1"
+    "zustand": "^5.0.1",
+    "kokoro-js": "^1.2.1"
   },
   "devDependencies": {
     "@types/three": "^0.169.0",
     "esbuild": "^0.28.2",
     "typescript": "^5.6.3",
     "vite": "^8.3.6"
+  },
+  "overrides": {
+    "kokoro-js": {
+      "@huggingface/transformers": "$@huggingface/transformers"
+    }
   }
 }

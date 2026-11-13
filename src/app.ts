@@ -16,6 +16,7 @@ import { mountLesson } from './ui/screens/lesson';
 import { mountNotebook } from './ui/screens/notebook';
 import { mountPage } from './ui/screens/page';
 import { mountQuests } from './ui/screens/quests';
+import { mountBackstage } from './ui/screens/training/backstage';
 import { mountCando } from './ui/screens/training/cando';
 import { mountPronunciation } from './ui/screens/training/pronunciation';
 import { mountQuickchat } from './ui/screens/training/quickchat';
@@ -186,6 +187,7 @@ function showTab(tab: TabId) {
         { id: 'pron', label: 'Phát âm', mount: mountPronunciation },
         { id: 'rhythm', label: 'Nhịp', mount: mountRhythm },
         { id: 'quick', label: 'Phản xạ nhanh', mount: mountQuickchat },
+        { id: 'backstage', label: 'Hậu trường', mount: mountBackstage },
         { id: 'cando', label: 'Năng lực', mount: mountCando },
       ],
     });

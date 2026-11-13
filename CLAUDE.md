@@ -20,6 +20,10 @@ Lưu ý: hai file đó còn ghi Vite 5, trong khi repo đang dùng Vite 8 (`pack
   - **Tập và Diễn**: `mountLesson(..., { perform })`. Diễn: mỗi lượt một lần nói (thêm một lần nếu 0 sao, `PERFORM_TRIES`), không gợi ý, không câu mẫu, không bỏ qua; chỉ Diễn mới đổi danh tiếng (`countsForRep` trong `lesson.ts`, `finishScene(..., { perform, heat })`). Nút Diễn mở sau khi đã Tập bài đó một lần.
   - Màn chính là hàng poster vuốt ngang (`.poster` trong `base.css`, màu theo `data-theme`); danh sách bài của poster đang chọn nằm bên dưới.
   - Chưa làm: nhạc nền theo thể loại, điểm diễn chưa cộng vào XP.
+- **Hậu trường** (2026-11-13, tab Luyện tập): hội thoại mở nhiều lượt với AI đóng vai (cô dâu, điều phối khách sạn, giám đốc thương hiệu, quản lý cửa hàng, bố chú rể, diễn giả). Mỗi câu người học nói, AI trả lời trong vai và sửa lỗi kèm giải thích tiếng Việt; tối đa 10 lượt, cuối buổi có tổng kết và XP.
+  - Vai ở `src/data/backstage.ts` (mỗi vai phải dùng một giọng Kokoro **đơn**, không trộn, test kiểm). Lời nhắc, đọc JSON, tổng kết, AI giả ở `src/core/backstage.ts`; gọi Groq (`llama-3.3-70b-versatile`, gói miễn phí) ở `src/core/aiClient.ts`. Test: `npm run test:backstage`.
+  - Khoá Groq do người học tự dán, lưu ở `localStorage['mclife.groq.key']`. Không bao giờ đưa khoá vào repo (repo công khai). Có nút "Chạy thử" dùng AI giả để xem giao diện không cần khoá.
+  - Giọng: `src/audio/liveVoice.ts` chạy Kokoro ngay trong trình duyệt bằng `kokoro-js` (ép dùng chung `@huggingface/transformers` v4 qua `overrides` trong `package.json`), mô hình q8 khoảng 90 MB tải lần đầu từ Hugging Face rồi được cache. Chưa tải xong thì chỉ hiện chữ, không dùng giọng trình duyệt.
 - "Phản xạ nhanh" thay cho trò chuyện với người đi đường: không gọi `openStreetTalk` (sẽ mở hộp thoại của bản React), nhưng vẫn gọi `markStreetTalkUsed` để nhiệm vụ loại `street` được tính.
 
 ## Lệnh thường dùng
