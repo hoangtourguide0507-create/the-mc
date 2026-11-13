@@ -1,7 +1,9 @@
 /**
  * Giọng Kokoro chạy ngay trong trình duyệt, cho câu thoại mới do AI viết (chế độ Hậu trường).
  * Cùng bộ giọng với clip Kokoro render sẵn của NPC, nên mỗi vai vẫn giữ một giọng.
- * - Tải lười lần đầu (~90 MB, mô hình q8), trình duyệt tự cache cho các lần sau.
+ * - Máy có WebGPU (iPhone iOS 26+, Chrome máy tính): chạy trên GPU, nhanh hơn nhiều; tải lần đầu ~330 MB (fp32).
+ * - Không có WebGPU: chạy WASM trên CPU, mô hình q8 ~90 MB, chậm (vài giây cho mỗi câu).
+ * - Trình duyệt tự cache mô hình cho các lần sau.
  * - Đọc từng câu: câu đầu phát ngay khi tạo xong, các câu sau tạo trong lúc câu trước đang phát.
  * - Chưa tải xong thì không đọc bằng giọng trình duyệt (để không trộn giọng trong một vai).
  */
@@ -16,8 +18,12 @@ interface KokoroLike {
   generate(text: string, opts: { voice: string; speed?: number }): Promise<{ toBlob(): Blob }>;
 }
 
+export type Backend = { device: 'webgpu' | 'wasm'; dtype: 'fp32' | 'fp16' | 'q8' };
+
 let status: LiveVoiceStatus = 'idle';
 let progress = 0;
+let lastError = '';
+let backend: Backend | null = null;
 let loading: Promise<KokoroLike> | null = null;
 const listeners = new Set<(s: LiveVoiceStatus, progress: number) => void>();
 let playToken = 0;
@@ -35,6 +41,26 @@ export function onLiveVoiceStatus(fn: (s: LiveVoiceStatus, progress: number) => 
 
 export function liveVoiceStatus(): LiveVoiceStatus {
   return status;
+}
+
+/** Lỗi gần nhất khi tải giọng (để hiện cho người học và gửi lại khi báo lỗi) */
+export function liveVoiceError(): string {
+  return lastError;
+}
+
+export function liveVoiceBackend(): Backend | null {
+  return backend;
+}
+
+/** Chọn WebGPU nếu máy có, ngược lại WASM */
+export async function pickBackend(): Promise<Backend> {
+  try {
+    const gpu = (navigator as Navigator & { gpu?: { requestAdapter(): Promise<unknown> } }).gpu;
+    if (gpu && (await gpu.requestAdapter())) return { device: 'webgpu', dtype: 'fp32' };
+  } catch {
+    // không có GPU dùng được
+  }
+  return { device: 'wasm', dtype: 'q8' };
 }
 
 /** Giọng Kokoro của một vai. Giọng trộn ("a:0.5+b:0.5") lấy thành phần đầu, vì bản trình duyệt không trộn giọng. */
@@ -59,28 +85,56 @@ export function splitSentences(text: string): string[] {
   return out;
 }
 
+/** Tải mô hình với một cấu hình cụ thể (dùng cho chẩn đoán) */
+export async function loadKokoro(b: Backend, onProgress?: (pct: number) => void): Promise<KokoroLike> {
+  const tf = await import('@huggingface/transformers');
+  tf.env.allowLocalModels = false;
+  const { KokoroTTS } = await import('kokoro-js');
+  // Tiến độ tính theo tổng byte của mọi file, không theo từng file
+  const files = new Map<string, { loaded: number; total: number }>();
+  const tts = await KokoroTTS.from_pretrained(MODEL_ID, {
+    dtype: b.dtype,
+    device: b.device,
+    progress_callback: (p: { file?: string; loaded?: number; total?: number }) => {
+      if (!p.file || typeof p.total !== 'number' || !p.total) return;
+      files.set(p.file, { loaded: p.loaded ?? 0, total: p.total });
+      let l = 0;
+      let t = 0;
+      files.forEach((f) => { l += f.loaded; t += f.total; });
+      onProgress?.(Math.min(99, Math.round((l / t) * 100)));
+    },
+  } as never);
+  return tts as unknown as KokoroLike;
+}
+
 export function loadLiveVoice(): Promise<KokoroLike> {
   if (loading) return loading;
+  lastError = '';
   emit('loading');
   loading = (async () => {
+    const onProgress = (pct: number) => {
+      progress = pct;
+      listeners.forEach((fn) => fn(status, progress));
+    };
     try {
-      const tf = await import('@huggingface/transformers');
-      tf.env.allowLocalModels = false;
-      const { KokoroTTS } = await import('kokoro-js');
-      const tts = await KokoroTTS.from_pretrained(MODEL_ID, {
-        dtype: 'q8',
-        device: 'wasm',
-        progress_callback: (p: { progress?: number }) => {
-          if (typeof p.progress === 'number') {
-            progress = Math.round(p.progress);
-            listeners.forEach((fn) => fn(status, progress));
-          }
-        },
-      } as never);
+      backend = await pickBackend();
+      let tts: KokoroLike;
+      try {
+        tts = await loadKokoro(backend, onProgress);
+        await tts.generate('Hi.', voiceFor('coach'));
+      } catch (gpuErr) {
+        if (backend.device !== 'webgpu') throw gpuErr;
+        // GPU lỗi (thiếu bộ nhớ, trình điều khiển...): quay về CPU
+        console.warn('[liveVoice] WebGPU lỗi, chuyển sang WASM', gpuErr);
+        backend = { device: 'wasm', dtype: 'q8' };
+        progress = 0;
+        tts = await loadKokoro(backend, onProgress);
+      }
       emit('ready');
-      return tts as unknown as KokoroLike;
+      return tts;
     } catch (err) {
       console.warn('[liveVoice] không tải được Kokoro', err);
+      lastError = String((err as Error)?.message ?? err).slice(0, 200);
       loading = null;
       emit('error');
       throw err;
@@ -129,5 +183,5 @@ export async function speakLive(text: string, role: string, onStart?: () => void
 
 // Chẩn đoán: mở game với ?qa=1 để gọi giọng từ console (window.__liveVoice)
 if (typeof window !== 'undefined' && /[?&]qa=1\b/.test(window.location.search)) {
-  (window as unknown as Record<string, unknown>).__liveVoice = { loadLiveVoice, speakLive, voiceFor, liveVoiceStatus };
+  (window as unknown as Record<string, unknown>).__liveVoice = { loadLiveVoice, loadKokoro, pickBackend, speakLive, voiceFor, liveVoiceStatus, liveVoiceError };
 }
