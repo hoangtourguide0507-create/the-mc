@@ -12,6 +12,7 @@ import { firstSample, maxPoints, newTalk, starsFor, step, xpFor, type Talk, type
 import { TALKS } from '../../../data/talks';
 import { answerBar } from '../../answer';
 import { clear, h } from '../../dom';
+import { closeWordSheet, fillPickable } from '../../wordpick';
 
 const BEST_KEY = 'mclife.talk.best';
 
@@ -156,7 +157,8 @@ export function mountTalk(root: HTMLElement): () => void {
 
     /** Bong bóng của nhân vật: nghe trước, chữ ẩn cho tới khi bấm "Hiện chữ" */
     const npcBubble = (text: string, vi?: string) => {
-      const body = h('p', { class: 'tk-text', style: { display: 'none' } }, text);
+      const body = h('p', { class: 'tk-text', style: { display: 'none' } });
+      fillPickable(body, text, { vi, npcId: speakOpts.npcId, speaker: speakOpts.speaker, scene: `talk:${t.id}` });
       const viEl = vi ? h('p', { class: 'vi', style: { display: 'none' } }, vi) : null;
       const wave = h('span', { class: 'wave' }, h('i'), h('i'), h('i'), h('i'), h('i'));
       const showBtn = h('button', { class: 'btn quiet tk-mini', onclick: () => { body.style.display = ''; showBtn.style.display = 'none'; } }, 'Hiện chữ');
@@ -228,7 +230,7 @@ export function mountTalk(root: HTMLElement): () => void {
             'div',
             { class: 'tk-model' },
             h('div', { class: 'tk-model-label' }, res.outcome === 'forced' ? 'Câu nên nói' : 'Cách nói tự nhiên'),
-            h('p', { class: 'tk-model-text' }, sample),
+            (() => { const el = h('p', { class: 'tk-model-text' }); fillPickable(el, sample, { npcId: 'coach', scene: `talk:${t.id}` }); return el; })(),
             h('button', { class: 'btn quiet tk-mini', onclick: () => { if (!busy) void Voice.speak(sample, { npcId: 'coach' }); } }, 'Nghe')
           )
         );

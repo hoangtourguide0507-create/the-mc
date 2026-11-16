@@ -230,6 +230,9 @@ export interface GameState {
     progress: Record<string, { tries: number; ok: number }>;
     recent: string[];
   };
+  /** Sổ từ tự chọn (core/notes.ts): từ và cụm người học tự ghi, và các gợi ý đã từ chối. */
+  notes: import('../core/notes').NoteBook;
+  noteSkip: string[];
   /** Tiến trình học: số lần gặp kịch bản, lượt tự nói, hộp ôn cụm, bài nhịp, kiểm tra tuần. */
   learn: import('../core/cando').LearnState;
 }

@@ -12,3 +12,6 @@
 .notebook-locked { opacity: 0.6; }
 .notebook .chips .btn.quiet { flex: 1 1 auto; justify-content: center; }
 .notebook .btn.notebook-main { background: var(--primary); color: var(--primary-ink); border-color: transparent; }
+.notebook-meaning { margin: 0; font-size: 17px; }
+.notebook .wp-ipa { display: inline; font-size: 15px; color: var(--accent); }
+.notebook .note-box .btn { width: auto; justify-self: start; }

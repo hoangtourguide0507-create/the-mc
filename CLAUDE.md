@@ -24,6 +24,11 @@ Lưu ý: hai file đó còn ghi Vite 5, trong khi repo đang dùng Vite 8 (`pack
   - Luật ở `src/core/talk.ts`, nội dung ở `src/data/talks.ts` (6 cuộc, mỗi cuộc 5 lượt), màn ở `src/ui/screens/training/talk.ts`. Test: `npm run test:talk`.
   - Viết cuộc mới: mọi câu mẫu `say` phải được nhận đúng ý của chính nó, ý cụ thể hơn khai báo trước, mỗi lượt có một nhánh mơ hồ, câu cụt lủn ("Yes.") không được đi tiếp (test kiểm).
   - Giọng: mọi câu của nhân vật và câu mẫu nằm ở phase `talk` trong `tools/voice-lines.mjs` và `tools/voices.kokoro.json`, được `voices-kokoro.yml` render sẵn. Phase này không nằm trong cấu hình ElevenLabs.
+- **Sổ từ tự chọn** (2026-11-16): chạm một từ trong câu nhân vật, thẻ nhắc lời, Trò chuyện hoặc Sổ tay để mở thẻ từ (IPA, nghĩa, nghe thường/chậm); nhấn giữ rồi kéo để chọn cả cụm (thẻ từ cũng có nút nới cụm). Hai nhãn: "Từ mới" và "Luyện phát âm".
+  - Luật ở `src/core/notes.ts` (lịch ôn Leitner theo **ngày thật** `realDay()`, tô từ đã ghi, gợi ý từ đọc sai từ 2 lần, xuất CSV), giao diện chung ở `src/ui/wordpick.ts` (`fillPickable`, `bindPick`, `openWordSheet`), dữ liệu ở `state.notes` và `state.noteSkip`. Test: `npm run test:notes`.
+  - Ôn ở tab Sổ tay, mục "Từ của tôi": từ mới thì tự đặt một câu có từ đó (`evaluateNoteUse`), phát âm thì đọc từ (`evaluateNoteSay`) hoặc "Chấm từng âm" bằng mô hình âm vị (`phoneTargetIpas`, ngưỡng `NOTE_PHONE_PASS`; chưa kiểm chứng với mô hình thật).
+  - Bảng từ `src/data/glossary.json` (tải lười): IPA từ CMUdict, nghĩa soạn tay ở `tools/glossary/vi-*.txt` (dạng gốc; từ biến đổi tra theo `lemmaCandidates`). Thêm nội dung mới thì chạy `npm i --no-save cmu-pronouncing-dictionary && npm run glossary`; lệnh in các từ hay gặp còn thiếu nghĩa.
+  - Câu mới hiện cho người học nên dựng bằng `fillPickable` thay vì chèn chuỗi thẳng, để từ nào cũng chạm được.
 - "Phản xạ nhanh" thay cho trò chuyện với người đi đường: không gọi `openStreetTalk` (sẽ mở hộp thoại của bản React), nhưng vẫn gọi `markStreetTalkUsed` để nhiệm vụ loại `street` được tính.
 
 ## Lệnh thường dùng

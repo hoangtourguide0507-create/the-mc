@@ -6,6 +6,7 @@ import { CHUNKS } from '../../../data/chunks';
 import { watch } from '../../../engine/watch';
 import { answerBar, type AnswerBar } from '../../answer';
 import { clear, h } from '../../dom';
+import { isNoteDue, realDay } from '../../../core/notes';
 
 /**
  * Khởi động: nói lại các cụm tới hạn trong ngữ cảnh mới (bản thuần của Warmup trong TrainingSheet.tsx).
@@ -27,6 +28,10 @@ export function mountWarmup(root: HTMLElement): () => void {
   let barKey = '';
 
   const host = h('div', { class: 'warmup' });
+  // Nhắc các mục trong sổ từ tự chọn đã đến hạn (ôn ở tab Sổ tay)
+  const dueNotes = Object.values(store().state.notes ?? {}).filter((n) => isNoteDue(n, realDay())).length;
+  const noteHint = dueNotes > 0 ? h('div', { class: 'note-box' }, `Sổ từ của bạn có ${dueNotes} mục đến hạn ôn hôm nay. Mở tab Sổ tay, mục “Từ của tôi” để ôn.`) : null;
+  if (noteHint) root.append(noteHint);
   root.append(host);
 
   function dropBar() {
@@ -199,5 +204,6 @@ export function mountWarmup(root: HTMLElement): () => void {
     Voice.stop();
     SpeechEngine.abort();
     host.remove();
+    noteHint?.remove();
   };
 }

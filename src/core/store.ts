@@ -1,3 +1,4 @@
+import { realDay, removeNote, scheduleNote, setMemo, upsertNote, type NoteInput } from './notes';
 import { EMPTY_LEARN, type LearnState } from './cando';
 import { newChunkCard, scheduleChunk } from './chunks';
 import { createStore } from 'zustand/vanilla';
@@ -68,6 +69,8 @@ export const DEFAULT_STATE: GameState = {
   muted: false,
   voiceURI: null,
   pron: { progress: {}, recent: [] },
+  notes: {},
+  noteSkip: [],
   learn: deepCloneLearn(),
 };
 
@@ -266,6 +269,12 @@ export interface GameStore {
   closeResultSummary: () => void;
   addWeakWordsFromTokens: (sceneId: string, cueText: string, tokens: EvaluatedToken[]) => void;
   resolveWeakWord: (key: string, status: 'ok' | 'near') => void;
+  /** Sổ từ tự chọn: thêm hoặc đổi nhãn; bỏ cả hai nhãn là xoá mục. */
+  saveNote: (input: NoteInput) => void;
+  dropNote: (key: string) => void;
+  memoNote: (key: string, memo: string) => void;
+  reviewNote: (key: string, correct: boolean) => void;
+  skipNoteSuggest: (key: string) => void;
   unlockPhrase: (phraseId: string) => void;
 
   // Modals & Shop
@@ -1017,6 +1026,46 @@ export const gameStore = createStore<GameStore>((set, get) => ({
       SFX.play('ting');
       get().toast(`Gần chuẩn rồi! "${item.word}" sẽ ôn lại ngày mai.`, 'info');
     }
+  },
+
+  saveNote: (input) => {
+    const st = get().state;
+    const notes = upsertNote(st.notes ?? {}, input, realDay());
+    if (notes === st.notes) return;
+    const next = { ...st, notes };
+    set({ state: next });
+    persistStateNow(next);
+  },
+
+  dropNote: (key) => {
+    const st = get().state;
+    const next = { ...st, notes: removeNote(st.notes ?? {}, key) };
+    set({ state: next });
+    persistStateNow(next);
+  },
+
+  memoNote: (key, memo) => {
+    const st = get().state;
+    const next = { ...st, notes: setMemo(st.notes ?? {}, key, memo) };
+    set({ state: next });
+    persistStateDebounced(next);
+  },
+
+  reviewNote: (key, correct) => {
+    const st = get().state;
+    const note = st.notes?.[key];
+    if (!note) return;
+    const next = { ...st, notes: { ...st.notes, [key]: scheduleNote(note, correct, realDay()) } };
+    set({ state: next });
+    persistStateDebounced(next);
+  },
+
+  skipNoteSuggest: (key) => {
+    const st = get().state;
+    if (st.noteSkip?.includes(key)) return;
+    const next = { ...st, noteSkip: [...(st.noteSkip ?? []), key].slice(-200) };
+    set({ state: next });
+    persistStateDebounced(next);
   },
 
   unlockPhrase: (phraseId) => {

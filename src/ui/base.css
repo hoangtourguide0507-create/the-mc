@@ -254,7 +254,8 @@ button:disabled { cursor: default; opacity: 0.45; }
 .lesson.live.done .l-meter { display: none; }
 .lesson.live.done .result { padding: 14px 14px 20px; gap: 12px; }
 .lesson.live.done .result .big-stars .stars { font-size: 32px; }
-.lesson.live.done .l-sheet { flex: 1; max-height: none; }
+/* min-height: 0 để phần kết quả cuộn được bên trong, không tràn khỏi màn hình khi nội dung dài */
+.lesson.live.done .l-sheet { flex: 1; min-height: 0; max-height: none; }
 .lesson.live.done .l-body { flex: 1; }
 .lesson.live.done .result { margin: 8px auto; border: 0; box-shadow: none; background: none; animation: pop-in 0.4s; }
 

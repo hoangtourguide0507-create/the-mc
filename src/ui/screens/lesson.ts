@@ -23,6 +23,9 @@ import { SCENE_OBJECTIVES } from '../../data/objectives';
 import type { EvalResult, StageMicPhase } from '../../types/game';
 import type { LiveStage } from '../../scenes/LiveStage';
 import { append, clear, h } from '../dom';
+import { bindPick, closeWordSheet, fillPickable, loadGlossary, openWordSheet } from '../wordpick';
+import { cleanWord, lookupGloss, suggestFromWeak, splitWords } from '../../core/notes';
+import type { TurnData } from '../../types/game';
 
 export interface LessonOptions {
   /** Rời bài hoặc xong bài; `again` = người học muốn luyện lại ngay bài này */
@@ -34,6 +37,8 @@ export interface LessonOptions {
   /** Bối cảnh sân khấu, dùng để chọn sự cố đúng thể loại */
   theme?: string;
 }
+
+let pickHintShown = false;
 
 export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOptions): () => void {
   const store = () => gameStore.getState();
@@ -100,6 +105,7 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
   let reflexTimer = 0;
   let speakTimer = 0;
 
+  const startedAt = Date.now();
   const turn = () => turns[turnIdx] || turns[0];
   const plan = () => planTurn(turn(), stage, selfTalk);
   const npcId = () => turn().who || baseScene.npc;
@@ -734,6 +740,18 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
     return 'Đọc theo thẻ nhắc';
   }
 
+  /** Câu của nhân vật: từng từ chạm được để ghi vào sổ từ. */
+  function npcLine(t: TurnData): HTMLElement {
+    const p = h('p', { class: 'npc-line' });
+    // Lần đầu thấy chữ mà sổ từ còn trống: nhắc một lần là từ nào cũng chạm được
+    if (!pickHintShown && Object.keys(store().state.notes ?? {}).length === 0) {
+      pickHintShown = true;
+      store().toast('Mẹo: chạm một từ để nghe và ghi vào sổ. Nhấn giữ rồi kéo để chọn cả cụm.', 'info', 6000);
+    }
+    fillPickable(p, t.npc, { vi: t.npcVi, npcId: npcId(), speaker: t.speaker, scene: baseScene.id });
+    return p;
+  }
+
   function listenCard(): HTMLElement {
     const t = turn();
     return h(
@@ -746,7 +764,7 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
         h('span', { class: `wave${npcSpeaking ? ' on' : ''}` }, ...[1, 2, 3, 4, 5, 6, 7].map(() => h('i')))
       ),
       // Chưa hiện chữ thì bong bóng chỉ có tên và sóng âm: nghe trước, đọc sau (×2 XP nghe)
-      revealed ? h('p', { class: 'npc-line' }, `“${t.npc}”`) : null,
+      revealed ? npcLine(t) : null,
       revealed && translated && support.npcToggle ? h('p', { class: 'vi' }, t.npcVi) : null,
       h(
         'div',
@@ -843,12 +861,13 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
             line.append(
               h(
                 'button',
-                { class: `tok ${tok.status === 'ok' ? 'ok' : tok.status === 'near' ? 'near' : 'bad'}`, title: 'Chạm để nghe từ này', onclick: () => void Voice.speak(tok.clean || tok.word, { preferredURI: store().state.voiceURI }) },
+                { class: `tok ${tok.status === 'ok' ? 'ok' : tok.status === 'near' ? 'near' : 'bad'}`, title: 'Chạm để nghe và ghi chú từ này', dataset: { wp: String(line.childElementCount) } },
                 tok.word
               )
             );
           }
-        } else for (const w of (t.cue || '').split(/\s+/)) line.append(h('span', { class: 'w' }, w));
+          bindPick(line, evalResult.tokens.map((tok) => ({ raw: tok.word, word: cleanWord(tok.word) })), cueCtx(t));
+        } else fillPickable(line, t.cue || '', cueCtx(t), 'w');
         card.append(line);
         const chunk = practiceChunk();
         if (chunk) {
@@ -905,6 +924,8 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
       card.append(h('div', { class: 'note-box focus' }, 'Gợi ý sửa:', ...evalResult.grammarIssues.map((g) => h('span', null, `“${g.wrong}” → “${g.fix}”`))));
     }
     if (support.tip && t.tip && !perform) card.append(h('div', { class: 'note-box' }, t.tip));
+    const hint = suggestBox(t);
+    if (hint) card.append(hint);
 
     if (interim || evalResult) {
       heardText.textContent = `“${evalResult ? evalResult.transcript : interim}”`;
@@ -918,6 +939,24 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
       );
     }
     return card;
+  }
+
+  const cueCtx = (t: TurnData) => ({ sentence: t.cue || t.sample || '', vi: t.cueVi, npcId: 'coach', scene: baseScene.id });
+
+  /** Từ trong câu này đã đọc sai từ 2 lần mà chưa có trong sổ: hỏi người học có muốn ghi lại không. */
+  function suggestBox(t: TurnData): HTMLElement | null {
+    if (!evalResult || perform) return null;
+    const st = store().state;
+    const inCue = new Set(splitWords(t.cue || t.sample || '').map((x) => x.word.toLowerCase()));
+    const w = suggestFromWeak(st.weak, st.notes ?? {}, st.noteSkip ?? []).find((x) => inCue.has(x.key));
+    if (!w) return null;
+    return h(
+      'div',
+      { class: 'note-box wp-suggest' },
+      h('span', null, `Bạn đã đọc chưa chuẩn “${w.word}” ${w.misses} lần. Thêm vào sổ từ để luyện phát âm?`),
+      h('button', { class: 'btn', onclick: () => { store().saveNote({ text: w.word, pron: true, auto: true, ctx: t.cue || t.sample || '', ctxVi: t.cueVi, npcId: 'coach', scene: baseScene.id }); SFX.play('correct'); render(); } }, 'Thêm'),
+      h('button', { class: 'btn quiet', onclick: () => { store().skipNoteSuggest(w.key); render(); } }, 'Không cần')
+    );
   }
 
   function renderMic() {
@@ -982,6 +1021,29 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
     }
   }
 
+  /** Ôn nhanh cuối bài: các từ vừa ghi trong bài này. Chạm để nghe lại và mở thẻ từ. */
+  function recapBox(): HTMLElement | null {
+    const fresh = Object.values(store().state.notes ?? {}).filter((n) => n.at >= startedAt).sort((a, b) => a.at - b.at);
+    if (fresh.length === 0) return null;
+    const box = h('div', { class: 'wp-recap' }, h('span', { class: 'eyebrow' }, `Bạn vừa ghi ${fresh.length} mục. Chạm để ôn nhanh`));
+    void loadGlossary().then((g) => {
+      if (disposed) return;
+      for (const n of fresh) {
+        const meaning = lookupGloss(g, n.text).vi || n.memo || n.ctxVi || '';
+        const tokens = splitWords(n.text);
+        box.append(
+          h(
+            'button',
+            { class: 'wp-recap-item', onclick: () => openWordSheet({ tokens, from: 0, to: tokens.length - 1, ctx: { sentence: n.ctx || n.text, vi: n.ctxVi, npcId: n.npcId, speaker: n.speaker, scene: n.scene } }) },
+            h('b', null, n.text),
+            h('span', null, [n.pron ? 'phát âm' : '', n.vocab ? meaning || 'từ mới' : ''].filter(Boolean).join(' · '))
+          )
+        );
+      }
+    });
+    return box;
+  }
+
   function renderResult() {
     const r = store().resultSummary;
     const { charisma } = store().state;
@@ -1021,6 +1083,7 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
           h('div', { class: 'cell' }, h('b', null, (r?.avgStars ?? 0).toFixed(1)), h('span', null, 'Sao trung bình')),
           h('div', { class: 'cell' }, h('b', null, `Lv.${charisma.lv}`), h('span', null, 'Cấp hiện tại'))
         ),
+        recapBox(),
         h('button', { class: 'btn', onclick: () => opts.onExit(true) }, perform ? 'Diễn lại bài này' : 'Tập lại bài này'),
         h('button', { class: 'btn quiet', style: { width: '100%' }, onclick: () => opts.onExit(false) }, 'Về danh sách')
       )
@@ -1069,6 +1132,7 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
 
   return () => {
     disposed = true;
+    closeWordSheet();
     frameWatch?.disconnect();
     stopIncClock();
     window.clearTimeout(introTimer);
