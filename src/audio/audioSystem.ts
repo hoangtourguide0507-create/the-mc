@@ -895,7 +895,12 @@ class SpeechRecognitionEngine {
     this.abortFn?.();
   }
 
-  async listen(opts: { weakMode?: boolean; onInterim?: (text: string) => void } = {}): Promise<ListenResult> {
+  /**
+   * `long`: lượt nói dài (độc thoại 60-90 giây). Không tự dừng khi người nói ngắt nghỉ, chỉ dừng khi
+   * bấm dừng hoặc hết `maxMs`; nếu trình duyệt tự kết thúc phiên nhận dạng giữa chừng thì mở lại
+   * và nối tiếp phần đã nghe.
+   */
+  async listen(opts: { weakMode?: boolean; long?: boolean; maxMs?: number; onStart?: () => void; onInterim?: (text: string) => void } = {}): Promise<ListenResult> {
     const armed = await AudioBus.armMic();
     if (!armed) {
       return { transcript: '', alternatives: [], reason: 'aborted' };
@@ -917,12 +922,14 @@ class SpeechRecognitionEngine {
     }
 
     const silenceMs = opts.weakMode ? 1100 : 1800;
-    const noSpeechMs = opts.weakMode ? 5000 : 7000;
-    const maxTotalMs = opts.weakMode ? 6000 : 20000;
+    const noSpeechMs = opts.long ? 12000 : opts.weakMode ? 5000 : 7000;
+    const maxTotalMs = opts.long ? opts.maxMs ?? 120000 : opts.weakMode ? 6000 : 20000;
 
     return new Promise<ListenResult>((resolve) => {
       let done = false;
       let started = false;
+      let stopping = false;
+      let restarts = 0;
       let heardSpeech = false;
       const finalChunks: string[] = [];
       let interimText = '';
@@ -974,6 +981,7 @@ class SpeechRecognitionEngine {
 
       this.stopFn = () => {
         if (done) return;
+        stopping = true;
         SFX.play('recStop');
         try {
           rec.stop();
@@ -995,9 +1003,11 @@ class SpeechRecognitionEngine {
       }, 5000);
 
       rec.onstart = () => {
+        if (started) return; // phiên mở lại giữa lượt nói dài: giữ nguyên các đồng hồ
         started = true;
         if (startTimer) window.clearTimeout(startTimer);
         SFX.play('recStart');
+        opts.onStart?.();
         noSpeechTimer = window.setTimeout(() => {
           if (!heardSpeech) finish('no-speech');
         }, noSpeechMs);
@@ -1014,6 +1024,7 @@ class SpeechRecognitionEngine {
         this.pulse(0.65 + Math.random() * 0.35);
 
         interimText = '';
+        // Không tính lại từ resultIndex: sau khi mở lại phiên, danh sách kết quả bắt đầu lại từ 0
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const res = event.results[i];
           const primary = res[0]?.transcript || '';
@@ -1032,15 +1043,35 @@ class SpeechRecognitionEngine {
         const currentPreview = mergeChunks([...finalChunks, interimText]);
         opts.onInterim?.(currentPreview);
 
-        silenceTimer = window.setTimeout(() => {
-          SFX.play('recStop');
-          finish('silence');
-        }, silenceMs);
+        // Lượt nói dài: người nói được ngắt nghỉ lâu, không tự dừng theo quãng lặng
+        if (!opts.long) {
+          silenceTimer = window.setTimeout(() => {
+            SFX.play('recStop');
+            finish('silence');
+          }, silenceMs);
+        }
+      };
+
+      /** Lượt nói dài: trình duyệt tự đóng phiên (thường sau một quãng lặng) thì mở lại và nghe tiếp. */
+      const resume = (): boolean => {
+        if (!opts.long || stopping || done || restarts >= 30) return false;
+        restarts += 1;
+        // Phần đang nghe dở của phiên cũ được giữ như một đoạn đã chốt
+        if (interimText.trim()) finalChunks.push(interimText.trim());
+        interimText = '';
+        try {
+          rec.start();
+          return true;
+        } catch {
+          return false;
+        }
       };
 
       rec.onerror = (ev: any) => {
         const err = ev?.error || 'unknown';
         if (err === 'no-speech') {
+          // Đã nói được một phần rồi im: với lượt nói dài, chờ onend để mở lại phiên
+          if (opts.long && heardSpeech) return;
           finish('no-speech');
         } else {
           finish('error', err);
@@ -1048,6 +1079,7 @@ class SpeechRecognitionEngine {
       };
 
       rec.onend = () => {
+        if (resume()) return;
         finish('manual');
       };
 

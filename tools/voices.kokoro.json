@@ -13,7 +13,9 @@
     "streettalk",
     "words",
     "incidents",
-    "talk"
+    "talk",
+    "longturn",
+    "interpret"
   ],
   "roles": {
     "leo": {

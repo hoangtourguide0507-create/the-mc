@@ -27,6 +27,7 @@
     "test:show": "node tests/show.test.mjs",
     "test:talk": "node tests/talk.test.mjs",
     "test:notes": "node tests/notes.test.mjs",
+    "test:longturn": "node tests/longturn.test.mjs",
     "glossary": "node tools/build-glossary.mjs"
   },
   "dependencies": {

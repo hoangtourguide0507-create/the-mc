@@ -230,6 +230,8 @@ export interface GameState {
     progress: Record<string, { tries: number; ok: number }>;
     recent: string[];
   };
+  /** Nói dài và dịch nối tiếp (core/longturn.ts): sao tốt nhất và số lần thử từng bài. */
+  speak: import('../core/longturn').SpeakProgress;
   /** Sổ từ tự chọn (core/notes.ts): từ và cụm người học tự ghi, và các gợi ý đã từ chối. */
   notes: import('../core/notes').NoteBook;
   noteSkip: string[];

@@ -71,6 +71,7 @@ export const DEFAULT_STATE: GameState = {
   pron: { progress: {}, recent: [] },
   notes: {},
   noteSkip: [],
+  speak: { long: {}, interp: {} },
   learn: deepCloneLearn(),
 };
 
@@ -275,6 +276,10 @@ export interface GameStore {
   memoNote: (key: string, memo: string) => void;
   reviewNote: (key: string, correct: boolean) => void;
   skipNoteSuggest: (key: string) => void;
+  /** Ghi kết quả một lượt nói dài; trả về XP vừa cộng. */
+  recordLong: (id: string, stars: number, wpm: number | null, blind: boolean) => number;
+  /** Ghi kết quả một bộ dịch nối tiếp; trả về XP vừa cộng. */
+  recordInterp: (id: string, stars: number) => number;
   unlockPhrase: (phraseId: string) => void;
 
   // Modals & Shop
@@ -1066,6 +1071,37 @@ export const gameStore = createStore<GameStore>((set, get) => ({
     const next = { ...st, noteSkip: [...(st.noteSkip ?? []), key].slice(-200) };
     set({ state: next });
     persistStateDebounced(next);
+  },
+
+  recordLong: (id, stars, wpm, blind) => {
+    const st = get().state;
+    const old = st.speak?.long?.[id];
+    const better = stars > (old?.stars ?? 0);
+    const entry = {
+      stars: Math.max(stars, old?.stars ?? 0),
+      tries: (old?.tries ?? 0) + 1,
+      wpm: better || old?.wpm === undefined ? wpm ?? old?.wpm : old.wpm,
+      blind: old?.blind || (blind && stars >= 2) || undefined,
+    };
+    const next = { ...st, speak: { long: { ...(st.speak?.long ?? {}), [id]: entry }, interp: st.speak?.interp ?? {} } };
+    set({ state: next });
+    persistStateNow(next);
+    // Nói dài là việc khó nhất: 15 XP mỗi sao, thêm 10 nếu không nhìn dàn ý
+    const xp = stars * 15 + (blind && stars >= 2 ? 10 : 0);
+    if (xp > 0) get().gain({ xp });
+    return xp;
+  },
+
+  recordInterp: (id, stars) => {
+    const st = get().state;
+    const old = st.speak?.interp?.[id];
+    const entry = { stars: Math.max(stars, old?.stars ?? 0), tries: (old?.tries ?? 0) + 1 };
+    const next = { ...st, speak: { long: st.speak?.long ?? {}, interp: { ...(st.speak?.interp ?? {}), [id]: entry } } };
+    set({ state: next });
+    persistStateNow(next);
+    const xp = stars * 10;
+    if (xp > 0) get().gain({ xp });
+    return xp;
   },
 
   unlockPhrase: (phraseId) => {

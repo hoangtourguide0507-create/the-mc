@@ -1,0 +1,46 @@
+/* Nói dài và Dịch nối tiếp. Dùng chung khung thẻ .tk-card của Trò chuyện; màu lấy từ biến của base.css. */
+.lt { display: grid; gap: 12px; }
+.lt > *, .lt .tk-card > * { min-width: 0; }
+.lt-brief { margin: 0; font-size: 16px; line-height: 1.55; color: var(--ink); }
+.lt-ideas { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; counter-reset: lt; }
+.lt-idea { display: grid; grid-template-columns: 30px 1fr; gap: 10px; align-items: start; padding: 10px 12px; border-radius: 14px; background: var(--panel-2); counter-increment: lt; }
+.lt-idea::before { content: counter(lt); width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 14px; background: var(--accent-soft); color: var(--accent); }
+.lt-idea.hit { background: var(--ok-bg); }
+.lt-idea.hit::before { content: '✓'; background: transparent; color: var(--ok-ink); font-size: 18px; }
+.lt-idea.miss { background: var(--bad-bg); }
+.lt-idea.miss::before { content: '✗'; background: transparent; color: var(--bad-ink); font-size: 16px; }
+.lt-idea b { display: block; font-weight: 600; font-size: 16px; line-height: 1.4; }
+.lt-idea .lt-key { display: block; margin-top: 2px; font-size: 15px; color: var(--accent); font-style: italic; }
+.lt-idea .lt-say { margin: 6px 0 0; font-size: 16px; line-height: 1.5; color: var(--ink); }
+.lt-idea .btn { margin-top: 6px; }
+.lt-clock { display: grid; gap: 6px; }
+.lt-time { font: 700 34px/1 var(--display); color: var(--ink); font-variant-numeric: tabular-nums; }
+.lt-time small { font: 500 14px/1 var(--body); color: var(--muted); margin-left: 8px; }
+.lt-bar { position: relative; height: 10px; border-radius: 99px; background: var(--panel-2); overflow: hidden; }
+.lt-bar i { position: absolute; inset: 0 auto 0 0; width: 0; background: var(--accent); border-radius: 99px; transition: width 0.3s linear; }
+.lt-bar i.ok { background: var(--ok-ink); }
+.lt-bar::after { content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 25%; border-left: 2px solid var(--line); border-right: 2px solid var(--line); }
+.lt-live { margin: 0; min-height: 48px; font-size: 15px; line-height: 1.5; color: var(--muted); font-style: italic; }
+.lt-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.lt-stats div { padding: 10px 6px; border-radius: 14px; background: var(--panel-2); text-align: center; display: grid; gap: 2px; }
+.lt-stats strong { font: 700 20px/1.2 var(--display); }
+.lt-stats span { font-size: 12.5px; color: var(--muted); }
+.lt-advice { margin: 0; padding-left: 20px; display: grid; gap: 6px; font-size: 15.5px; line-height: 1.5; }
+.lt-heard { margin: 0; font-size: 15px; line-height: 1.55; color: var(--muted); }
+.lt textarea {
+  width: 100%; min-height: 120px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel-2);
+  font: inherit; color: inherit; -webkit-user-select: text; user-select: text; resize: vertical;
+}
+.lt-toggle { display: flex; align-items: center; gap: 10px; min-height: var(--tap); font-size: 15.5px; }
+.lt-toggle input { width: 22px; height: 22px; accent-color: var(--accent); }
+/* Dịch nối tiếp */
+.lt-vi { margin: 0; padding: 14px 16px; border-radius: 16px; background: var(--panel-2); font: 600 19px/1.55 var(--body); color: var(--ink); min-height: 96px; display: grid; align-content: center; }
+.lt-vi.hidden { color: var(--muted); font-weight: 500; font-size: 16px; text-align: center; }
+.lt-count { height: 6px; border-radius: 99px; background: var(--panel-2); overflow: hidden; }
+.lt-count i { display: block; height: 100%; width: 100%; background: var(--accent); transform-origin: left; }
+.lt-seg-res { display: grid; gap: 8px; }
+.lt-chipline { display: flex; flex-wrap: wrap; gap: 6px; }
+.lt-chip { font-size: 13.5px; font-weight: 600; padding: 5px 10px; border-radius: 99px; }
+.lt-chip.hit { background: var(--ok-bg); color: var(--ok-ink); }
+.lt-chip.miss { background: var(--bad-bg); color: var(--bad-ink); }
+.lt .tk-head .pill { justify-self: start; }

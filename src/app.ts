@@ -21,6 +21,8 @@ import { mountPronunciation } from './ui/screens/training/pronunciation';
 import { mountQuickchat } from './ui/screens/training/quickchat';
 import { mountRhythm } from './ui/screens/training/rhythm';
 import { mountTalk } from './ui/screens/training/talk';
+import { mountLongTurn } from './ui/screens/training/longturn';
+import { mountInterpret } from './ui/screens/training/interpret';
 import { mountWarmup } from './ui/screens/training/warmup';
 
 const canvas = document.getElementById('stage3d') as HTMLCanvasElement;
@@ -188,6 +190,8 @@ function showTab(tab: TabId) {
         { id: 'rhythm', label: 'Nhịp', mount: mountRhythm },
         { id: 'quick', label: 'Phản xạ nhanh', mount: mountQuickchat },
         { id: 'talk', label: 'Trò chuyện', mount: mountTalk },
+        { id: 'long', label: 'Nói dài', mount: mountLongTurn },
+        { id: 'interp', label: 'Dịch', mount: mountInterpret },
         { id: 'cando', label: 'Năng lực', mount: mountCando },
       ],
     });

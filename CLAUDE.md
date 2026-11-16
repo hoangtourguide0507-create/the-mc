@@ -29,6 +29,12 @@ Lưu ý: hai file đó còn ghi Vite 5, trong khi repo đang dùng Vite 8 (`pack
   - Ôn ở tab Sổ tay, mục "Từ của tôi": từ mới thì tự đặt một câu có từ đó (`evaluateNoteUse`), phát âm thì đọc từ (`evaluateNoteSay`) hoặc "Chấm từng âm" bằng mô hình âm vị (`phoneTargetIpas`, ngưỡng `NOTE_PHONE_PASS`; chưa kiểm chứng với mô hình thật).
   - Bảng từ `src/data/glossary.json` (tải lười): IPA từ CMUdict, nghĩa soạn tay ở `tools/glossary/vi-*.txt` (dạng gốc; từ biến đổi tra theo `lemmaCandidates`). Thêm nội dung mới thì chạy `npm i --no-save cmu-pronouncing-dictionary && npm run glossary`; lệnh in các từ hay gặp còn thiếu nghĩa.
   - Câu mới hiện cho người học nên dựng bằng `fillPickable` thay vì chèn chuỗi thẳng, để từ nào cũng chạm được.
+- **Nói dài và Dịch nối tiếp** (2026-11-16, tab Luyện tập): chấm theo ý bằng nhóm từ khoá, không theo từng chữ. Luật ở `src/core/longturn.ts`, test `npm run test:longturn`.
+  - Nói dài (`src/data/longturns.ts`, màn `training/longturn.ts`): 12 bài độc thoại 60-90 giây, mỗi bài dàn ý 6 ý; `scoreLong` tính ý đã nói, số từ, tốc độ (từ/phút), lời dẫn, tiếng đệm; `longAdvice` cho tối đa 3 lời khuyên. 3 sao cần đủ 6 ý và từ `LONG_FULL_WORDS` từ. Có chế độ ẩn dàn ý.
+  - Thu tiếng lượt dài: `SpeechEngine.listen({ long: true, maxMs })` không tự dừng theo quãng lặng và tự mở lại phiên nếu trình duyệt đóng giữa chừng; màn còn nút "Nói tiếp" nếu việc mở lại thất bại. Mới kiểm bằng bộ nhận dạng giả lập, chưa kiểm trên iPhone thật.
+  - Dịch nối tiếp Việt → Anh (`src/data/interpret.ts`, màn `training/interpret.ts`): 8 bộ, mỗi bộ 5 câu; câu gốc hiện `showSeconds` giây rồi ẩn; xem lại thì tối đa 2 sao.
+  - Viết bài mới: mỗi câu mẫu `say` phải trúng ý của chính nó, câu lạc đề không được trúng ý nào, bài mẫu nói dài 110-190 từ (test kiểm). Câu mẫu đọc bằng giọng coach, phase `longturn` và `interpret` trong `tools/voice-lines.mjs` (chỉ Kokoro).
+  - Tiến độ lưu ở `state.speak` (`recordLong`, `recordInterp`).
 - "Phản xạ nhanh" thay cho trò chuyện với người đi đường: không gọi `openStreetTalk` (sẽ mở hộp thoại của bản React), nhưng vẫn gọi `markStreetTalkUsed` để nhiệm vụ loại `street` được tính.
 
 ## Lệnh thường dùng
