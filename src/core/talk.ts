@@ -37,9 +37,11 @@ export interface Talk {
   speaker?: 'emma' | 'liam';
   name: string;
   kind: string;
+  /** Chức năng lời nói chính của cuộc trò chuyện (src/data/functions.ts) */
+  fn?: string;
   roleVi: string;
   goalVi: string;
-  cefr: 'B1' | 'B2';
+  cefr: 'B1' | 'B2' | 'C1';
   nodes: TalkNode[];
   end: string;
   endVi: string;

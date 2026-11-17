@@ -23,6 +23,8 @@ export interface LongTask {
   kind: string;
   cefr: 'B1' | 'B2' | 'C1';
   title: string;
+  /** Chức năng lời nói chính (src/data/functions.ts) */
+  fn?: string;
   /** Tình huống và việc phải làm, tiếng Việt */
   brief: string;
   ideas: Idea[];
@@ -30,9 +32,11 @@ export interface LongTask {
 }
 
 export interface InterpSegment {
-  /** Lời người phát biểu, tiếng Việt */
+  /** Câu nguồn: lời người phát biểu bằng tiếng Việt (dịch nối tiếp) hoặc câu tiếng Anh cần đổi văn phong */
   vi: string;
   ideas: { label: string; need: string[][] }[];
+  /** Đổi văn phong: các từ sai tông phải tránh (ví dụ "guys" khi cần trang trọng) */
+  avoid?: string[];
   /** Bản dịch mẫu */
   say: string;
 }
@@ -42,6 +46,7 @@ export interface InterpSet {
   kind: string;
   cefr: 'B1' | 'B2' | 'C1';
   title: string;
+  fn?: string;
   /** Ai đang nói, trong hoàn cảnh nào (tiếng Việt) */
   brief: string;
   segments: InterpSegment[];
@@ -194,6 +199,8 @@ export interface InterpScore {
   transcript: string;
   covered: boolean[];
   hit: number;
+  /** Từ sai tông còn sót trong câu nói (chỉ có ở bài đổi văn phong) */
+  offTone: string[];
   stars: 0 | 1 | 2 | 3;
 }
 
@@ -204,8 +211,12 @@ export function scoreInterp(seg: InterpSegment, candidates: string[], peeked = f
   const frac = seg.ideas.length > 0 ? hit / seg.ideas.length : 0;
   let stars: 0 | 1 | 2 | 3 = frac >= 1 ? 3 : frac >= 0.6 ? 2 : frac >= 0.3 ? 1 : 0;
   if (peeked && stars > 2) stars = 2;
-  if (normalizeText(transcript).length < 3) stars = 0;
-  return { transcript, covered, hit, stars };
+  const tokens = normalizeText(transcript);
+  if (tokens.length < 3) stars = 0;
+  // Đổi văn phong: đủ ý nhưng còn từ sai tông thì tối đa 1 sao
+  const offTone = (seg.avoid ?? []).filter((w) => containsTokenSequence(tokens, normalizeText(w)));
+  if (offTone.length > 0 && stars > 1) stars = 1;
+  return { transcript, covered, hit, offTone, stars };
 }
 
 /** Thời gian hiện câu tiếng Việt trước khi ẩn, theo độ dài câu (giây). */
@@ -224,6 +235,8 @@ export function setStars(stars: number[]): 0 | 1 | 2 | 3 {
 export interface SpeakProgress {
   long: Record<string, { stars: number; tries: number; wpm?: number; blind?: boolean }>;
   interp: Record<string, { stars: number; tries: number }>;
+  /** Bài đổi văn phong (src/data/register.ts) */
+  register?: Record<string, { stars: number; tries: number }>;
 }
 
 export const EMPTY_SPEAK: SpeakProgress = { long: {}, interp: {} };

@@ -7,6 +7,9 @@
  * - nhân vật phải có giọng trong tools/voices.kokoro.json (câu thoại được render ở phase `talk`)
  */
 import type { Talk, TalkReply } from '../core/talk';
+import { TALKS_MORE_1 } from './talks.more1';
+import { TALKS_MORE_2 } from './talks.more2';
+import { TALKS_MORE_3 } from './talks.more3';
 
 /** Ý cụ thể: hội thoại đi tiếp */
 const r = (label: string, need: string[][], say: string, react: string): TalkReply => ({ label, need, say, react });
@@ -20,9 +23,10 @@ const CALM = ['no problem', 'do not worry', "don't worry", 'not a problem', ...O
 const ANY = ['any', 'anything', 'anywhere', 'either', 'whatever', 'up to you', 'you decide', 'your choice', 'do not mind', "don't mind", ...OK];
 const HELLO = ['hello', 'hi', 'good morning', 'good evening', ...OK];
 
-export const TALKS: Talk[] = [
+const BASE_TALKS: Talk[] = [
   {
     id: 'bride-call',
+    fn: 'client',
     npcId: 'couple',
     speaker: 'emma',
     name: 'Emma',
@@ -92,6 +96,7 @@ export const TALKS: Talk[] = [
   },
   {
     id: 'venue-walk',
+    fn: 'backstage',
     npcId: 'victoria',
     name: 'Victoria',
     kind: 'Tiệc cưới',
@@ -162,6 +167,7 @@ export const TALKS: Talk[] = [
   },
   {
     id: 'brand-brief',
+    fn: 'client',
     npcId: 'maya',
     name: 'Maya',
     kind: 'Thương hiệu và triển lãm',
@@ -231,6 +237,7 @@ export const TALKS: Talk[] = [
   },
   {
     id: 'opening-rehearsal',
+    fn: 'backstage',
     npcId: 'grace',
     name: 'Grace',
     kind: 'Thương hiệu và triển lãm',
@@ -299,6 +306,7 @@ export const TALKS: Talk[] = [
   },
   {
     id: 'family-elder',
+    fn: 'social',
     npcId: 'robert',
     name: 'Robert',
     kind: 'Cưới',
@@ -366,6 +374,7 @@ export const TALKS: Talk[] = [
   },
   {
     id: 'keynote-green-room',
+    fn: 'intro',
     npcId: 'okafor',
     name: 'Dr. Okafor',
     kind: 'Hội nghị và nghi thức',
@@ -436,3 +445,5 @@ export const TALKS: Talk[] = [
 export function talkById(id: string): Talk | undefined {
   return TALKS.find((t) => t.id === id);
 }
+
+export const TALKS: Talk[] = [...BASE_TALKS, ...TALKS_MORE_1, ...TALKS_MORE_2, ...TALKS_MORE_3];

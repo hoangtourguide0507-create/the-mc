@@ -279,7 +279,7 @@ export interface GameStore {
   /** Ghi kết quả một lượt nói dài; trả về XP vừa cộng. */
   recordLong: (id: string, stars: number, wpm: number | null, blind: boolean) => number;
   /** Ghi kết quả một bộ dịch nối tiếp; trả về XP vừa cộng. */
-  recordInterp: (id: string, stars: number) => number;
+  recordInterp: (id: string, stars: number, bucket?: 'interp' | 'register') => number;
   unlockPhrase: (phraseId: string) => void;
 
   // Modals & Shop
@@ -1083,7 +1083,7 @@ export const gameStore = createStore<GameStore>((set, get) => ({
       wpm: better || old?.wpm === undefined ? wpm ?? old?.wpm : old.wpm,
       blind: old?.blind || (blind && stars >= 2) || undefined,
     };
-    const next = { ...st, speak: { long: { ...(st.speak?.long ?? {}), [id]: entry }, interp: st.speak?.interp ?? {} } };
+    const next = { ...st, speak: { ...(st.speak ?? {}), long: { ...(st.speak?.long ?? {}), [id]: entry }, interp: st.speak?.interp ?? {} } };
     set({ state: next });
     persistStateNow(next);
     // Nói dài là việc khó nhất: 15 XP mỗi sao, thêm 10 nếu không nhìn dàn ý
@@ -1092,11 +1092,12 @@ export const gameStore = createStore<GameStore>((set, get) => ({
     return xp;
   },
 
-  recordInterp: (id, stars) => {
+  recordInterp: (id, stars, bucket = 'interp') => {
     const st = get().state;
-    const old = st.speak?.interp?.[id];
+    const speak = st.speak ?? { long: {}, interp: {} };
+    const old = speak[bucket]?.[id];
     const entry = { stars: Math.max(stars, old?.stars ?? 0), tries: (old?.tries ?? 0) + 1 };
-    const next = { ...st, speak: { long: st.speak?.long ?? {}, interp: { ...(st.speak?.interp ?? {}), [id]: entry } } };
+    const next = { ...st, speak: { ...speak, long: speak.long ?? {}, interp: speak.interp ?? {}, [bucket]: { ...(speak[bucket] ?? {}), [id]: entry } } };
     set({ state: next });
     persistStateNow(next);
     const xp = stars * 10;

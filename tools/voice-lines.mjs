@@ -36,7 +36,7 @@ export async function loadContent() {
     `export * from ${src('content.ts')};\nexport { PRON_DRILLS, coachFor } from ${src('pronunciation.ts')};\n` +
       `export { CHUNKS } from ${src('chunks.ts')};\nexport { RHYTHM_DRILLS, rhythmPlain } from ${src('rhythm.ts')};\n` +
       `export { INCIDENTS } from ${src('incidents.ts')};\nexport { TALKS } from ${src('talks.ts')};\n` +
-      `export { LONG_TASKS } from ${src('longturns.ts')};\nexport { INTERP_SETS } from ${src('interpret.ts')};\n`
+      `export { LONG_TASKS } from ${src('longturns.ts')};\nexport { INTERP_SETS } from ${src('interpret.ts')};\nexport { REGISTER_SETS } from ${src('register.ts')};\n`
   );
   await build({ entryPoints: [entry], bundle: true, format: 'esm', platform: 'node', outfile, logLevel: 'silent' });
   try {
@@ -122,6 +122,7 @@ export function collect(C) {
   // Nói dài (câu mẫu từng ý) và dịch nối tiếp (bản dịch mẫu), giọng coach
   for (const t of C.LONG_TASKS || []) for (const idea of t.ideas) add('longturn', 'coach', idea.say);
   for (const set of C.INTERP_SETS || []) for (const g of set.segments) add('interpret', 'coach', g.say);
+  for (const set of C.REGISTER_SETS || []) for (const g of set.segments) add('register', 'coach', g.say);
 
   // 6. Sổ tay và từ đơn (chạm vào từ để nghe)
   for (const p of C.STARTER || []) add('phrasebook', 'coach', p.en);

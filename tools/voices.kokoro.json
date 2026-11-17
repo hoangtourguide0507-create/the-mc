@@ -15,7 +15,8 @@
     "incidents",
     "talk",
     "longturn",
-    "interpret"
+    "interpret",
+    "register"
   ],
   "roles": {
     "leo": {

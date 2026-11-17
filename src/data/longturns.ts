@@ -17,6 +17,7 @@ const APPLAUSE = ['applause', 'welcome', 'welcoming', 'hand', 'clap', 'cheer'];
 export const LONG_TASKS: LongTask[] = [
   {
     id: 'wedding-open',
+    fn: 'open',
     kind: 'Tiệc cưới',
     cefr: 'B1',
     title: 'Mở màn tiệc cưới',
@@ -33,6 +34,7 @@ export const LONG_TASKS: LongTask[] = [
   },
   {
     id: 'speaker-intro',
+    fn: 'intro',
     kind: 'Hội nghị',
     cefr: 'B2',
     title: 'Giới thiệu diễn giả chính',
@@ -49,6 +51,7 @@ export const LONG_TASKS: LongTask[] = [
   },
   {
     id: 'closing',
+    fn: 'close',
     kind: 'Hội nghị',
     cefr: 'B1',
     title: 'Bế mạc chương trình',
@@ -65,6 +68,7 @@ export const LONG_TASKS: LongTask[] = [
   },
   {
     id: 'toast',
+    fn: 'thanks',
     kind: 'Tiệc cưới',
     cefr: 'B1',
     title: 'Dẫn phần nâng ly',
@@ -81,6 +85,7 @@ export const LONG_TASKS: LongTask[] = [
   },
   {
     id: 'launch-open',
+    fn: 'open',
     kind: 'Ra mắt sản phẩm',
     cefr: 'B2',
     title: 'Mở màn buổi ra mắt sản phẩm',
@@ -97,6 +102,7 @@ export const LONG_TASKS: LongTask[] = [
   },
   {
     id: 'delay',
+    fn: 'trouble',
     kind: 'Gala',
     cefr: 'B2',
     title: 'Thông báo chậm chương trình',
@@ -113,6 +119,7 @@ export const LONG_TASKS: LongTask[] = [
   },
   {
     id: 'award',
+    fn: 'intro',
     kind: 'Lễ trao giải',
     cefr: 'B2',
     title: 'Công bố một giải thưởng',
@@ -129,6 +136,7 @@ export const LONG_TASKS: LongTask[] = [
   },
   {
     id: 'housekeeping',
+    fn: 'announce',
     kind: 'Sự kiện quốc tế',
     cefr: 'B1',
     title: 'Thông báo đầu giờ cho hội nghị',
@@ -145,6 +153,7 @@ export const LONG_TASKS: LongTask[] = [
   },
   {
     id: 'sponsor-thanks',
+    fn: 'thanks',
     kind: 'Gala',
     cefr: 'B1',
     title: 'Cảm ơn nhà tài trợ',
@@ -161,6 +170,7 @@ export const LONG_TASKS: LongTask[] = [
   },
   {
     id: 'tea-ceremony',
+    fn: 'announce',
     kind: 'Lễ cưới truyền thống',
     cefr: 'B2',
     title: 'Giải thích lễ gia tiên cho khách nước ngoài',
@@ -177,6 +187,7 @@ export const LONG_TASKS: LongTask[] = [
   },
   {
     id: 'qa-open',
+    fn: 'qa',
     kind: 'Họp báo',
     cefr: 'B2',
     title: 'Mở phần hỏi đáp ở họp báo',
@@ -193,6 +204,7 @@ export const LONG_TASKS: LongTask[] = [
   },
   {
     id: 'auction-open',
+    fn: 'thanks',
     kind: 'Đấu giá từ thiện',
     cefr: 'B2',
     title: 'Mở phiên đấu giá từ thiện',

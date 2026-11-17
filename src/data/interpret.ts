@@ -17,6 +17,7 @@ const FAMILY = ['family', 'families'];
 export const INTERP_SETS: InterpSet[] = [
   {
     id: 'mc-wedding',
+    fn: 'open',
     kind: 'Tiệc cưới',
     cefr: 'B1',
     title: 'Tự dịch lời dẫn tiệc cưới',
@@ -31,6 +32,7 @@ export const INTERP_SETS: InterpSet[] = [
   },
   {
     id: 'father-bride',
+    fn: 'thanks',
     kind: 'Tiệc cưới',
     cefr: 'B1',
     title: 'Bố cô dâu phát biểu',
@@ -45,6 +47,7 @@ export const INTERP_SETS: InterpSet[] = [
   },
   {
     id: 'yearend-director',
+    fn: 'close',
     kind: 'Tiệc tất niên',
     cefr: 'B1',
     title: 'Giám đốc phát biểu tất niên',
@@ -59,6 +62,7 @@ export const INTERP_SETS: InterpSet[] = [
   },
   {
     id: 'chairman-open',
+    fn: 'open',
     kind: 'Hội nghị',
     cefr: 'B2',
     title: 'Chủ tịch khai mạc hội nghị',
@@ -73,6 +77,7 @@ export const INTERP_SETS: InterpSet[] = [
   },
   {
     id: 'launch-ceo',
+    fn: 'intro',
     kind: 'Ra mắt sản phẩm',
     cefr: 'B2',
     title: 'CEO giới thiệu sản phẩm mới',
@@ -87,6 +92,7 @@ export const INTERP_SETS: InterpSet[] = [
   },
   {
     id: 'trad-elder',
+    fn: 'social',
     kind: 'Lễ cưới truyền thống',
     cefr: 'B2',
     title: 'Đại diện họ nhà trai phát biểu',
@@ -101,6 +107,7 @@ export const INTERP_SETS: InterpSet[] = [
   },
   {
     id: 'gala-charity',
+    fn: 'thanks',
     kind: 'Gala',
     cefr: 'B2',
     title: 'Trưởng ban tổ chức kêu gọi gây quỹ',
@@ -115,6 +122,7 @@ export const INTERP_SETS: InterpSet[] = [
   },
   {
     id: 'press-joint',
+    fn: 'qa',
     kind: 'Họp báo',
     cefr: 'C1',
     title: 'Phát ngôn tại họp báo ký kết',

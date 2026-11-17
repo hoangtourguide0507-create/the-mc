@@ -21,7 +21,7 @@ Lưu ý: hai file đó còn ghi Vite 5, trong khi repo đang dùng Vite 8 (`pack
   - Màn chính là hàng poster vuốt ngang (`.poster` trong `base.css`, màu theo `data-theme`); danh sách bài của poster đang chọn nằm bên dưới.
   - Chưa làm: nhạc nền theo thể loại, điểm diễn chưa cộng vào XP.
 - **Trò chuyện** (2026-11-13, tab Luyện tập, thay cho Hậu trường đã gỡ): hội thoại rẽ nhánh viết sẵn, không dùng AI. Người học tự nghĩ câu; máy dò ý theo nhóm từ khoá (`matchReply`) để chọn câu nhân vật đáp. Ý cụ thể thì đi tiếp (2 điểm lần đầu, 1 điểm sau khi bị hỏi lại); trả lời mơ hồ (`stay`) thì bị hỏi vặn; không rõ ý thì nhân vật hỏi lại và hiện gợi ý; quá 3 lần thì tự đi tiếp.
-  - Luật ở `src/core/talk.ts`, nội dung ở `src/data/talks.ts` (6 cuộc, mỗi cuộc 5 lượt), màn ở `src/ui/screens/training/talk.ts`. Test: `npm run test:talk`.
+  - Luật ở `src/core/talk.ts`, nội dung ở `src/data/talks.ts` và `talks.more1..3.ts` (30 cuộc, mỗi cuộc 5 lượt, B1 đến C1; gồm hỏi đáp với khán giả, hậu trường, khách hàng, xã giao), màn ở `src/ui/screens/training/talk.ts`. Test: `npm run test:talk`.
   - Viết cuộc mới: mọi câu mẫu `say` phải được nhận đúng ý của chính nó, ý cụ thể hơn khai báo trước, mỗi lượt có một nhánh mơ hồ, câu cụt lủn ("Yes.") không được đi tiếp (test kiểm).
   - Giọng: mọi câu của nhân vật và câu mẫu nằm ở phase `talk` trong `tools/voice-lines.mjs` và `tools/voices.kokoro.json`, được `voices-kokoro.yml` render sẵn. Phase này không nằm trong cấu hình ElevenLabs.
 - **Sổ từ tự chọn** (2026-11-16): chạm một từ trong câu nhân vật, thẻ nhắc lời, Trò chuyện hoặc Sổ tay để mở thẻ từ (IPA, nghĩa, nghe thường/chậm); nhấn giữ rồi kéo để chọn cả cụm (thẻ từ cũng có nút nới cụm). Hai nhãn: "Từ mới" và "Luyện phát âm".
@@ -35,6 +35,8 @@ Lưu ý: hai file đó còn ghi Vite 5, trong khi repo đang dùng Vite 8 (`pack
   - Dịch nối tiếp Việt → Anh (`src/data/interpret.ts`, màn `training/interpret.ts`): 8 bộ, mỗi bộ 5 câu; câu gốc hiện `showSeconds` giây rồi ẩn; xem lại thì tối đa 2 sao.
   - Viết bài mới: mỗi câu mẫu `say` phải trúng ý của chính nó, câu lạc đề không được trúng ý nào, bài mẫu nói dài 110-190 từ (test kiểm). Câu mẫu đọc bằng giọng coach, phase `longturn` và `interpret` trong `tools/voice-lines.mjs` (chỉ Kokoro).
   - Tiến độ lưu ở `state.speak` (`recordLong`, `recordInterp`).
+- **Văn phong** (2026-11-17, tab Luyện tập): đổi tông một câu tiếng Anh (thân mật → trang trọng, và một bộ ngược lại). Dữ liệu `src/data/register.ts` (6 bộ, 5 câu mỗi bộ), dùng chung màn với Dịch (`mountRegister` trong `training/interpret.ts`, cấu hình `DrillConfig`). Mỗi câu có `avoid`: đủ ý mà còn từ sai tông thì tối đa 1 sao (`offTone` trong `scoreInterp`). Tiến độ ở `state.speak.register`. Giọng mẫu: phase `register` (Kokoro).
+- **Chức năng lời nói** (2026-11-17): `src/data/functions.ts` có 10 chức năng (mở màn, giới thiệu, thông báo, xử lý sự cố, cảm ơn, hỏi đáp, bế mạc, hậu trường, khách hàng, xã giao). Mọi bài Trò chuyện, Nói dài, Dịch, Văn phong phải có `fn` hợp lệ, mỗi chức năng ít nhất 3 bài (`npm run test:longturn` kiểm). Hàng nút lọc dùng chung ở `src/ui/fnFilter.ts`. 144 bài trên Sân khấu chưa gắn chức năng.
 - "Phản xạ nhanh" thay cho trò chuyện với người đi đường: không gọi `openStreetTalk` (sẽ mở hộp thoại của bản React), nhưng vẫn gọi `markStreetTalkUsed` để nhiệm vụ loại `street` được tính.
 
 ## Lệnh thường dùng

@@ -11,9 +11,9 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const outfile = path.join(os.tmpdir(), `mc-long-${process.pid}.mjs`);
 const entry = path.join(os.tmpdir(), `mc-long-entry-${process.pid}.ts`);
 const q = (rel) => JSON.stringify(path.join(root, rel));
-writeFileSync(entry, `export * as L from ${q('src/core/longturn.ts')};\nexport { LONG_TASKS } from ${q('src/data/longturns.ts')};\nexport { INTERP_SETS } from ${q('src/data/interpret.ts')};\nexport { normalizeText } from ${q('src/core/evaluator.ts')};`);
+writeFileSync(entry, `export * as L from ${q('src/core/longturn.ts')};\nexport { LONG_TASKS } from ${q('src/data/longturns.ts')};\nexport { INTERP_SETS } from ${q('src/data/interpret.ts')};\nexport { REGISTER_SETS } from ${q('src/data/register.ts')};\nexport { FUNCTIONS, FN_BY_ID } from ${q('src/data/functions.ts')};\nexport { TALKS } from ${q('src/data/talks.ts')};\nexport { normalizeText } from ${q('src/core/evaluator.ts')};`);
 await build({ entryPoints: [entry], bundle: true, format: 'esm', platform: 'node', outfile, logLevel: 'silent' });
-const { L, LONG_TASKS, INTERP_SETS, normalizeText } = await import(pathToFileURL(outfile).href);
+const { L, LONG_TASKS, INTERP_SETS, REGISTER_SETS, FUNCTIONS, FN_BY_ID, TALKS, normalizeText } = await import(pathToFileURL(outfile).href);
 
 const OFF_TOPIC = 'I had noodles for lunch with my cousin and then we watched a football match on television because it was raining outside all afternoon and nobody wanted to go to the market or the beach so we stayed at home and cooked rice and fish and talked about our favourite films and songs until it was very late and everybody fell asleep on the sofa with the cat and the dog next to the window in the kitchen of my grandmother house in the countryside far away from the city where I usually work every single day of the week';
 const CEFR = new Set(['B1', 'B2', 'C1']);
@@ -102,4 +102,45 @@ assert.equal(L.scoreInterp(g0, ['Our sales increased by 20 percent compared to t
 assert.equal(L.scoreInterp(g0, ['Sales went up a lot']).stars, 1, 'thiếu con số và mốc so sánh');
 assert.deepEqual([L.setStars([3, 3, 3, 2, 3]), L.setStars([2, 2, 2, 2, 1]), L.setStars([1, 1, 1, 0, 2]), L.setStars([0, 0, 1, 0, 0]), L.setStars([])], [3, 2, 1, 0, 0]);
 
-console.log(`longturn.test: ${LONG_TASKS.length} bài nói dài (${modelWords} từ mẫu), ${INTERP_SETS.length} bộ dịch (${segs} câu) — OK`);
+/* ---------- Đổi văn phong ---------- */
+assert.ok(REGISTER_SETS.length >= 6, 'cần ít nhất 6 bộ đổi văn phong');
+let regSegs = 0;
+for (const s of REGISTER_SETS) {
+  assert.ok(!ids.has(s.id), `trùng id ${s.id}`);
+  ids.add(s.id);
+  assert.ok(CEFR.has(s.cefr) && ['Nâng tông', 'Hạ tông'].includes(s.kind) && s.title && s.brief, `${s.id}: thiếu trường`);
+  assert.equal(s.segments.length, 5, `${s.id}: mỗi bộ 5 câu`);
+  s.segments.forEach((g, k) => {
+    const at = `${s.id} câu ${k + 1}`;
+    regSegs += 1;
+    assert.ok(g.avoid?.length > 0, `${at}: cần danh sách từ sai tông`);
+    const r = L.scoreInterp(g, [g.say]);
+    assert.equal(r.stars, 3, `${at}: bản mẫu thiếu ý ${g.ideas.filter((_, i) => !r.covered[i]).map((x) => x.label).join('; ')} hoặc còn từ sai tông ${r.offTone.join(', ')}`);
+    const src = L.scoreInterp(g, [g.vi]);
+    assert.ok(src.stars <= 1, `${at}: lặp lại câu nguồn không được quá 1 sao (được ${src.stars})`);
+    assert.equal(L.scoreInterp(g, [OFF_TOPIC]).stars, 0, `${at}: câu lạc đề phải 0 sao`);
+  });
+}
+assert.ok(REGISTER_SETS.some((s) => s.cefr === 'C1') && REGISTER_SETS.some((s) => s.kind === 'Hạ tông'));
+// Đủ ý nhưng còn từ suồng sã thì tối đa 1 sao và báo đúng từ
+const reg0 = REGISTER_SETS[0].segments[0];
+const mixed = L.scoreInterp(reg0, ['Ladies and gentlemen, guys, please take your seats, we are about to begin']);
+assert.equal(mixed.hit, 3);
+assert.equal(mixed.stars, 1);
+assert.deepEqual(mixed.offTone, ['guys']);
+assert.deepEqual(L.scoreInterp(INTERP_SETS[0].segments[0], [INTERP_SETS[0].segments[0].say]).offTone, [], 'bài dịch không có từ sai tông');
+
+/* ---------- Chức năng lời nói ---------- */
+assert.equal(new Set(FUNCTIONS.map((f) => f.id)).size, FUNCTIONS.length);
+const fnCount = Object.fromEntries(FUNCTIONS.map((f) => [f.id, 0]));
+for (const [name, list] of [['Nói dài', LONG_TASKS], ['Dịch', INTERP_SETS], ['Văn phong', REGISTER_SETS], ['Trò chuyện', TALKS]]) {
+  for (const item of list) {
+    assert.ok(FN_BY_ID[item.fn], `${name} ${item.id}: chức năng "${item.fn}" không có trong functions.ts`);
+    fnCount[item.fn] += 1;
+  }
+}
+for (const f of FUNCTIONS) assert.ok(fnCount[f.id] >= 3, `chức năng ${f.id} mới có ${fnCount[f.id]} bài, cần ít nhất 3`);
+assert.ok(TALKS.length >= 30, 'cần ít nhất 30 cuộc trò chuyện');
+assert.ok(TALKS.filter((t) => t.cefr === 'C1').length >= 4, 'cần ít nhất 4 cuộc trò chuyện C1');
+
+console.log(`longturn.test: ${LONG_TASKS.length} bài nói dài (${modelWords} từ mẫu), ${INTERP_SETS.length} bộ dịch (${segs} câu), ${REGISTER_SETS.length} bộ văn phong (${regSegs} câu), ${TALKS.length} cuộc trò chuyện — OK`);

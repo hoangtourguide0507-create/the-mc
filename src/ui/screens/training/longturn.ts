@@ -13,6 +13,7 @@ import { gameStore } from '../../../core/store';
 import { LONG_TASKS } from '../../../data/longturns';
 import { clear, h } from '../../dom';
 import { closeWordSheet, fillPickable } from '../../wordpick';
+import { byFn, fnChips } from '../../fnFilter';
 
 /** Giới hạn một lượt nói, giây. Thanh thời gian chia theo mốc này. */
 const HARD_MAX = 120;
@@ -51,7 +52,8 @@ export function mountLongTurn(root: HTMLElement): () => void {
         h('p', { class: 'tk-lead' }, `Tự nói một mạch ${LONG_MIN_SEC}-${LONG_MAX_SEC} giây như trên sân khấu thật. Không có câu để đọc: bạn chỉ có dàn ý. Máy chấm theo ý, số từ và tốc độ nói.`)
       )
     );
-    for (const t of LONG_TASKS) {
+    box.append(fnChips(LONG_TASKS, () => go(renderList)));
+    for (const t of byFn(LONG_TASKS)) {
       const d = done[t.id];
       box.append(
         h(

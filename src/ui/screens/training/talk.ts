@@ -13,6 +13,7 @@ import { TALKS } from '../../../data/talks';
 import { answerBar } from '../../answer';
 import { clear, h } from '../../dom';
 import { closeWordSheet, fillPickable } from '../../wordpick';
+import { byFn, fnChips } from '../../fnFilter';
 
 const BEST_KEY = 'mclife.talk.best';
 
@@ -66,7 +67,8 @@ export function mountTalk(root: HTMLElement): () => void {
         h('p', { class: 'tk-lead' }, 'Nói chuyện nhiều lượt với khách hàng, cô dâu, diễn giả. Không có câu mẫu để đọc: bạn tự nghĩ câu. Trả lời mơ hồ sẽ bị hỏi vặn lại.')
       )
     );
-    for (const t of TALKS) {
+    box.append(fnChips(TALKS, () => go(renderList)));
+    for (const t of byFn(TALKS)) {
       box.append(
         h(
           'button',
