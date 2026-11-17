@@ -1,4 +1,4 @@
-import { findGrammarIssues } from './grammar';
+import { capForGrammar, findGrammarIssues } from './grammar';
 import { EvalResult, EvaluatedToken, TurnData } from '../types/game';
 import { clamp } from './clock';
 
@@ -594,7 +594,10 @@ export function containsTokenSequence(haystack: string[], needle: string[]): boo
 
 export function evaluateFreeform(turn: TurnData, transcript: string): EvalResult {
   const base = scoreFreeform(turn, transcript);
-  return { ...base, grammarIssues: findGrammarIssues(transcript) };
+  const grammarIssues = findGrammarIssues(transcript);
+  // Lượt ứng biến: đủ ý nhưng sai ngữ pháp rõ ràng thì tối đa 2 sao
+  const stars = capForGrammar(base.stars, grammarIssues);
+  return { ...base, stars, score: stars < base.stars ? Math.min(base.score, 79) : base.score, grammarIssues };
 }
 
 function scoreFreeform(turn: TurnData, transcript: string): EvalResult {

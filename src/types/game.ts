@@ -339,7 +339,7 @@ export interface EvalResult {
   blanksFilled?: number;
   blanksTotal?: number;
   /** Lỗi ngữ pháp / khẩu ngữ tìm thấy trong câu nói tự do. */
-  grammarIssues?: { wrong: string; fix: string }[];
+  grammarIssues?: import('../core/grammar').GrammarIssue[];
 }
 
 export type AudioBusState = 'idle' | 'speaking' | 'arming' | 'listening';

@@ -32,6 +32,7 @@ import {
   type WordNote,
 } from '../../core/notes';
 import { closeWordSheet, fillPickable, loadGlossary, openWordSheet } from '../wordpick';
+import { grammarErrors } from '../../core/grammar';
 
 interface Phrase {
   id: string;
@@ -240,7 +241,11 @@ export function mountNotebook(root: HTMLElement): () => void {
       noteMsg = {
         key: n.key,
         ok: false,
-        text: best.r.hasNote ? `Câu còn ngắn quá. Hãy nói trọn một câu của MC có “${n.text}”. Máy nghe: “${best.t}”` : `Chưa nghe thấy “${n.text}” trong câu. Máy nghe: “${best.t}”`,
+        text: best.r.hasNote && best.r.fullSentence
+          ? `Có từ rồi nhưng câu còn sai ngữ pháp: ${grammarErrors(best.r.grammar).map((g) => `“${g.wrong}” → “${g.fix}”`).join('; ')}. Máy nghe: “${best.t}”`
+          : best.r.hasNote
+          ? `Câu còn ngắn quá. Hãy nói trọn một câu của MC có “${n.text}”. Máy nghe: “${best.t}”`
+          : `Chưa nghe thấy “${n.text}” trong câu. Máy nghe: “${best.t}”`,
       };
     }
     render();

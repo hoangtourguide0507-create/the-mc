@@ -14,6 +14,7 @@ import { LONG_TASKS } from '../../../data/longturns';
 import { clear, h } from '../../dom';
 import { closeWordSheet, fillPickable } from '../../wordpick';
 import { byFn, fnChips } from '../../fnFilter';
+import { grammarNote } from '../../grammarNote';
 
 /** Giới hạn một lượt nói, giây. Thanh thời gian chia theo mốc này. */
 const HARD_MAX = 120;
@@ -339,6 +340,7 @@ export function mountLongTurn(root: HTMLElement): () => void {
         ),
         h('p', { class: 'vi' }, [seconds > 0 ? `Thời gian nói: ${clock(seconds)}.` : '', xp > 0 ? `+${xp} XP.` : '', blind ? 'Không nhìn dàn ý.' : '', 'Tốc độ dễ nghe trên sân khấu là 100-165 từ mỗi phút.'].filter(Boolean).join(' ')),
         advice.length ? h('div', { class: 'note-box focus' }, 'Lần sau:', h('ul', { class: 'lt-advice' }, ...advice.map((a) => h('li', null, a)))) : h('div', { class: 'note-box' }, 'Đủ ý, đủ dài, tốc độ tốt. Thử lại với dàn ý ẩn, hoặc chọn bài khác.'),
+        grammarNote(s.grammar.slice(0, 6)),
         h('div', { class: 'eyebrow' }, 'Dàn ý và câu mẫu (chạm một từ để ghi vào sổ)'),
         list,
         allBtn,

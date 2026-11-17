@@ -7,6 +7,7 @@
  * Hàm ở đây đều thuần (không DOM, không âm thanh). Test: npm run test:talk
  */
 import { containsTokenSequence, normalizeText } from './evaluator';
+import { findGrammarIssues, grammarErrors, type GrammarIssue } from './grammar';
 
 export interface TalkReply {
   /** Ý của câu trả lời, tiếng Việt (hiện sau khi máy nhận ra, và trong gợi ý) */
@@ -101,6 +102,10 @@ export interface Step {
   gained: number;
   /** Từ lần hỏi lại thứ hai: hiện câu mẫu cho người học */
   reveal: boolean;
+  /** Lỗi ngữ pháp trong câu vừa nói. Đúng ý nhưng sai ngữ pháp thì chỉ được 1 điểm. */
+  grammar: GrammarIssue[];
+  /** Bị trừ điểm vì sai ngữ pháp */
+  grammarCost: boolean;
 }
 
 export function firstSample(node: TalkNode): TalkReply {
@@ -111,7 +116,8 @@ export function step(talk: Talk, s: TalkState, candidates: string[]): Step {
   const node = talk.nodes[s.node];
   const m = matchReply(node, candidates);
   const nextAsk = (i: number) => (i < talk.nodes.length ? talk.nodes[i].ask : talk.end);
-  const go = (react: string, gained: number, outcome: Outcome): Step => {
+  const grammar = findGrammarIssues(m?.transcript ?? candidates[0] ?? '');
+  const go = (react: string, gained: number, outcome: Outcome, grammarCost = false): Step => {
     const n = s.node + 1;
     return {
       state: { node: n, tries: 0, points: s.points + gained, done: n >= talk.nodes.length },
@@ -120,9 +126,16 @@ export function step(talk: Talk, s: TalkState, candidates: string[]): Step {
       npc: [react, nextAsk(n)],
       gained,
       reveal: false,
+      grammar,
+      grammarCost,
     };
   };
-  if (m && !m.reply.stay) return go(m.reply.react, s.tries === 0 ? POINTS_FIRST : POINTS_LATER, 'advance');
+  if (m && !m.reply.stay) {
+    const full = s.tries === 0 ? POINTS_FIRST : POINTS_LATER;
+    // Đúng ý nhưng sai ngữ pháp rõ ràng: nhân vật vẫn hiểu, nhưng chỉ được 1 điểm
+    const wrong = grammarErrors(grammar).length > 0 && full > POINTS_LATER;
+    return go(m.reply.react, wrong ? POINTS_LATER : full, 'advance', wrong);
+  }
   const tries = s.tries + 1;
   if (tries >= MAX_TRIES) return go(firstSample(node).react, 0, 'forced');
   return {
@@ -132,6 +145,8 @@ export function step(talk: Talk, s: TalkState, candidates: string[]): Step {
     npc: [m ? m.reply.react : node.nudge],
     gained: 0,
     reveal: tries >= 2,
+    grammar,
+    grammarCost: false,
   };
 }
 

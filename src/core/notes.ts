@@ -3,6 +3,7 @@
 // tính theo ngày thật (không theo ngày trong game, vì ngày trong game không còn tự trôi).
 import { normalizeText, wordSim } from './evaluator';
 import { SRS_INTERVALS, SRS_MAX_BOX } from './srs';
+import { findGrammarIssues, grammarErrors, type GrammarIssue } from './grammar';
 import type { WeakWord } from '../types/game';
 
 export interface WordNote {
@@ -188,6 +189,7 @@ export interface NoteUse {
   hasNote: boolean;
   /** Câu đủ dài để là một câu trọn vẹn, không chỉ đọc lại từ. */
   fullSentence: boolean;
+  grammar: GrammarIssue[];
 }
 
 /** Ôn "từ mới" bằng cách nói: người học tự đặt một câu có từ đó. */
@@ -202,7 +204,8 @@ export function evaluateNoteUse(noteText: string, transcript: string): NoteUse {
     });
   }
   const fullSentence = spoken.length >= need.length + 3;
-  return { ok: hasNote && fullSentence, hasNote, fullSentence };
+  const grammar = findGrammarIssues(transcript);
+  return { ok: hasNote && fullSentence && grammarErrors(grammar).length === 0, hasNote, fullSentence, grammar };
 }
 
 /** Ôn "phát âm": máy nghe ra đúng từ (hoặc cụm) đã ghi trong một phương án bất kỳ. */

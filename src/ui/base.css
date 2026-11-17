@@ -330,3 +330,9 @@ button:disabled { cursor: default; opacity: 0.45; }
   .l-sheet { align-self: center; width: 100%; max-width: 720px; border: 1px solid var(--line); }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+/* Khung lỗi ngữ pháp dùng chung (src/ui/grammarNote.ts) */
+.gn { display: grid; gap: 6px; }
+.gn-title { font-size: 13px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+.gn-line { font-size: 15.5px; line-height: 1.5; }
+.gn-line s { opacity: 0.75; }
+.gn-why { display: block; font-size: 14px; opacity: 0.85; }

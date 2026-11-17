@@ -1,6 +1,7 @@
 // "Cụm mang về": mỗi tình huống chốt vài cụm dùng lại được. Cụm vào hộp ôn (Leitner) và quay lại
 // trong phần Khởi động đầu ngày, nơi người học phải tự nói một câu có cụm đó trong ngữ cảnh khác.
 import { normalizeText, wordSim } from './evaluator';
+import { findGrammarIssues, grammarErrors, type GrammarIssue } from './grammar';
 import { SRS_INTERVALS, SRS_MAX_BOX } from './srs';
 
 export interface ChunkCard {
@@ -41,6 +42,8 @@ export interface ChunkUse {
   hasChunk: boolean;
   /** Câu đủ dài để là một câu trọn vẹn, không chỉ đọc lại cụm. */
   fullSentence: boolean;
+  /** Lỗi ngữ pháp trong câu: có lỗi thì chưa tính là thuộc */
+  grammar: GrammarIssue[];
 }
 
 /** Kiểm tra người học có dùng cụm trong một câu trọn vẹn không. */
@@ -55,5 +58,6 @@ export function evaluateChunkUse(chunk: string, transcript: string): ChunkUse {
     });
   }
   const fullSentence = spoken.length >= need.length + 2;
-  return { ok: hasChunk && fullSentence, hasChunk, fullSentence };
+  const grammar = findGrammarIssues(transcript);
+  return { ok: hasChunk && fullSentence && grammarErrors(grammar).length === 0, hasChunk, fullSentence, grammar };
 }

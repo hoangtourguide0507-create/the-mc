@@ -6,7 +6,7 @@
  */
 import './talk.css';
 import { SFX, Voice } from '../../../audio/audioSystem';
-import { findGrammarIssues } from '../../../core/grammar';
+import { grammarNote } from '../../grammarNote';
 import { gameStore } from '../../../core/store';
 import { firstSample, maxPoints, newTalk, starsFor, step, xpFor, type Talk, type TalkState } from '../../../core/talk';
 import { TALKS } from '../../../data/talks';
@@ -212,7 +212,7 @@ export function mountTalk(root: HTMLElement): () => void {
       const note = h('div', { class: 'tk-note' });
       const model = res.outcome === 'advance' ? res.match!.reply : firstSample(node);
       if (res.outcome === 'advance') {
-        note.append(h('div', { class: 'tk-ok' }, `✓ ${model.label} · +${res.gained} điểm`));
+        note.append(h('div', { class: 'tk-ok' }, `✓ ${model.label} · +${res.gained} điểm${res.grammarCost ? ' (đúng ý, nhưng sai ngữ pháp nên chỉ được 1 điểm)' : ''}`));
         SFX.play('correct');
       } else if (res.outcome === 'press') {
         note.append(h('div', { class: 'tk-warn' }, `Còn chung chung, ${t.name} hỏi vặn lại.`));
@@ -224,7 +224,8 @@ export function mountTalk(root: HTMLElement): () => void {
         note.append(h('div', { class: 'tk-warn' }, 'Hết lượt thử, câu chuyện đi tiếp.'));
         SFX.play('error');
       }
-      for (const g of findGrammarIssues(heard)) note.append(h('div', { class: 'tk-fix' }, 'Sửa: ', h('s', null, g.wrong), ' → ', h('strong', null, g.fix)));
+      const gn = grammarNote(res.grammar);
+      if (gn) note.append(gn);
       if ((res.outcome === 'advance' || res.outcome === 'forced') && model.say && !same(model.say, heard)) {
         const sample = model.say;
         note.append(

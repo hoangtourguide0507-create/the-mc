@@ -73,7 +73,11 @@ assert.deepEqual(N.notedMask(N.splitWords('Welcome - to the show'), { 'welcome t
 
 // Ôn bằng cách nói
 assert.equal(N.evaluateNoteUse('applause', 'Please give her a big round of applause').ok, true);
-assert.deepEqual(N.evaluateNoteUse('applause', 'applause'), { ok: false, hasNote: true, fullSentence: false });
+assert.deepEqual(N.evaluateNoteUse('applause', 'applause'), { ok: false, hasNote: true, fullSentence: false, grammar: [] });
+// Có từ, đủ dài nhưng sai ngữ pháp thì chưa đạt
+const bad = N.evaluateNoteUse('applause', 'Please everyone are give a big applause');
+assert.equal(bad.ok, false);
+assert.ok(bad.hasNote && bad.fullSentence && bad.grammar.length > 0);
 assert.equal(N.evaluateNoteUse('applause', 'I had noodles for lunch with my cousin').hasNote, false);
 assert.equal(N.evaluateNoteUse('join me in welcoming', 'Please join me in welcoming our next speaker tonight').ok, true);
 assert.equal(N.evaluateNoteSay('schedule', ['shed', 'the schedule']), true);

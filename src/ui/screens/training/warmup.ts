@@ -1,6 +1,8 @@
 import './warmup.css';
 import { SFX, SpeechEngine, Voice } from '../../../audio/audioSystem';
 import { dueChunkIds, evaluateChunkUse, masteredChunks } from '../../../core/chunks';
+import { grammarErrors, type GrammarIssue } from '../../../core/grammar';
+import { grammarNote } from '../../grammarNote';
 import { gameStore } from '../../../core/store';
 import { CHUNKS } from '../../../data/chunks';
 import { watch } from '../../../engine/watch';
@@ -19,7 +21,7 @@ export function mountWarmup(root: HTMLElement): () => void {
 
   let idx = 0;
   let peeked = false;
-  let result: { ok: boolean; heard: string; hasChunk: boolean } | null = null;
+  let result: { ok: boolean; heard: string; hasChunk: boolean; grammar: GrammarIssue[] } | null = null;
   let graded = false;
   let right = 0;
   let disposed = false;
@@ -43,10 +45,10 @@ export function mountWarmup(root: HTMLElement): () => void {
   function answer(candidates: string[]) {
     if (disposed) return;
     const chunk = CHUNKS[queue[idx]];
-    let best = { ok: false, hasChunk: false, heard: candidates[0] || '' };
+    let best: { ok: boolean; hasChunk: boolean; heard: string; grammar: GrammarIssue[] } = { ok: false, hasChunk: false, heard: candidates[0] || '', grammar: [] };
     for (const c of candidates) {
       const r = evaluateChunkUse(chunk.en, c);
-      if (r.ok || (r.hasChunk && !best.hasChunk)) best = { ok: r.ok, hasChunk: r.hasChunk, heard: c };
+      if (r.ok || (r.hasChunk && !best.hasChunk)) best = { ok: r.ok, hasChunk: r.hasChunk, heard: c, grammar: r.grammar };
       if (r.ok) break;
     }
     SFX.play(best.ok ? 'ting' : 'error');
@@ -146,6 +148,8 @@ export function mountWarmup(root: HTMLElement): () => void {
         ? peeked
           ? 'Đúng rồi. Vì đã xem trước nên mai cụm này quay lại.'
           : 'Chuẩn! Cụm này sẽ quay lại sau vài ngày.'
+        : r.hasChunk && grammarErrors(r.grammar).length > 0
+        ? 'Có cụm rồi, nhưng câu còn sai ngữ pháp. Sửa lại theo gợi ý; mai cụm này quay lại.'
         : r.hasChunk
         ? 'Có cụm rồi, nhưng hãy nói thành một câu trọn vẹn.'
         : 'Chưa nghe thấy cụm này trong câu của bạn.';
@@ -155,6 +159,7 @@ export function mountWarmup(root: HTMLElement): () => void {
           { class: `warmup-result ${r.ok ? 'ok' : 'miss'}` },
           h('p', { class: 'warmup-verdict' }, verdict),
           h('p', { class: 'vi' }, 'Máy nghe được: ', h('i', null, `“${r.heard}”`)),
+          grammarNote(r.grammar),
           h(
             'button',
             {

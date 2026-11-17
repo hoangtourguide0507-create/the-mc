@@ -13,6 +13,7 @@ import { answerBar, type AnswerBar } from '../../answer';
 import { clear, h } from '../../dom';
 import { closeWordSheet, fillPickable } from '../../wordpick';
 import { byFn, fnChips } from '../../fnFilter';
+import { grammarNote } from '../../grammarNote';
 import { REGISTER_SETS } from '../../../data/register';
 
 function starsEl(n: number): HTMLElement {
@@ -208,9 +209,10 @@ function mountDrill(root: HTMLElement, cfg: DrillConfig): () => void {
         const model = h('p', { class: 'tk-model-text' });
         fillPickable(model, g.say, { vi: cfg.bucket === 'interp' ? g.vi : undefined, npcId: 'coach', scene: `${cfg.bucket}:${set.id}` });
         body.append(
-          h('div', { class: 'tk-row tk-between' }, h('div', { class: 'eyebrow' }, r.stars === 3 ? cfg.okLabel : r.offTone.length ? 'Còn từ sai tông' : r.stars > 0 ? 'Còn thiếu ý' : 'Chưa đạt'), starsEl(r.stars)),
+          h('div', { class: 'tk-row tk-between' }, h('div', { class: 'eyebrow' }, r.stars === 3 ? cfg.okLabel : r.offTone.length ? 'Còn từ sai tông' : r.hit === g.ideas.length && r.grammar.some((x) => x.kind !== 'style') ? 'Đủ ý, còn lỗi ngữ pháp' : r.stars > 0 ? 'Còn thiếu ý' : 'Chưa đạt'), starsEl(r.stars)),
           h('p', { class: 'vi' }, g.vi),
           h('div', { class: 'lt-chipline' }, ...g.ideas.map((idea, k) => h('span', { class: `lt-chip ${r.covered[k] ? 'hit' : 'miss'}` }, `${r.covered[k] ? '✓' : '✗'} ${idea.label}`))),
+          grammarNote(r.grammar) ?? '',
           r.offTone.length ? h('div', { class: 'note-box focus' }, `Từ sai tông cần bỏ: ${r.offTone.map((w) => `“${w}”`).join(', ')}. Còn từ này thì câu tối đa 1 sao.`) : '',
           h('p', { class: 'lt-heard' }, 'Máy nghe được: ', h('i', null, `“${r.transcript}”`)),
           h(

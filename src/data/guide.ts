@@ -73,6 +73,8 @@ export const GUIDE: GuideEntry[] = [
     tips: [
       'Trên iPhone, hãy dùng Safari. Nếu mic không phản hồi, tải lại trang rồi thử lại.',
       'Máy hay nghe nhầm tên riêng. Nếu chỉ sai tên riêng, đừng lo: phần chấm thường bỏ qua tên.',
+      'Máy nghe đôi khi tự "sửa" câu cho đúng, hoặc làm rơi từ nhỏ như "the" khi bạn nói nhanh. Vì vậy máy có thể bỏ sót lỗi ngữ pháp, hoặc báo nhầm thiếu từ. Xem dòng "Máy nghe được" để biết máy đã nghe gì.',
+      '"Gonna", "wanna" không bị trừ sao, chỉ có ghi chú văn phong: trên sân khấu trang trọng nên nói "going to", "want to".',
     ],
     keys: 'micro mic quyen safari iphone go ban phim nhan giong',
   },
@@ -133,6 +135,7 @@ export const GUIDE: GuideEntry[] = [
     scoring: [
       'Lượt đọc theo thẻ chấm cộng dồn: từ đã đúng ở một lần đọc thì giữ là đúng. Phần còn sai được tách thành một cụm ngắn để bạn đọc riêng, không phải đọc lại cả câu.',
       'Lượt điền ô và ứng biến chấm từng lần.',
+      'Lượt tự nói và ứng biến còn xét ngữ pháp: thiếu "is", "to", "will", dùng "to being" thay vì "to be", sai ngôi ("he have")… thì tối đa 2 sao. Câu đảo lộn thứ tự từ hoặc sai nhiều chỗ chỉ được 1 sao. Máy hiện đoạn sai và cách sửa.',
       'Lần thứ hai chơi một bài, lượt đọc thẻ thành "tự nói" với gợi ý tiếng Việt. Từ lần thứ ba, không còn gợi ý: bạn phải nhớ và tự nói.',
     ],
     tips: ['Muốn rời bài giữa chừng, bấm "Rời" hai lần.'],
@@ -175,7 +178,7 @@ export const GUIDE: GuideEntry[] = [
     short: 'Ôn các cụm mang về từ những bài đã học, theo lịch giãn dần. Nên làm đầu mỗi buổi.',
     what: 'Mỗi bài cho bạn 2 "cụm mang về", những cụm MC dùng nhiều nhất. Khởi động bắt bạn nói lại chúng trong một tình huống mới, đúng lúc sắp quên.',
     steps: ['Đọc tình huống, tự nói một câu có cụm cần ôn.', 'Bí quá thì bấm xem trước cụm, nhưng lần đó sẽ tính là chưa thuộc.'],
-    scoring: ['Chỉ lần nói đầu tiên quyết định lịch ôn. Đúng thì cụm được giãn ra lâu hơn mới hỏi lại, sai thì hỏi lại sớm.'],
+    scoring: ['Chỉ lần nói đầu tiên quyết định lịch ôn. Đúng thì cụm được giãn ra lâu hơn mới hỏi lại, sai thì hỏi lại sớm.', 'Có cụm nhưng câu sai ngữ pháp thì tính là chưa thuộc.'],
     tips: ['Khi sổ từ của bạn có mục đến hạn, đầu mục Khởi động sẽ nhắc bạn sang Sổ tay để ôn.'],
     target: { tab: 'train', section: 'warmup' },
     keys: 'on tap cum mang ve lap lai ngat quang',
@@ -237,7 +240,7 @@ export const GUIDE: GuideEntry[] = [
       'Nghe nhân vật, tự nghĩ và nói câu trả lời. Nhân vật sẽ phản ứng theo đúng ý bạn nói.',
     ],
     scoring: [
-      'Trả lời cụ thể, đúng ý: được 2 điểm và đi tiếp.',
+      'Trả lời cụ thể, đúng ý: được 2 điểm và đi tiếp. Đúng ý nhưng sai ngữ pháp: nhân vật vẫn hiểu, nhưng chỉ được 1 điểm, kèm cách sửa.',
       'Trả lời chung chung ("okay", "maybe"): nhân vật hỏi vặn lại. Trả lời đúng sau đó được 1 điểm.',
       'Máy không hiểu ý: nhân vật hỏi lại và hiện gợi ý. Sau 3 lần, cuộc trò chuyện tự đi tiếp.',
     ],
@@ -261,6 +264,7 @@ export const GUIDE: GuideEntry[] = [
     scoring: [
       '3 sao: đủ 6 ý và từ 90 từ trở lên. 2 sao: từ 4 ý. 1 sao: từ 2 ý.',
       'Tốc độ dễ nghe trên sân khấu là 100–165 từ mỗi phút. Máy còn đếm lời dẫn ("First of all", "Finally") và tiếng đệm ("um", "uh").',
+      'Bài còn lỗi ngữ pháp thì tối đa 2 sao; máy liệt kê các đoạn cần sửa.',
     ],
     tips: ['Mỗi ý nói khoảng hai câu. Thay tiếng đệm bằng một quãng lặng ngắn.'],
     target: { tab: 'train', section: 'long' },
@@ -279,7 +283,7 @@ export const GUIDE: GuideEntry[] = [
     ],
     scoring: [
       'Chấm theo ý, không theo từng chữ: nhiều cách dịch khác nhau đều được.',
-      'Bấm "Xem lại câu gốc" thì câu đó tối đa 2 sao.',
+      'Bấm "Xem lại câu gốc", hoặc dịch đủ ý nhưng sai ngữ pháp, thì câu đó tối đa 2 sao.',
     ],
     tips: ['Nghe để bắt ý chính và con số, đừng cố nhớ từng chữ.'],
     target: { tab: 'train', section: 'interp' },
@@ -296,7 +300,7 @@ export const GUIDE: GuideEntry[] = [
       'Nói lại ý đó cho đúng tông của sự kiện.',
       'Xem các ý đã đủ và từ sai tông còn sót.',
     ],
-    scoring: ['Đủ ý mà còn từ sai tông (như "guys", "boss") thì câu tối đa 1 sao. Máy chỉ rõ từ cần bỏ.'],
+    scoring: ['Đủ ý mà còn từ sai tông (như "guys", "boss") thì câu tối đa 1 sao. Máy chỉ rõ từ cần bỏ.', 'Đủ ý, đúng tông nhưng sai ngữ pháp thì tối đa 2 sao.'],
     tips: ['Lời trang trọng thường dùng "please", "may I", "we kindly ask" và gọi đúng chức danh.'],
     target: { tab: 'train', section: 'register' },
     keys: 'van phong trang trong than mat tong giong',
@@ -330,7 +334,7 @@ export const GUIDE: GuideEntry[] = [
     ],
     scoring: [
       'Ôn đạt thì từ lên hộp cao hơn và giãn ngày ôn: 1, 2, 4, 8, 16 ngày. Chưa thuộc thì về hộp 1, mai ôn lại.',
-      'Câu tự đặt phải có từ đó và đủ dài thành một câu trọn vẹn.',
+      'Câu tự đặt phải có từ đó, đủ dài thành một câu trọn vẹn, và không sai ngữ pháp.',
     ],
     target: { tab: 'notebook' },
     keys: 'so tay tu cua toi can luyen xuat csv anki on tu',

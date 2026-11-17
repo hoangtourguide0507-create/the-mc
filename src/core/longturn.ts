@@ -6,6 +6,7 @@
  * Hàm ở đây đều thuần (không DOM, không âm thanh). Test: npm run test:longturn
  */
 import { containsTokenSequence, normalizeText } from './evaluator';
+import { capForGrammar, findGrammarIssues, grammarErrors, type GrammarIssue } from './grammar';
 
 export interface Idea {
   /** Ý cần có, tiếng Việt (hiện trong dàn ý và bảng kết quả) */
@@ -132,6 +133,8 @@ export interface LongScore {
   timing: 'short' | 'ok' | 'long' | null;
   markers: string[];
   fillers: number;
+  /** Lỗi ngữ pháp trong bài nói: có lỗi thì tối đa 2 sao */
+  grammar: GrammarIssue[];
   stars: 0 | 1 | 2 | 3;
 }
 
@@ -162,6 +165,8 @@ export function scoreLong(task: LongTask, candidates: string[], seconds = 0): Lo
   if (frac >= 1 && words >= LONG_FULL_WORDS) stars = 3;
   else if (frac >= 0.66 && words >= LONG_OK_WORDS) stars = 2;
   else if (frac >= 0.33 && words >= LONG_SOME_WORDS) stars = 1;
+  const grammar = findGrammarIssues(transcript);
+  stars = capForGrammar(stars, grammar);
   return {
     transcript,
     covered,
@@ -172,6 +177,7 @@ export function scoreLong(task: LongTask, candidates: string[], seconds = 0): Lo
     timing: seconds >= 8 ? (seconds < LONG_MIN_SEC ? 'short' : seconds > LONG_MAX_SEC + 15 ? 'long' : 'ok') : null,
     markers,
     fillers,
+    grammar,
     stars,
   };
 }
@@ -186,6 +192,8 @@ export function longAdvice(task: LongTask, s: LongScore): string[] {
   const out: string[] = [];
   const missing = task.ideas.filter((_, i) => !s.covered[i]);
   if (missing.length > 0) out.push(`Còn thiếu ${missing.length} ý: ${missing.map((m) => m.label).join('; ')}.`);
+  const errs = grammarErrors(s.grammar);
+  if (errs.length > 0) out.push(`Sửa ${errs.length} lỗi ngữ pháp bên dưới; còn lỗi thì bài tối đa 2 sao.`);
   if (s.words < LONG_FULL_WORDS) out.push(`Bài mới có ${s.words} từ. Mỗi ý nên nói hai câu, cả bài từ ${LONG_FULL_WORDS} từ trở lên.`);
   if (s.pace === 'fast') out.push(`Bạn nói ${s.wpm} từ mỗi phút, hơi nhanh cho sân khấu. Ngắt một nhịp sau mỗi ý.`);
   if (s.pace === 'slow') out.push(`Bạn nói ${s.wpm} từ mỗi phút, hơi chậm. Chuẩn bị sẵn cụm mở đầu của từng ý để bớt ngập ngừng.`);
@@ -199,6 +207,7 @@ export interface InterpScore {
   transcript: string;
   covered: boolean[];
   hit: number;
+  grammar: GrammarIssue[];
   /** Từ sai tông còn sót trong câu nói (chỉ có ở bài đổi văn phong) */
   offTone: string[];
   stars: 0 | 1 | 2 | 3;
@@ -216,7 +225,10 @@ export function scoreInterp(seg: InterpSegment, candidates: string[], peeked = f
   // Đổi văn phong: đủ ý nhưng còn từ sai tông thì tối đa 1 sao
   const offTone = (seg.avoid ?? []).filter((w) => containsTokenSequence(tokens, normalizeText(w)));
   if (offTone.length > 0 && stars > 1) stars = 1;
-  return { transcript, covered, hit, offTone, stars };
+  // Đủ ý nhưng sai ngữ pháp rõ ràng thì tối đa 2 sao
+  const grammar = findGrammarIssues(transcript);
+  stars = capForGrammar(stars, grammar);
+  return { transcript, covered, hit, grammar, offTone, stars };
 }
 
 /** Thời gian hiện câu tiếng Việt trước khi ẩn, theo độ dài câu (giây). */

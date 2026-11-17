@@ -25,6 +25,7 @@ import type { LiveStage } from '../../scenes/LiveStage';
 import { append, clear, h } from '../dom';
 import { bindPick, closeWordSheet, fillPickable, loadGlossary, openWordSheet } from '../wordpick';
 import { closeGuide, openGuide } from '../guide';
+import { grammarNote } from '../grammarNote';
 import { cleanWord, lookupGloss, suggestFromWeak, splitWords } from '../../core/notes';
 import type { TurnData } from '../../types/game';
 
@@ -923,7 +924,8 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
     }
 
     if (evalResult?.grammarIssues?.length) {
-      card.append(h('div', { class: 'note-box focus' }, 'Gợi ý sửa:', ...evalResult.grammarIssues.map((g) => h('span', null, `“${g.wrong}” → “${g.fix}”`))));
+      const gn = grammarNote(evalResult.grammarIssues, { capped: evalResult.stars < 3 && evalResult.grammarIssues.some((g) => g.kind !== 'style') });
+      if (gn) card.append(gn);
     }
     if (support.tip && t.tip && !perform) card.append(h('div', { class: 'note-box' }, t.tip));
     const hint = suggestBox(t);
