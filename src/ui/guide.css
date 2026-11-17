@@ -1,0 +1,52 @@
+/* Trang Hướng dẫn (phủ toàn màn hình) và gợi ý tại chỗ ở đầu mỗi mục. Màu lấy từ biến của base.css. */
+.gd-veil {
+  position: fixed; inset: 0; z-index: 70; display: flex; justify-content: center;
+  background: rgba(30, 26, 20, 0.28);
+}
+.gd-panel {
+  width: min(100%, 640px); height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch;
+  background: var(--bg); display: flex; flex-direction: column; gap: 12px;
+  padding: calc(14px + var(--safe-top)) 16px calc(24px + var(--safe-bottom));
+  animation: gd-in 0.18s ease-out;
+}
+@keyframes gd-in { from { transform: translateY(16px); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .gd-panel { animation: none; } }
+.gd-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.gd-head h2 { margin: 0; font: 700 26px/1.1 var(--display); }
+.gd-search {
+  width: 100%; min-height: 48px; padding: 10px 14px; border-radius: 14px; border: 1px solid var(--line);
+  background: var(--panel); color: var(--ink); font: inherit; font-size: 16px;
+}
+.gd-list { display: grid; gap: 10px; }
+.gd-group { margin-top: 8px; }
+.gd-empty { color: var(--muted); }
+.gd-entry { padding: 0; overflow: hidden; }
+.gd-entry > summary {
+  list-style: none; cursor: pointer; display: grid; gap: 4px; padding: 14px 44px 14px 16px; position: relative; min-height: 52px;
+}
+.gd-entry > summary::-webkit-details-marker { display: none; }
+.gd-entry > summary::after {
+  content: '+'; position: absolute; right: 16px; top: 12px; font: 600 22px/1 var(--body); color: var(--accent);
+}
+.gd-entry[open] > summary::after { content: '−'; }
+.gd-entry > summary b { font: 700 17px/1.35 var(--display); color: var(--ink); }
+.gd-entry > summary span { font-size: 15px; line-height: 1.5; color: var(--muted); }
+.gd-body { display: grid; gap: 8px; padding: 0 16px 16px; font-size: 16px; line-height: 1.55; }
+.gd-body p { margin: 0; }
+.gd-body ol, .gd-body ul { margin: 0; padding-left: 22px; display: grid; gap: 6px; }
+.gd-sub { margin-top: 6px; font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); }
+.gd-tips li::marker { color: var(--accent); }
+.gd-body .btn { margin-top: 6px; }
+
+/* Gợi ý tại chỗ */
+.gd-strip p { margin: 0 0 8px; font-size: 15.5px; line-height: 1.5; }
+.gd-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.gd-row .btn { flex: 1 1 auto; }
+.gd-strip.compact { display: flex; justify-content: flex-end; margin-bottom: -4px; }
+.gd-help { min-height: var(--tap); padding: 0 4px; font-size: 14.5px; }
+/* Nút "?" tròn ở thanh trên màn bài học và màn chính */
+.gd-q {
+  flex: none; width: var(--tap); height: var(--tap); border-radius: 50%; border: 1px solid var(--line);
+  background: var(--panel); color: var(--ink); font: 700 18px/1 var(--display);
+}
+.home-actions { display: flex; align-items: center; gap: 10px; }

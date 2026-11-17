@@ -24,6 +24,7 @@ import type { EvalResult, StageMicPhase } from '../../types/game';
 import type { LiveStage } from '../../scenes/LiveStage';
 import { append, clear, h } from '../dom';
 import { bindPick, closeWordSheet, fillPickable, loadGlossary, openWordSheet } from '../wordpick';
+import { closeGuide, openGuide } from '../guide';
 import { cleanWord, lookupGloss, suggestFromWeak, splitWords } from '../../core/notes';
 import type { TurnData } from '../../types/game';
 
@@ -705,6 +706,7 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
     const avg = played.length ? Math.round(played.reduce((a, b) => a + b, 0) / played.length) : 0;
     topEl.append(
       h('button', { class: 'btn quiet', onclick: leave }, leaveArmed ? 'Chạm lần nữa để rời' : 'Rời'),
+      h('button', { class: 'gd-q', ariaLabel: 'Hướng dẫn các kiểu lượt', title: 'Hướng dẫn', onclick: () => openGuide({ focus: perform ? 'perform' : 'lesson', jump: false }) }, '?'),
       h(
         'div',
         { class: 'info' },
@@ -1133,6 +1135,7 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
   return () => {
     disposed = true;
     closeWordSheet();
+    closeGuide();
     frameWatch?.disconnect();
     stopIncClock();
     window.clearTimeout(introTimer);

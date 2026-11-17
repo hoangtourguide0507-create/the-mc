@@ -11,6 +11,7 @@ import { watch } from '../../engine/watch';
 import type { StageTheme } from '../../scenes/StageBackdrop';
 import type { SceneData } from '../../types/game';
 import { clear, h } from '../dom';
+import { helpStrip, openGuide } from '../guide';
 
 /** Nhãn thể loại và bối cảnh 3D của các tình huống gốc; sự kiện mới tự khai trong gói (EVENT_UI) */
 const SCENE_INFO: Record<string, { kind: string; theme: StageTheme }> = {
@@ -118,8 +119,9 @@ export function mountHome(root: HTMLElement, opts: HomeOptions): () => void {
         'header',
         { class: 'brand' },
         h('div', null, h('div', { class: 'eyebrow' }, 'Tiếng Anh sân khấu'), h('h1', null, 'MC Life ', h('em', null, 'English Stage'))),
-        themeBtn
+        h('div', { class: 'home-actions' }, h('button', { class: 'gd-q', ariaLabel: 'Mở hướng dẫn sử dụng', title: 'Hướng dẫn', onclick: () => openGuide() }, '?'), themeBtn)
       ),
+      helpStrip('start'),
       h('div', { class: 'spacer-hero' }),
       career,
       h('div', { class: 'section-title eyebrow' }, 'Tình huống'),

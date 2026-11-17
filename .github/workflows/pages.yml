@@ -84,6 +84,8 @@ jobs:
         run: npm run test:notes
       - name: Long turn and interpreting test
         run: npm run test:longturn
+      - name: Guide test
+        run: npm run test:guide
 
       - name: Build (typecheck + Vite)
         run: npm run build

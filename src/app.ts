@@ -14,7 +14,8 @@ import { mountHome, sceneTheme } from './ui/screens/home';
 import { SCENES } from './data/content';
 import { mountLesson } from './ui/screens/lesson';
 import { mountNotebook } from './ui/screens/notebook';
-import { mountPage } from './ui/screens/page';
+import { setPageSection, mountPage } from './ui/screens/page';
+import { closeGuide, setGuideNavigator } from './ui/guide';
 import { mountQuests } from './ui/screens/quests';
 import { mountCando } from './ui/screens/training/cando';
 import { mountPronunciation } from './ui/screens/training/pronunciation';
@@ -161,7 +162,14 @@ function quiet() {
   SpeechEngine.abort();
 }
 
+// Nút "Thử ngay" trong Hướng dẫn: chọn sẵn mục rồi chuyển tab
+setGuideNavigator((target) => {
+  if (target.section) setPageSection(target.tab, target.section);
+  showTab(target.tab);
+});
+
 function showTab(tab: TabId) {
+  closeGuide();
   quiet();
   unmount?.();
   activeTab = tab;
@@ -197,9 +205,9 @@ function showTab(tab: TabId) {
       ],
     });
   } else if (tab === 'notebook') {
-    unmount = mountPage(ui, { key: 'notebook', eyebrow: 'Ôn lại', title: 'Sổ tay', sections: [{ id: 'all', label: 'Sổ tay', mount: mountNotebook }] });
+    unmount = mountPage(ui, { key: 'notebook', eyebrow: 'Ôn lại', title: 'Sổ tay', sections: [{ id: 'all', label: 'Sổ tay', mount: mountNotebook, help: 'notebook' }] });
   } else {
-    unmount = mountPage(ui, { key: 'quests', eyebrow: 'Thang nghề', title: 'Nhiệm vụ', sections: [{ id: 'all', label: 'Nhiệm vụ', mount: mountQuests }] });
+    unmount = mountPage(ui, { key: 'quests', eyebrow: 'Thang nghề', title: 'Nhiệm vụ', sections: [{ id: 'all', label: 'Nhiệm vụ', mount: mountQuests, help: 'quests' }] });
   }
   // Đặt màn mới dưới thanh tab và thông báo
   ui.append(tabbar, toast);
