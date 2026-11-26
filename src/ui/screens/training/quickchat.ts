@@ -15,6 +15,7 @@ import { STREET_TALK, WM_NAMES } from '../../../data/content';
 import { watch } from '../../../engine/watch';
 import type { EvalResult, StreetTalkItem } from '../../../types/game';
 import { clear, h } from '../../dom';
+import { closeWordSheet, modelSentence } from '../../wordpick';
 
 const SPEAK_PASS_STARS = 2;
 const SPEAK_MAX_ATTEMPTS = 3;
@@ -366,7 +367,7 @@ export function mountQuickchat(root: HTMLElement): () => void {
     }
     if (speakDone) {
       wrap.append(
-        h('div', { class: 'note-box' }, h('span', { class: 'vi' }, 'Câu mẫu:'), h('p', { class: 'big' }, target))
+        modelSentence(target, { npcId: 'coach', scene: 'quick' }, 'Câu mẫu', () => Voice.speak(target, { npcId: 'coach', preferredURI: store().state.voiceURI }))
       );
     }
     return wrap;
@@ -446,6 +447,7 @@ export function mountQuickchat(root: HTMLElement): () => void {
   paintQuestion();
 
   return () => {
+    closeWordSheet();
     disposed = true;
     qToken++;
     for (const t of timers) window.clearTimeout(t);

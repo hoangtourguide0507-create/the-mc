@@ -12,7 +12,7 @@ import { firstSample, maxPoints, newTalk, starsFor, step, xpFor, type Talk, type
 import { TALKS } from '../../../data/talks';
 import { answerBar } from '../../answer';
 import { clear, h } from '../../dom';
-import { closeWordSheet, fillPickable } from '../../wordpick';
+import { closeWordSheet, fillPickable, sentenceActions } from '../../wordpick';
 import { byFn, fnChips } from '../../fnFilter';
 
 const BEST_KEY = 'mclife.talk.best';
@@ -234,7 +234,8 @@ export function mountTalk(root: HTMLElement): () => void {
             { class: 'tk-model' },
             h('div', { class: 'tk-model-label' }, res.outcome === 'forced' ? 'Câu nên nói' : 'Cách nói tự nhiên'),
             (() => { const el = h('p', { class: 'tk-model-text' }); fillPickable(el, sample, { npcId: 'coach', scene: `talk:${t.id}` }); return el; })(),
-            h('button', { class: 'btn quiet tk-mini', onclick: () => { if (!busy) void Voice.speak(sample, { npcId: 'coach' }); } }, 'Nghe')
+            h('button', { class: 'btn quiet tk-mini', onclick: () => { if (!busy) void Voice.speak(sample, { npcId: 'coach' }); } }, 'Nghe'),
+            sentenceActions(sample, { vi: `Trò chuyện: ${t.name}. ${t.goalVi}`, npcId: 'coach', scene: `talk:${t.id}` })
           )
         );
       }

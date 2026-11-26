@@ -8,6 +8,7 @@ import { CHUNKS } from '../../../data/chunks';
 import { watch } from '../../../engine/watch';
 import { answerBar, type AnswerBar } from '../../answer';
 import { clear, h } from '../../dom';
+import { closeWordSheet, modelSentence } from '../../wordpick';
 import { isNoteDue, realDay } from '../../../core/notes';
 
 /**
@@ -160,17 +161,7 @@ export function mountWarmup(root: HTMLElement): () => void {
           h('p', { class: 'warmup-verdict' }, verdict),
           h('p', { class: 'vi' }, 'Máy nghe được: ', h('i', null, `“${r.heard}”`)),
           grammarNote(r.grammar),
-          h(
-            'button',
-            {
-              class: 'btn quiet warmup-sample',
-              type: 'button',
-              onclick: () => {
-                void Voice.speak(chunk.sample, { npcId: 'coach' });
-              },
-            },
-            `Câu mẫu: ${chunk.sample}`
-          )
+          modelSentence(chunk.sample, { vi: chunk.vi, npcId: 'coach', scene: 'warmup' }, 'Câu mẫu', () => void Voice.speak(chunk.sample, { npcId: 'coach' }))
         )
       );
     }
@@ -202,6 +193,7 @@ export function mountWarmup(root: HTMLElement): () => void {
   render();
 
   return () => {
+    closeWordSheet();
     disposed = true;
     offLearn();
     offDay();

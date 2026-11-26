@@ -190,6 +190,8 @@ interface SheetOpts {
   to: number;
   ctx: PickCtx;
   onChange?: () => void;
+  /** Mở sẵn khung hỏi AI (nút "Hỏi AI về câu này") */
+  ask?: boolean;
 }
 
 let closeCurrent: (() => void) | null = null;
@@ -214,7 +216,7 @@ export function openWordSheet(o: SheetOpts): void {
   const note = () => store().state.notes?.[key()];
   const speak = (slow: boolean) => void Voice.speak(text(), { npcId: 'coach', slow });
   // Khung hỏi AI: tạo một lần, giữ lịch sử hỏi khi thẻ vẽ lại; đổi cụm thì bắt đầu cuộc hỏi mới
-  let askOpen = false;
+  let askOpen = Boolean(o.ask);
   const asker = askPanel(() => ({
     phrase: text(),
     sentence: o.ctx.sentence,
@@ -256,7 +258,7 @@ export function openWordSheet(o: SheetOpts): void {
       h(
         'div',
         { class: 'wp-head' },
-        h('div', null, h('b', { class: 'wp-text' }, t), g?.ipa ? h('span', { class: 'wp-ipa' }, `/${g.ipa}/`) : null),
+        h('div', null, h('b', { class: `wp-text${to - from >= 6 ? ' long' : ''}` }, t), g?.ipa && to - from < 6 ? h('span', { class: 'wp-ipa' }, `/${g.ipa}/`) : null),
         h('button', { class: 'link', ariaLabel: 'Đóng thẻ từ', onclick: close }, 'Đóng')
       ),
       g?.vi
@@ -313,7 +315,64 @@ export function openWordSheet(o: SheetOpts): void {
 
   render();
   document.body.append(veil);
+  if (askOpen) asker.reveal();
   if (!glossary) void loadGlossary().then(() => closeCurrent === close && render());
   // Chạm một từ lẻ thì đọc luôn từ đó, như nút từ trước đây
-  if (from === to) speak(false);
+  if (from === to && !o.ask) speak(false);
+}
+
+/* ---------- Câu mẫu: chạm từng từ, lưu cả câu, hỏi AI về câu ---------- */
+
+/**
+ * Hàng nút cho một câu mẫu: "Lưu câu" (ghi cả câu vào Sổ tay, nhãn Từ mới) và "Hỏi AI về câu này"
+ * (mở thẻ từ với cả câu được chọn, khung hỏi AI mở sẵn). `ctx.vi` nên là nghĩa hoặc tình huống
+ * tiếng Việt để AI hiểu vì sao câu được dùng.
+ */
+export function sentenceActions(text: string, ctx: Omit<PickCtx, 'sentence'>): HTMLElement {
+  const store = () => gameStore.getState();
+  const row = h('div', { class: 'wp-sent-actions' });
+  const paint = () => {
+    const saved = Boolean(store().state.notes?.[noteKey(text)]);
+    clear(row);
+    row.append(
+      h(
+        'button',
+        {
+          class: `btn quiet wp-mini${saved ? ' on' : ''}`,
+          type: 'button',
+          ariaPressed: String(saved),
+          onclick: () => {
+            if (saved) store().dropNote(noteKey(text));
+            else store().saveNote({ text, vocab: true, ctx: text, ctxVi: ctx.vi, npcId: ctx.npcId, speaker: ctx.speaker, scene: ctx.scene });
+            if (!saved) store().toast('Đã lưu câu vào Sổ tay.', 'success', 1800);
+            paint();
+          },
+        },
+        saved ? '✓ Đã lưu câu' : 'Lưu câu'
+      ),
+      h(
+        'button',
+        {
+          class: 'btn quiet wp-mini',
+          type: 'button',
+          onclick: () => {
+            const tokens = splitWords(text);
+            openWordSheet({ tokens, from: 0, to: tokens.length - 1, ctx: { ...ctx, sentence: text }, ask: true, onChange: paint });
+          },
+        },
+        'Hỏi AI về câu này'
+      )
+    );
+  };
+  paint();
+  return row;
+}
+
+/** Khung câu mẫu: chữ chạm được từng từ, nút Nghe (nếu có) và hàng nút lưu/hỏi AI. */
+export function modelSentence(text: string, ctx: Omit<PickCtx, 'sentence'>, label: string, onListen?: () => void): HTMLElement {
+  const line = h('p', { class: 'wp-model-text' });
+  fillPickable(line, text, ctx);
+  const actions = sentenceActions(text, ctx);
+  if (onListen) actions.prepend(h('button', { class: 'btn quiet wp-mini', type: 'button', onclick: onListen }, 'Nghe'));
+  return h('div', { class: 'wp-model' }, h('span', { class: 'wp-label' }, label), line, actions);
 }

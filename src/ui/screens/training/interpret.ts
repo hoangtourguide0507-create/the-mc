@@ -11,7 +11,7 @@ import { gameStore } from '../../../core/store';
 import { INTERP_SETS } from '../../../data/interpret';
 import { answerBar, type AnswerBar } from '../../answer';
 import { clear, h } from '../../dom';
-import { closeWordSheet, fillPickable } from '../../wordpick';
+import { closeWordSheet, fillPickable, sentenceActions } from '../../wordpick';
 import { byFn, fnChips } from '../../fnFilter';
 import { grammarNote } from '../../grammarNote';
 import { REGISTER_SETS } from '../../../data/register';
@@ -225,7 +225,8 @@ function mountDrill(root: HTMLElement, cfg: DrillConfig): () => void {
               { class: 'tk-row' },
               h('button', { class: 'btn quiet tk-mini', onclick: () => void Voice.speak(g.say, { npcId: 'coach' }) }, 'Nghe'),
               h('button', { class: 'btn quiet tk-mini', onclick: () => void Voice.speak(g.say, { npcId: 'coach', slow: true }) }, 'Chậm')
-            )
+            ),
+            sentenceActions(g.say, { vi: g.vi, npcId: 'coach', scene: `${cfg.bucket}:${set.id}` })
           ),
           peeked ? h('p', { class: 'vi' }, 'Bạn đã xem lại câu gốc nên câu này tối đa 2 sao.') : '',
           h('button', { class: 'btn', onclick: next }, idx + 1 >= set.segments.length ? 'Xem kết quả' : 'Câu tiếp')

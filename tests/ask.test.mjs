@@ -146,6 +146,17 @@ const follow = A.buildAskMessages(ctx, [{ q: 'Sao không nói we change plan?', 
 assert.deepEqual(follow.map((m) => m.role), ['system', 'user', 'assistant', 'user']);
 assert.equal(follow[3].content, 'Còn "plans" thì sao?');
 
+// Hỏi về cả câu: nhận ra và dùng bộ câu hỏi riêng
+const whole = { phrase: 'Thank you for your question. May I kindly ask that we keep to today\'s topic?', sentence: "Thank you for your question. May I kindly ask that we keep to today's topic?", sentenceVi: 'Tình huống: phóng viên hỏi ngoài chủ đề.' };
+assert.equal(A.isWholeSentence(whole), true);
+assert.equal(A.isWholeSentence(ctx), false);
+assert.equal(A.quickAsksFor(whole), A.SENTENCE_ASKS);
+assert.equal(A.quickAsksFor(ctx), A.QUICK_ASKS);
+const wm = A.buildAskMessages(whole, [], 'Vì sao nói như vậy?');
+assert.match(wm[1].content, /hỏi về cả câu/);
+assert.match(wm[1].content, /phóng viên/);
+assert.doesNotMatch(wm[1].content, /Cụm đang hỏi/);
+
 assert.equal(A.fillQuestion(A.QUICK_ASKS[0].q, 'stuck in'), A.QUICK_ASKS[0].q.replace('{p}', 'stuck in'));
 assert.equal(A.askCacheKey(ctx, ' Vì  sao? '), A.askCacheKey({ ...ctx, phrase: 'Change of PLAN' }, 'vì sao?'));
 

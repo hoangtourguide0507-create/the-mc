@@ -5,7 +5,7 @@
  */
 import './askAi.css';
 import { AiError, chatText, errorMessageVi, getApiKey, looksLikeKey, PROVIDER_NAME, providerOf, setApiKey } from '../core/aiClient';
-import { askCacheKey, buildAskMessages, fillQuestion, parseAnswer, QUICK_ASKS, readCache, writeCache, type AskContext, type QaTurn } from '../core/ask';
+import { askCacheKey, buildAskMessages, fillQuestion, isWholeSentence, parseAnswer, quickAsksFor, readCache, writeCache, type AskContext, type QaTurn } from '../core/ask';
 import { noteKey, type NoteInput } from '../core/notes';
 import { gameStore } from '../core/store';
 import { clear, h } from './dom';
@@ -143,7 +143,7 @@ export function askPanel(source: () => AskSource): { el: HTMLElement; refresh: (
       error = '';
     }
     clear(el);
-    el.append(h('div', { class: 'ask-title' }, h('span', null, `Hỏi AI về “${src.phrase}”`), getApiKey() && !editKey ? h('button', { class: 'link', onclick: () => { editKey = true; render(); } }, `${PROVIDER_NAME[providerOf(getApiKey()) ?? 'groq']} · đổi khoá`) : null));
+    el.append(h('div', { class: 'ask-title' }, h('span', null, isWholeSentence(src) ? 'Hỏi AI về câu này' : `Hỏi AI về “${src.phrase}”`), getApiKey() && !editKey ? h('button', { class: 'link', onclick: () => { editKey = true; render(); } }, `${PROVIDER_NAME[providerOf(getApiKey()) ?? 'groq']} · đổi khoá`) : null));
     if (editKey || !getApiKey()) {
       el.append(keyForm());
       return;
@@ -185,7 +185,7 @@ export function askPanel(source: () => AskSource): { el: HTMLElement; refresh: (
       h(
         'div',
         { class: 'ask-chips' },
-        ...QUICK_ASKS.map((qa) =>
+        ...quickAsksFor(src).map((qa) =>
           h(
             'button',
             {

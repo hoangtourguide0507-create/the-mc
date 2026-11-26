@@ -90,6 +90,7 @@ export const GUIDE: GuideEntry[] = [
       'Chọn nhãn "Từ mới" (học nghĩa và cách dùng) hoặc "Luyện phát âm", hoặc cả hai.',
       'Có thể gõ ghi chú riêng: nghĩa theo cách hiểu của bạn, mẹo nhớ.',
       'Từ đã ghi được gạch chân ở mọi câu khác, để bạn thấy mình gặp lại nó.',
+      'Câu mẫu sau mỗi lượt (ứng biến, sự cố, tự nói, Dịch, Văn phong, Trò chuyện, Khởi động) có nút "Lưu câu" để ghi cả câu vào Sổ tay, và "Hỏi AI về câu này" để hỏi vì sao nói như vậy.',
       'Thắc mắc vì sao câu dùng như vậy? Bấm "Hỏi AI: vì sao nói vậy?". Chọn câu hỏi nhanh hoặc tự gõ, ví dụ: sao không nói “we change plan”? AI trả lời bằng tiếng Việt và hỏi tiếp được. Bấm "Lưu vào Sổ tay" để giữ câu trả lời cùng từ đó.',
     ],
     tips: [
@@ -98,7 +99,7 @@ export const GUIDE: GuideEntry[] = [
       'Hỏi AI cần một khoá miễn phí, làm một lần: Gemini (aistudio.google.com/apikey, đăng nhập Google, "Create API key") hoặc Groq (console.groq.com/keys). Dán vào là game tự nhận ra loại khoá. Khoá chỉ lưu trên máy bạn. AI có thể nhầm, câu quan trọng nên kiểm tra lại.',
     ],
     target: { tab: 'notebook' },
-    keys: 'ghi chu tu moi so tu cham phien am nghia cum hoi ai vi sao ngu phap groq gemini',
+    keys: 'ghi chu tu moi so tu cham phien am nghia cum hoi ai vi sao ngu phap groq gemini luu cau mau',
   },
 
   /* ---------- Sân khấu ---------- */

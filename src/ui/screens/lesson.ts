@@ -25,7 +25,7 @@ import { SCENE_OBJECTIVES } from '../../data/objectives';
 import type { EvalResult, StageMicPhase } from '../../types/game';
 import type { LiveStage } from '../../scenes/LiveStage';
 import { append, clear, h } from '../dom';
-import { bindPick, closeWordSheet, fillPickable, loadGlossary, openWordSheet } from '../wordpick';
+import { bindPick, closeWordSheet, fillPickable, loadGlossary, modelSentence, openWordSheet } from '../wordpick';
 import { closeGuide, openGuide } from '../guide';
 import { grammarNote } from '../grammarNote';
 import { cleanWord, lookupGloss, suggestFromWeak, splitWords } from '../../core/notes';
@@ -691,8 +691,10 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
       const r = it.res;
       append(card, [
         h('div', { class: 'chips' }, ...r.matched.map((k) => h('span', { class: 'kw hit' }, `Có ý: ${k}`)), ...r.missing.map((k) => h('span', { class: 'kw' }, `Thiếu ý: ${k}`))),
-        h('span', { class: 'who' }, 'Một cách nói (chạm để nghe)'),
-        h('button', { class: 'opt picked', onclick: () => void Voice.speak(it.data.sample, { npcId: 'coach', preferredURI: store().state.voiceURI }) }, it.data.sample),
+        // Tình huống và yêu cầu tiếng Việt đi kèm để AI hiểu vì sao dùng câu này
+        modelSentence(it.data.sample, { vi: `Tình huống: ${it.data.alert} Yêu cầu: ${it.data.task}`, npcId: 'coach', scene: baseScene.id }, 'Một cách nói (chạm từ để ghi, hoặc lưu cả câu)', () =>
+          void Voice.speak(it.data.sample, { npcId: 'coach', preferredURI: store().state.voiceURI })
+        ),
         h('div', { class: 'heard' }, h('span', null, 'Máy nghe được: ', h('i', null, `“${r.transcript}”`)), h('span', { class: 'score' }, r.stars === 3 && !it.inTime ? 'Trễ giờ ' : '', starsEl(r.stars))),
       ]);
     } else if (interim) {
@@ -884,8 +886,7 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
         }
       } else {
         append(card, [
-          h('span', { class: 'who' }, 'Câu mẫu (chạm để nghe)'),
-          h('button', { class: 'opt picked', onclick: () => playSample(false) }, p.target),
+          modelSentence(p.target, { vi: t.cueVi, npcId: 'coach', scene: baseScene.id }, 'Câu mẫu (chạm từ để ghi, hoặc lưu cả câu)', () => playSample(false)),
           t.cueVi ? h('p', { class: 'vi' }, t.cueVi) : null,
           (evalResult.missingKeywords?.length ?? 0) > 0 ? h('p', { class: 'vi' }, `Ý còn thiếu: ${evalResult.missingKeywords!.join(', ')}`) : null,
         ]);

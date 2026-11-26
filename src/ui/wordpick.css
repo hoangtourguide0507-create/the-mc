@@ -49,3 +49,10 @@
 .wp-ask.on { border-style: solid; }
 /* Cột lưới không được nở theo nội dung dài (câu trả lời AI, ô nhập), tránh cuộn ngang trên điện thoại */
 .wp-card { grid-template-columns: minmax(0, 1fr); }
+/* Câu mẫu dùng chung (modelSentence, sentenceActions) */
+.wp-model { display: grid; gap: 8px; padding: 12px 14px; border-radius: 14px; background: var(--ok-bg); }
+.wp-model-text { margin: 0; font-size: 18px; line-height: 1.5; color: var(--ok-ink); }
+.wp-sent-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.wp-mini { width: auto; min-height: var(--tap); padding: 0 14px; font-size: 15px; }
+.wp-mini.on { color: var(--ok-ink); }
+.wp-text.long { font-size: 19px; line-height: 1.4; }

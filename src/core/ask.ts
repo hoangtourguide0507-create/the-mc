@@ -16,16 +16,36 @@ export interface QaTurn {
 }
 
 /** Câu hỏi bấm nhanh. `fill` là chữ điền sẵn vào ô để người học gõ tiếp. */
-export const QUICK_ASKS: { label: string; q?: string; fill?: string }[] = [
+export type QuickAsk = { label: string; q?: string; fill?: string };
+
+export const QUICK_ASKS: QuickAsk[] = [
   { label: 'Vì sao dùng như vậy?', q: 'Vì sao trong câu này lại dùng “{p}”? Giải thích cấu trúc ngữ pháp.' },
   { label: 'Sao không nói…?', fill: 'Sao không nói “…”?' },
   { label: 'Cách nói khác', q: 'Có những cách nói nào khác thay cho “{p}”? Khác nhau thế nào (trang trọng, thân mật)?' },
   { label: 'Dùng khi nào?', q: 'MC dùng “{p}” trong tình huống nào? Cho 2 ví dụ ngắn.' },
 ];
 
+/** Câu hỏi nhanh khi hỏi về cả câu mẫu (không phải một từ trong câu) */
+export const SENTENCE_ASKS: QuickAsk[] = [
+  { label: 'Vì sao nói như vậy?', q: 'Vì sao trong tình huống này lại nói câu này? Phân tích cấu trúc và cách dùng từng phần.' },
+  { label: 'Sao không nói…?', fill: 'Sao không nói “…”?' },
+  { label: 'Cách nói khác', q: 'Có những cách nói nào khác cho câu này? Khác nhau thế nào về mức lịch sự, trang trọng?' },
+  { label: 'Cụm đáng học', q: 'Trong câu này có những cụm nào đáng học thuộc để dùng lại? Cho ví dụ khác cho mỗi cụm.' },
+];
+
+/** Người học đang hỏi về cả câu (đã chọn hết câu) hay về một từ/cụm trong câu */
+export function isWholeSentence(ctx: AskContext): boolean {
+  const n = (s: string) => s.toLowerCase().replace(/[^a-z0-9' ]+/g, ' ').replace(/\s+/g, ' ').trim();
+  return n(ctx.phrase) === n(ctx.sentence);
+}
+
+export function quickAsksFor(ctx: AskContext): QuickAsk[] {
+  return isWholeSentence(ctx) ? SENTENCE_ASKS : QUICK_ASKS;
+}
+
 export const ASK_SYSTEM = [
   'Bạn là giáo viên tiếng Anh của một MC sự kiện người Việt (trình độ khoảng B1–B2), dẫn tiệc cưới và sự kiện song ngữ.',
-  'Người học đang xem một câu tiếng Anh trong bài luyện và hỏi về một từ hoặc cụm trong câu đó.',
+  'Người học đang xem một câu tiếng Anh trong bài luyện và hỏi về cả câu hoặc một từ, cụm trong câu đó.',
   'Trả lời bằng tiếng Việt, ngắn gọn (khoảng 80–160 từ), dễ đọc trên điện thoại.',
   'Cách trả lời:',
   '- Trả lời thẳng câu hỏi ngay câu đầu.',
@@ -44,7 +64,14 @@ export function fillQuestion(template: string, phrase: string): string {
 
 /** Dựng hội thoại gửi AI: bối cảnh ở lượt hỏi đầu, các lượt hỏi tiếp giữ lịch sử. */
 export function buildAskMessages(ctx: AskContext, history: QaTurn[], question: string): ChatMessage[] {
-  const head = [`Câu: "${ctx.sentence}"`, ctx.sentenceVi ? `Nghĩa tiếng Việt: ${ctx.sentenceVi}` : '', `Cụm đang hỏi: "${ctx.phrase}"`].filter(Boolean).join('\n');
+  const whole = isWholeSentence(ctx);
+  const head = [
+    `Câu: "${ctx.sentence}"`,
+    ctx.sentenceVi ? `Nghĩa hoặc tình huống (tiếng Việt): ${ctx.sentenceVi}` : '',
+    whole ? 'Người học hỏi về cả câu này.' : `Cụm đang hỏi: "${ctx.phrase}"`,
+  ]
+    .filter(Boolean)
+    .join('\n');
   const msgs: ChatMessage[] = [{ role: 'system', content: ASK_SYSTEM }];
   const turns = [...history.slice(-4), { q: question, a: '' }];
   turns.forEach((t, i) => {
