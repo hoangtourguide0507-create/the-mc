@@ -81,6 +81,51 @@ for (const [status, kind] of [[401, 'bad-key'], [429, 'rate-limit']]) {
   assert.equal(calls.length, C.GROQ_MODELS.length);
 }
 
+// Gemini: nhận theo dạng khoá, gửi đúng định dạng, đọc đúng câu trả lời
+const GK = 'AIza' + 'b'.repeat(35);
+assert.equal(C.providerOf(GK), 'gemini');
+assert.equal(C.providerOf('gsk_' + 'a'.repeat(40)), 'groq');
+assert.equal(C.providerOf('sk-abc'), null);
+const gOk = (text) => ({ ok: true, status: 200, json: async () => ({ candidates: [{ content: { parts: [{ text: 'nháp', thought: true }, { text }] } }] }) });
+const gFail = (status, message = '') => ({ ok: false, status, json: async () => ({ error: { message } }) });
+const grec = (replies) => {
+  const calls = [];
+  const fetcher = async (url, init) => {
+    calls.push({ url, headers: init.headers, body: JSON.parse(init.body) });
+    return replies[calls.length - 1];
+  };
+  return { calls, fetcher };
+};
+{
+  const { calls, fetcher } = grec([gOk('Giải thích')]);
+  const msgs = [{ role: 'system', content: 'Dặn' }, { role: 'user', content: 'Hỏi' }, { role: 'assistant', content: 'Đáp' }, { role: 'user', content: 'Hỏi tiếp' }];
+  const r = await C.chatText(GK, msgs, fetcher);
+  assert.equal(r.text, 'Giải thích', 'bỏ phần suy nghĩ nháp');
+  assert.equal(r.model, C.GEMINI_MODELS[0]);
+  assert.ok(calls[0].url.endsWith(`/${C.GEMINI_MODELS[0]}:generateContent`));
+  assert.equal(calls[0].headers['x-goog-api-key'], GK);
+  assert.equal(calls[0].body.systemInstruction.parts[0].text, 'Dặn');
+  assert.deepEqual(calls[0].body.contents.map((c) => c.role), ['user', 'model', 'user']);
+  assert.deepEqual(calls[0].body.generationConfig.thinkingConfig, { thinkingBudget: 0 });
+}
+{
+  // Tuỳ chọn bị từ chối (400) thì thử lại không kèm; mô hình không có (404) thì sang mô hình sau
+  const { calls, fetcher } = grec([gFail(400, 'Unknown field thinkingConfig'), gFail(404), gOk('OK')]);
+  const r = await C.chatText(GK, [{ role: 'user', content: 'x' }], fetcher);
+  assert.equal(calls[1].body.generationConfig.thinkingConfig, undefined);
+  assert.equal(r.model, C.GEMINI_MODELS[1]);
+}
+{
+  // Khoá sai: Gemini trả 400 kèm lời báo, phải hiểu là khoá sai và dừng ngay
+  const { calls, fetcher } = grec([gFail(400, 'API key not valid. Please pass a valid API key.'), gOk('x')]);
+  await assert.rejects(C.chatText(GK, [], fetcher), (e) => e.kind === 'bad-key' && /Gemini/.test(e.message));
+  assert.equal(calls.length, 1);
+}
+{
+  const { fetcher } = grec([gFail(429, 'Resource has been exhausted')]);
+  await assert.rejects(C.chatText(GK, [], fetcher), (e) => e.kind === 'rate-limit');
+}
+
 assert.equal(C.looksLikeKey('gsk_' + 'a'.repeat(40)), true);
 assert.equal(C.looksLikeKey('sk-abc'), false);
 assert.equal(C.stripThinking('<think>\nabc\n</think>\n\nKết quả'), 'Kết quả');

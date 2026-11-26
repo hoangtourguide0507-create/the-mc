@@ -4,7 +4,7 @@
  * Luật dựng câu hỏi và tách câu trả lời ở src/core/ask.ts; gọi mạng ở src/core/aiClient.ts.
  */
 import './askAi.css';
-import { AiError, chatText, errorMessageVi, getApiKey, looksLikeKey, setApiKey } from '../core/aiClient';
+import { AiError, chatText, errorMessageVi, getApiKey, looksLikeKey, PROVIDER_NAME, providerOf, setApiKey } from '../core/aiClient';
 import { askCacheKey, buildAskMessages, fillQuestion, parseAnswer, QUICK_ASKS, readCache, writeCache, type AskContext, type QaTurn } from '../core/ask';
 import { noteKey, type NoteInput } from '../core/notes';
 import { gameStore } from '../core/store';
@@ -82,7 +82,7 @@ export function askPanel(source: () => AskSource): { el: HTMLElement; refresh: (
       thread = thread.slice(0, -1);
       input.value = q;
       errorKind = e instanceof AiError ? e.kind : 'server';
-      error = e instanceof AiError ? e.message : errorMessageVi('server');
+      error = e instanceof AiError ? e.message : errorMessageVi('server', providerOf(getApiKey()) ?? 'groq');
       if (errorKind === 'bad-key' || errorKind === 'no-key') editKey = true;
     }
     busy = false;
@@ -90,18 +90,18 @@ export function askPanel(source: () => AskSource): { el: HTMLElement; refresh: (
   }
 
   function keyForm() {
-    const keyIn = h('input', { class: 'ask-input', type: 'password', placeholder: 'gsk_…', autocomplete: 'off', value: getApiKey() }) as HTMLInputElement;
+    const keyIn = h('input', { class: 'ask-input', type: 'password', placeholder: 'AIza… hoặc gsk_…', autocomplete: 'off', value: getApiKey() }) as HTMLInputElement;
     const err = h('p', { class: 'ask-err', role: 'alert' });
     return h(
       'div',
       { class: 'ask-key' },
-      h('p', null, h('b', null, 'Cần khoá Groq (miễn phí) để hỏi AI.'), ' Làm một lần trên máy này:'),
+      h('p', null, h('b', null, 'Cần khoá AI miễn phí để hỏi.'), ' Dùng Gemini hoặc Groq, làm một lần trên máy này:'),
       h(
         'ol',
         null,
-        h('li', null, 'Mở ', h('a', { href: 'https://console.groq.com/keys', target: '_blank', rel: 'noopener' }, 'console.groq.com/keys'), ', đăng nhập bằng Google. Không cần thẻ.'),
-        h('li', null, 'Bấm "Create API Key", sao chép khoá (bắt đầu bằng gsk_).'),
-        h('li', null, 'Dán vào ô dưới. Khoá chỉ lưu trên máy này, không gửi lên GitHub.')
+        h('li', null, h('b', null, 'Gemini: '), 'mở ', h('a', { href: 'https://aistudio.google.com/apikey', target: '_blank', rel: 'noopener' }, 'aistudio.google.com/apikey'), ', đăng nhập Google, bấm "Create API key", sao chép khoá (bắt đầu bằng AIza).'),
+        h('li', null, h('b', null, 'Hoặc Groq: '), 'mở ', h('a', { href: 'https://console.groq.com/keys', target: '_blank', rel: 'noopener' }, 'console.groq.com/keys'), ', bấm "Create API Key" (khoá bắt đầu bằng gsk_).'),
+        h('li', null, 'Dán khoá vào ô dưới, game tự nhận ra loại khoá. Khoá chỉ lưu trên máy này, không gửi lên GitHub.')
       ),
       keyIn,
       err,
@@ -115,7 +115,7 @@ export function askPanel(source: () => AskSource): { el: HTMLElement; refresh: (
             onclick: () => {
               const k = keyIn.value.trim();
               if (!looksLikeKey(k)) {
-                err.textContent = 'Khoá chưa đúng dạng. Khoá Groq bắt đầu bằng gsk_ và khá dài.';
+                err.textContent = 'Khoá chưa đúng dạng. Khoá Gemini bắt đầu bằng AIza, khoá Groq bắt đầu bằng gsk_.';
                 return;
               }
               setApiKey(k);
@@ -143,7 +143,7 @@ export function askPanel(source: () => AskSource): { el: HTMLElement; refresh: (
       error = '';
     }
     clear(el);
-    el.append(h('div', { class: 'ask-title' }, h('span', null, `Hỏi AI về “${src.phrase}”`), getApiKey() && !editKey ? h('button', { class: 'link', onclick: () => { editKey = true; render(); } }, 'Khoá AI') : null));
+    el.append(h('div', { class: 'ask-title' }, h('span', null, `Hỏi AI về “${src.phrase}”`), getApiKey() && !editKey ? h('button', { class: 'link', onclick: () => { editKey = true; render(); } }, `${PROVIDER_NAME[providerOf(getApiKey()) ?? 'groq']} · đổi khoá`) : null));
     if (editKey || !getApiKey()) {
       el.append(keyForm());
       return;

@@ -95,10 +95,10 @@ export const GUIDE: GuideEntry[] = [
     tips: [
       'Nếu bạn đọc sai một từ từ 2 lần, máy sẽ hỏi có muốn thêm từ đó vào sổ không.',
       'Cuối mỗi bài có danh sách các từ bạn vừa ghi để ôn nhanh 30 giây.',
-      'Hỏi AI cần khoá Groq miễn phí (làm một lần: console.groq.com/keys, đăng nhập Google, tạo khoá, dán vào). Khoá chỉ lưu trên máy bạn. AI có thể nhầm, câu quan trọng nên kiểm tra lại.',
+      'Hỏi AI cần một khoá miễn phí, làm một lần: Gemini (aistudio.google.com/apikey, đăng nhập Google, "Create API key") hoặc Groq (console.groq.com/keys). Dán vào là game tự nhận ra loại khoá. Khoá chỉ lưu trên máy bạn. AI có thể nhầm, câu quan trọng nên kiểm tra lại.',
     ],
     target: { tab: 'notebook' },
-    keys: 'ghi chu tu moi so tu cham phien am nghia cum hoi ai vi sao ngu phap groq',
+    keys: 'ghi chu tu moi so tu cham phien am nghia cum hoi ai vi sao ngu phap groq gemini',
   },
 
   /* ---------- Sân khấu ---------- */
