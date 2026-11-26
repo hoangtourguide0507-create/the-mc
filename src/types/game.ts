@@ -325,6 +325,10 @@ export interface EvaluatedToken {
   sim: number;
   status: TokenStatus;
   phonetic?: boolean;
+  /** Máy nghe ra dạng gốc (switch thay vì switched) nhiều lần: tạm tính gần đúng (core/hardword.ts) */
+  forgiven?: boolean;
+  /** Đã đạt khi luyện riêng bằng chấm từng âm */
+  verified?: boolean;
 }
 
 export interface EvalResult {

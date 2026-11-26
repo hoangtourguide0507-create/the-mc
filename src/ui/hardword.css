@@ -1,0 +1,17 @@
+/* Thẻ luyện riêng một từ khó (src/ui/hardword.ts). Khung dùng chung với thẻ từ (.wp-veil, .wp-head). */
+.hw-card { width: min(100%, 560px); max-height: 88%; overflow-y: auto; display: grid; gap: 10px; padding: 16px 16px calc(16px + var(--safe-bottom)); border-radius: 20px 20px 0 0; }
+.hw-sub { font-size: 13px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--accent); }
+.hw-steps { display: flex; flex-wrap: wrap; gap: 8px; }
+.hw-steps .btn { width: auto; flex: 1 1 auto; min-height: var(--tap); font-size: 15px; }
+.hw-card .pron-ops { list-style: none; margin: 0; padding: 10px 12px; border-radius: 12px; background: var(--panel-2); display: grid; gap: 4px; font-size: 15px; font-weight: 600; }
+.hw-card .pron-op.ok { color: var(--ok-ink); }
+.hw-card .pron-op.near { color: var(--near-ink); }
+.hw-card .pron-op.bad { color: var(--bad-ink); }
+.hw-card .pron-verdict { padding: 10px 12px; border-radius: 12px; font-weight: 600; }
+.hw-card .pron-verdict.ok { background: var(--ok-bg); color: var(--ok-ink); }
+.hw-card .pron-verdict.bad { background: var(--bad-bg); color: var(--bad-ink); }
+/* Từ được tạm tính gần đúng (máy cứ nghe ra dạng gốc): viền đứt để nhớ còn phải luyện */
+.tok.forgiven { outline: 2px dashed var(--near-ink); outline-offset: 1px; }
+.tok.verified { box-shadow: inset 0 -3px 0 var(--ok-ink); }
+.hw-drills { display: flex; flex-wrap: wrap; gap: 8px; }
+.hw-drills .btn { width: auto; flex: 1 1 auto; }

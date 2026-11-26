@@ -27,6 +27,7 @@
     "test:show": "node tests/show.test.mjs",
     "test:talk": "node tests/talk.test.mjs",
     "test:notes": "node tests/notes.test.mjs",
+    "test:hardword": "node tests/hardword.test.mjs",
     "test:longturn": "node tests/longturn.test.mjs",
     "test:guide": "node tests/guide.test.mjs",
     "glossary": "node tools/build-glossary.mjs"

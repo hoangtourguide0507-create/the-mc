@@ -12,6 +12,8 @@ import { clamp } from '../../core/clock';
 import { evaluateScripted, evaluateTurnCandidates } from '../../core/evaluator';
 import { evaluateRecallCandidates, planTurn, supportStage } from '../../core/recall';
 import { applyChunkAttempt, focusChunk, mergeAttempts } from '../../core/retry';
+import { FORGIVE_AFTER, drillCandidates, forgiveDroppedEndings, markVerified, newTrack, trackAttempt, type WordTrack } from '../../core/hardword';
+import { closeWordDrill, openWordDrill } from '../hardword';
 import { INCIDENT_SECONDS, evaluateIncident, incidentGroupOf, planIncidents, type Incident, type IncidentResult } from '../../core/incident';
 import { PERFORM_TRIES, applyImprove, applyIncident, applyMiss, applySkip, applyTurn, moodOf, multiplier, newShow, performBonus, verdict, type TurnOutcome } from '../../core/show';
 import { INCIDENTS } from '../../data/incidents';
@@ -91,6 +93,8 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
   let micPhase: StageMicPhase = 'idle';
   let interim = '';
   let evalResult: EvalResult | null = null;
+  /** Số lần sai của từng từ trong lượt đọc theo thẻ (core/hardword.ts) */
+  let track: WordTrack | null = null;
   let chunkRec = false;
   let hintAsked = false;
   let mistakes = 0;
@@ -229,6 +233,8 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
     revealed = false;
     translated = false;
     evalResult = null;
+    track = null;
+    closeWordDrill();
     chunkRec = false;
     interim = '';
     mistakes = 0;
@@ -351,7 +357,59 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
     const res = evaluateTurnCandidates(t, candidates);
     // Đọc theo thẻ / bắt từ: cộng dồn, từ đã đúng một lần thì giữ là đúng
     const cumulative = t.mode === 'scripted' || t.mode === 'catch';
-    awardTurn(cumulative ? mergeAttempts(evalResult, res) : res);
+    if (!cumulative) return awardTurn(res);
+    const merged = mergeAttempts(evalResult, res);
+    track = trackAttempt(track ?? newTrack(merged.tokens.length), res.tokens, candidates.join(' '));
+    awardTurn(forgiveHard(merged));
+  }
+
+  /**
+   * Máy cứ nghe thành dạng gốc (switch thay vì switched) từ lần thứ FORGIVE_AFTER: tạm tính gần đúng
+   * để người học không kẹt mãi ở một câu, rồi ghi từ vào Sổ tay để luyện riêng sau.
+   */
+  function forgiveHard(res: EvalResult): EvalResult {
+    if (perform || !track) return res;
+    const f = forgiveDroppedEndings(res, track);
+    if (f.forgiven.length === 0) return res;
+    const t = turn();
+    for (const w of f.forgiven) store().saveNote({ text: w, pron: true, auto: true, ctx: t.cue || t.sample || '', ctxVi: t.cueVi, npcId: 'coach', scene: baseScene.id });
+    window.setTimeout(
+      () => toast(`Đọc ${FORGIVE_AFTER} lần mà máy vẫn nghe thành dạng gốc của “${f.forgiven.join('”, “')}”. Tạm tính gần đúng và đã thêm vào Sổ tay để luyện riêng.`, 'info', 4200),
+      900
+    );
+    return f.result;
+  }
+
+  /** Nút "Luyện riêng" cho các từ đã sai từ 2 lần (tối đa 3 từ) */
+  function hardWordRow(): HTMLElement[] {
+    if (perform || !evalResult || !track) return [];
+    const idx = drillCandidates(evalResult, track).slice(0, 3);
+    if (idx.length === 0) return [];
+    const res = evalResult;
+    return [
+      h('p', { class: 'vi' }, 'Từ này đọc mãi chưa được? Luyện riêng: máy nghe từng âm và chỉ ra âm bạn còn thiếu.'),
+      h('div', { class: 'hw-drills' }, ...idx.map((i) => h('button', { class: 'btn quiet', onclick: () => drillWord(i) }, `Luyện riêng “${res.tokens[i].word.replace(/^[^A-Za-z']+|[^A-Za-z']+$/g, '')}”`))),
+    ];
+  }
+
+  /** Mở thẻ luyện riêng một từ bằng chấm từng âm; đạt thì từ đó được tính đúng trong câu */
+  function drillWord(index: number) {
+    if (!evalResult) return;
+    const t = turn();
+    const tok = evalResult.tokens[index];
+    if (!tok) return;
+    Voice.stop();
+    openWordDrill({
+      word: tok.word,
+      sentence: t.cue || t.sample || '',
+      sentenceVi: t.cueVi,
+      scene: baseScene.id,
+      onPass: () => {
+        if (disposed || !evalResult || evalResult.tokens[index]?.word !== tok.word) return;
+        awardTurn(markVerified(evalResult, index));
+        if (!focusChunk(evalResult.tokens)) toast('Đã đúng hết các từ trong câu.', 'success', 2200);
+      },
+    });
   }
 
   // Diễn thì không có luyện lại từng cụm
@@ -401,7 +459,8 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
       if (!best || r.score > best.score) best = r;
     }
     if (!best) return render();
-    const merged = applyChunkAttempt(base, chunk, best);
+    track = trackAttempt(track ?? newTrack(base.tokens.length), best.tokens, candidates.join(' '), chunk.start);
+    const merged = forgiveHard(applyChunkAttempt(base, chunk, best));
     const still = focusChunk(merged.tokens);
     awardTurn({ ...merged, transcript: best.transcript });
     if (!still) toast('Đã đúng hết các từ trong câu.', 'success', 2200);
@@ -865,7 +924,7 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
             line.append(
               h(
                 'button',
-                { class: `tok ${tok.status === 'ok' ? 'ok' : tok.status === 'near' ? 'near' : 'bad'}`, title: 'Chạm để nghe và ghi chú từ này', dataset: { wp: String(line.childElementCount) } },
+                { class: `tok ${tok.status === 'ok' ? 'ok' : tok.status === 'near' ? 'near' : 'bad'}${tok.forgiven ? ' forgiven' : ''}${tok.verified ? ' verified' : ''}`, title: 'Chạm để nghe và ghi chú từ này', dataset: { wp: String(line.childElementCount) } },
                 tok.word
               )
             );
@@ -886,7 +945,8 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
                 { class: 'chips' },
                 h('button', { class: 'btn quiet', onclick: () => void playChunkWords() }, `Nghe: ${chunk.weak.join(', ')}`),
                 h('button', { class: `btn ${chunkRec ? 'rec' : ''}`, style: { width: 'auto', flex: '1' }, disabled: micPhase === 'rec' || micPhase === 'arming', onclick: () => void chunkMic() }, chunkRec ? 'Dừng và chấm cụm' : 'Đọc riêng cụm này')
-              )
+              ),
+              ...hardWordRow()
             )
           );
         }
@@ -1138,6 +1198,7 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
   return () => {
     disposed = true;
     closeWordSheet();
+    closeWordDrill();
     closeGuide();
     frameWatch?.disconnect();
     stopIncClock();

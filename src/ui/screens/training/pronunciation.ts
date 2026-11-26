@@ -12,12 +12,14 @@ import {
   PRON_DRILLS,
   PRON_GROUP_META,
   PRON_LADDER,
+  PRON_ALWAYS_OPEN,
+  availableDrills,
   groupMastered,
   unlockedGroups,
   coachFor,
   pickPronDrill,
 } from '../../../data/pronunciation';
-import type { PronDrill } from '../../../data/pronunciation';
+import type { PronDrill, PronGroup } from '../../../data/pronunciation';
 import { normText, SpeechEngine, Voice } from '../../../audio/audioSystem';
 import { recordClip } from '../../../audio/clipRecorder';
 import type { ClipHandle } from '../../../audio/clipRecorder';
@@ -44,7 +46,7 @@ type Result =
   | { source: 'empty' }
   | null;
 
-function opLabel(op: AlignOp): { text: string; cls: string } {
+export function opLabel(op: AlignOp): { text: string; cls: string } {
   switch (op.kind) {
     case 'match':
       return { text: `Khớp /${op.target}/`, cls: 'ok' };
@@ -108,6 +110,8 @@ function resultBox(r: NonNullable<Result>, drillWord: string): HTMLElement {
 export function mountPronunciation(root: HTMLElement): () => void {
   const store = () => gameStore.getState();
   const initPron = store().state.pron;
+  /** Nhóm người học chọn luyện riêng (bấm vào bậc trên lộ trình); null là trộn mọi nhóm đang mở */
+  let focusGroup: PronGroup | null = null;
   let drill: PronDrill = pickPronDrill(initPron.progress, initPron.recent);
 
   let disposed = false;
@@ -136,7 +140,7 @@ export function mountPronunciation(root: HTMLElement): () => void {
     { class: 'card' },
     h('div', { class: 'eyebrow' }, 'Lộ trình phát âm'),
     ladderBox,
-    h('p', { class: 'vi' }, 'Đạt từ 60% đúng ở mọi bài của một nhóm để mở nhóm kế tiếp.')
+    h('p', { class: 'vi' }, 'Đạt từ 60% đúng ở mọi bài của một nhóm để mở nhóm kế tiếp. Bấm một nhóm đang mở để chỉ luyện nhóm đó.')
   );
   const metaRow = h('div', { class: 'chips pron-meta' });
   const drillSlot = h('div', { class: 'pron-drill' });
@@ -151,12 +155,30 @@ export function mountPronunciation(root: HTMLElement): () => void {
     const progress = store().state.pron.progress;
     const open = unlockedGroups(progress);
     clear(ladderBox);
-    PRON_LADDER.forEach((g, i) => {
+    [...PRON_LADDER, ...PRON_ALWAYS_OPEN].forEach((g, i) => {
       const done = groupMastered(progress, g);
       const isOpen = open.includes(g);
       const state = done ? 'done' : isOpen ? 'open' : 'locked';
       const note = done ? ' · đã xong' : isOpen ? ' · đang mở' : ' · khóa';
-      ladderBox.append(h('span', { class: `pron-step ${state}` }, `${i + 1}. ${PRON_GROUP_META[g].label}${note}`));
+      const label = PRON_ALWAYS_OPEN.includes(g) ? `★ ${PRON_GROUP_META[g].label}` : `${i + 1}. ${PRON_GROUP_META[g].label}`;
+      // Nhóm đang mở bấm được để chỉ luyện riêng nhóm đó; bấm lại để bỏ chọn
+      ladderBox.append(
+        h(
+          'button',
+          {
+            type: 'button',
+            class: `pron-step ${state}${focusGroup === g ? ' focus' : ''}`,
+            disabled: !isOpen,
+            ariaPressed: String(focusGroup === g),
+            onclick: () => {
+              focusGroup = focusGroup === g ? null : g;
+              paintLadder();
+              nextDrill();
+            },
+          },
+          `${label}${note}`
+        )
+      );
     });
   }
 
@@ -480,7 +502,8 @@ export function mountPronunciation(root: HTMLElement): () => void {
   function nextDrill(): void {
     token++;
     const pron = store().state.pron;
-    drill = pickPronDrill(pron.progress, [...pron.recent, drill.id]);
+    const pool = availableDrills(pron.progress).filter((x) => !focusGroup || x.group === focusGroup);
+    drill = pickPronDrill(pron.progress, [...pron.recent, drill.id], Math.random, pool.length ? pool : undefined);
     result = null;
     interim = '';
     typed = '';

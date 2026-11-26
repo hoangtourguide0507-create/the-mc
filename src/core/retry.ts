@@ -12,13 +12,19 @@ const RANK: Record<TokenStatus, number> = { bad: 0, near: 1, ok: 2 };
 /** Điểm của một kết quả đã gộp: trung bình độ khớp của các từ (từ đã "ok" tính tròn 1). */
 function scoreOf(tokens: EvaluatedToken[]): number {
   if (tokens.length === 0) return 0;
-  const sum = tokens.reduce((acc, t) => acc + (t.status === 'ok' ? 1 : t.sim), 0);
+  // Từ được tạm tính (forgiven) chỉ tính theo độ khớp thật, không tròn 1
+  const sum = tokens.reduce((acc, t) => acc + (t.status === 'ok' && !t.forgiven ? 1 : t.sim), 0);
   return Math.max(0, Math.min(100, Math.round((sum / tokens.length) * 100)));
 }
 
 function better(a: EvaluatedToken, b: EvaluatedToken): EvaluatedToken {
   if (RANK[b.status] !== RANK[a.status]) return RANK[b.status] > RANK[a.status] ? b : a;
   return b.sim > a.sim ? b : a;
+}
+
+/** Dựng lại điểm và sao sau khi đổi trạng thái một vài từ (không bao giờ thấp hơn kết quả cũ). */
+export function withTokens(result: EvalResult, tokens: EvaluatedToken[]): EvalResult {
+  return rebuild(tokens, result, result);
 }
 
 function rebuild(tokens: EvaluatedToken[], base: EvalResult, floor: EvalResult): EvalResult {

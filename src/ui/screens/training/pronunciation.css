@@ -64,3 +64,8 @@
 
 /* Câu mẫu */
 .pron-en { font-size: 16px; font-weight: 600; color: var(--ink); }
+/* Bậc trên lộ trình là nút: bấm để chỉ luyện riêng nhóm đó */
+button.pron-step { border: 0; font-family: inherit; line-height: 1.3; text-align: left; cursor: pointer; }
+button.pron-step:not(:disabled) { min-height: var(--tap); }
+button.pron-step:disabled { cursor: default; opacity: 1; }
+.pron-step.focus { box-shadow: 0 0 0 2px var(--accent); }

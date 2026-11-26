@@ -1,10 +1,11 @@
+import { PRON_ED_DRILLS } from './pronunciation.ed';
 /**
  * Kho bài "Bắt lỗi phát âm" dành cho người Việt.
  * Mỗi bài gồm: phiên âm IPA, cách tách âm tiết có đánh dấu trọng âm, lỗi thường gặp
  * và lý do về mặt âm vị, mẹo luyện, và một câu mẫu để nghe.
  */
 
-export type PronGroup = 'vowel' | 'stress' | 'silent' | 'final' | 'cluster' | 'pair' | 'ending' | 'spelling';
+export type PronGroup = 'vowel' | 'stress' | 'silent' | 'final' | 'cluster' | 'pair' | 'ending' | 'spelling' | 'ed';
 
 export interface PronSyllable {
   text: string;
@@ -48,9 +49,10 @@ export const PRON_GROUP_META: Record<PronGroup, { label: string; coachId: string
   pair: { label: 'Cặp dễ nhầm', coachId: 'alex', hint: 'Hai từ gần giống nhau, nghĩa khác' },
   ending: { label: 'Đuôi -s, -es', coachId: 'ivy', hint: 'Đuôi -es đọc /ɪz/, /z/ hay /s/ tùy âm đứng trước' },
   spelling: { label: 'Chữ viết dễ đánh lừa', coachId: 'grandma', hint: 'Đừng đọc theo mặt chữ' },
+  ed: { label: 'Đuôi -ed và cụm phụ âm cuối', coachId: 'sam', hint: 'switched /tʃt/, asked /skt/, guests /sts/: giữ đủ âm cuối, không thêm “ơ”' },
 };
 
-export const PRON_DRILLS: PronDrill[] = [
+const BASE_DRILLS: PronDrill[] = [
   {
     id: 'pr-value',
     word: 'value',
@@ -415,6 +417,8 @@ export const PRON_DRILLS: PronDrill[] = [
   },
 ];
 
+export const PRON_DRILLS: PronDrill[] = [...BASE_DRILLS, ...PRON_ED_DRILLS];
+
 /** Lấy bài theo nhóm lỗi, dùng để gắn với NPC. */
 export function coachFor(drill: PronDrill): string {
   return PRON_GROUP_META[drill.group].coachId;
@@ -464,6 +468,8 @@ export function pickPronDrill(
  */
 export const PRON_LADDER: PronGroup[] = ['ending', 'silent', 'final', 'vowel', 'pair', 'cluster', 'stress', 'spelling'];
 export const PRON_MASTERY = 0.6;
+/** Nhóm luôn mở, không phụ thuộc lộ trình (thêm sau, nên không chèn vào giữa lộ trình để khỏi khoá lại nhóm người học đã mở). */
+export const PRON_ALWAYS_OPEN: PronGroup[] = ['ed'];
 
 /** Một nhóm được coi là đạt khi mọi bài của nhóm đã có lượt thử và đều đạt ngưỡng. */
 export function groupMastered(progress: Record<string, PronProgress>, group: PronGroup): boolean {
@@ -481,7 +487,7 @@ export function unlockedGroups(progress: Record<string, PronProgress>): PronGrou
     if (!groupMastered(progress, PRON_LADDER[i])) break;
     open.push(PRON_LADDER[i + 1]);
   }
-  return open;
+  return [...open, ...PRON_ALWAYS_OPEN];
 }
 
 /** Bài đang mở khoá theo lộ trình. */
