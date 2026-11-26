@@ -182,6 +182,85 @@ class SoundSystem {
   unlocked = false;
   muted = false;
 
+  /* ---------- Tiếng vỗ tay thu thật (public/audio/sfx, CC0, xem CREDITS.md) ---------- */
+  private samples: Record<string, AudioBuffer[]> = {};
+  private samplesRequested = false;
+  /** Các tiếng khán phòng đang phát, để hạ nhỏ khi nhân vật nói hoặc khi mở mic */
+  private crowd = new Set<{ src: AudioBufferSourceNode; gain: GainNode }>();
+  private lastPick: Record<string, number> = {};
+
+  private static readonly SAMPLE_FILES: Record<string, string[]> = {
+    clap: ['clap-1', 'clap-2'],
+    applause: ['applause-1', 'applause-2'],
+    ovation: ['ovation'],
+  };
+
+  /** Tải và giải mã các bản thu một lần, ngay sau lần chạm đầu tiên. Lỗi thì giữ tiếng tổng hợp cũ. */
+  private loadSamples(): void {
+    const ctx = this.ctx;
+    if (this.samplesRequested || !ctx) return;
+    this.samplesRequested = true;
+    const decode = (data: ArrayBuffer) =>
+      new Promise<AudioBuffer>((ok, fail) => {
+        // Safari cũ chỉ có dạng callback
+        const p = ctx.decodeAudioData(data, ok, fail) as unknown as Promise<AudioBuffer> | undefined;
+        p?.then?.(ok, fail);
+      });
+    for (const [group, files] of Object.entries(SoundSystem.SAMPLE_FILES)) {
+      for (const f of files) {
+        fetch(`${AUDIO_BASE}sfx/${f}.mp3`)
+          .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(String(r.status)))))
+          .then(decode)
+          .then((buf) => {
+            (this.samples[group] ??= []).push(buf);
+          })
+          .catch(() => {
+            /* không tải được: dùng tiếng tổng hợp */
+          });
+      }
+    }
+  }
+
+  /** Phát một bản thu trong nhóm (đổi bản giữa các lần, lệch tốc độ nhẹ để không lặp y hệt). */
+  private playSample(group: string, vol: number): boolean {
+    const ctx = this.ctx;
+    const list = this.samples[group];
+    if (!ctx || !this.master || !list?.length) return false;
+    let i = Math.floor(Math.random() * list.length);
+    if (list.length > 1 && i === this.lastPick[group]) i = (i + 1) % list.length;
+    this.lastPick[group] = i;
+    const src = ctx.createBufferSource();
+    src.buffer = list[i];
+    src.playbackRate.value = 0.97 + Math.random() * 0.06;
+    const gain = ctx.createGain();
+    gain.gain.value = vol;
+    src.connect(gain);
+    gain.connect(this.master);
+    const item = { src, gain };
+    this.crowd.add(item);
+    src.onended = () => this.crowd.delete(item);
+    src.start();
+    return true;
+  }
+
+  /** Hạ dần tiếng khán phòng: gọi khi nhân vật bắt đầu nói hoặc khi mở mic, để không lấn tiếng. */
+  duckCrowd(seconds = 0.35): void {
+    const ctx = this.ctx;
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    for (const { src, gain } of this.crowd) {
+      gain.gain.cancelScheduledValues(now);
+      gain.gain.setValueAtTime(gain.gain.value, now);
+      gain.gain.linearRampToValueAtTime(0.0001, now + seconds);
+      try {
+        src.stop(now + seconds + 0.05);
+      } catch {
+        /* đã dừng */
+      }
+    }
+    this.crowd.clear();
+  }
+
   unlock(): AudioContext | null {
     if (typeof window === 'undefined') return null;
     const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
@@ -197,6 +276,7 @@ class SoundSystem {
       this.master.connect(this.comp);
       this.comp.connect(this.ctx.destination);
     }
+    this.loadSamples();
 
     if (this.ctx.state === 'suspended') {
       this.ctx.resume().catch(() => {});
@@ -271,19 +351,23 @@ class SoundSystem {
     src.start();
   }
 
-  play(name: string) {
+  /** `vol` nhân thêm âm lượng (chỉ áp cho tiếng khán phòng thu thật). */
+  play(name: string, vol = 1) {
     if (!this.unlocked || this.muted) return;
     switch (name) {
+      case 'ovation':
+        if (!this.playSample('ovation', 1 * vol)) this.noise(2.6, 2300, 0.55, 30);
+        break;
       case 'alarm':
         this.tone(740, 0.12, 'square', 0.12, 0);
         this.tone(554, 0.12, 'square', 0.12, 0.14);
         this.tone(740, 0.12, 'square', 0.12, 0.28);
         break;
       case 'applause':
-        this.noise(2.2, 2400, 0.5, 26);
+        if (!this.playSample('applause', 1 * vol)) this.noise(2.2, 2400, 0.5, 26);
         break;
       case 'clap':
-        this.noise(1.0, 2200, 0.3, 10);
+        if (!this.playSample('clap', 1 * vol)) this.noise(1.0, 2200, 0.3, 10);
         break;
       case 'murmur':
         this.noise(0.9, 380, 0.22);
@@ -720,6 +804,8 @@ class VoiceEngine {
     if (!ok) return;
 
     this.stop();
+    // Nhân vật bắt đầu nói thì tiếng khán phòng lắng xuống, như ngoài đời
+    SFX.duckCrowd(0.6);
 
     const npcId = opts.npcId || 'coach';
     const clipUrl = await Clips.find(roleFor(npcId, opts.speaker), text);
@@ -901,6 +987,8 @@ class SpeechRecognitionEngine {
    * và nối tiếp phần đã nghe.
    */
   async listen(opts: { weakMode?: boolean; long?: boolean; maxMs?: number; onStart?: () => void; onInterim?: (text: string) => void } = {}): Promise<ListenResult> {
+    // Tiếng vỗ tay từ loa lọt vào mic sẽ làm máy nghe sai: tắt trước khi nghe
+    SFX.duckCrowd(0.15);
     const armed = await AudioBus.armMic();
     if (!armed) {
       return { transcript: '', alternatives: [], reason: 'aborted' };

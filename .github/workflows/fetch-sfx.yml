@@ -1,0 +1,47 @@
+name: Fetch sound effect sources (CC0)
+
+# Tải các bản thu gốc liệt kê trong tools/sfx/sources.json vào tools/sfx/raw/ rồi commit lại vào nhánh.
+# Chỉ chạy trên nhánh feat/sfx-* (hoặc bấm tay), không deploy gì. tools/sfx/raw/ nằm trong .gitignore: chỉ
+# đưa lên nhánh tạm để lấy về máy, cắt xong thì bỏ ra. Bản thu gốc được cắt và chuẩn hoá
+# âm lượng ở bước sau (tools/sfx/build.sh) thành public/audio/sfx/*.mp3.
+on:
+  push:
+    branches: ['feat/sfx-*']
+    paths:
+      - tools/sfx/sources.json
+      - .github/workflows/fetch-sfx.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - name: Download sources
+        run: |
+          mkdir -p tools/sfx/raw
+          for id in $(python3 -c "import json;print(' '.join(s['id'] for s in json.load(open('tools/sfx/sources.json'))['sources']))"); do
+            out="tools/sfx/raw/$id.mp3"
+            [ -s "$out" ] && continue
+            ok=""
+            for url in "https://bigsoundbank.com/UPLOAD/mp3/$id.mp3" "https://bigsoundbank.com/UPLOAD/mp3/$((10#$id)).mp3"; do
+              if curl -fsSL -A "Mozilla/5.0" -o "$out" "$url" && [ "$(stat -c%s "$out")" -gt 20000 ]; then ok=1; echo "ok $id <- $url ($(stat -c%s "$out") bytes)"; break; fi
+              rm -f "$out"
+            done
+            [ -n "$ok" ] || echo "::warning::could not download $id"
+          done
+          ls -la tools/sfx/raw
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f tools/sfx/raw
+          git diff --cached --quiet && { echo "nothing new"; exit 0; }
+          git commit -m "Fetch CC0 applause source recordings"
+          git push

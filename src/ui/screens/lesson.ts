@@ -165,7 +165,8 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
     live?.setHeat(show.heat / 100);
     if (cheer > 0) {
       live?.cheer(cheer as 1 | 2 | 3);
-      SFX.play(cheer === 3 ? 'applause' : 'clap');
+      // 3 sao: tràng pháo tay; 2 sao: vỗ tay lịch sự; 1 sao: vài tiếng vỗ tay nhỏ
+      SFX.play(cheer === 3 ? 'applause' : 'clap', cheer === 1 ? 0.45 : 1);
       if (o.points > 0) pop(`+${o.points}${show.streak >= 2 ? `  ×${multiplier(show.streak).toFixed(1)}` : ''}`);
       if (cheer === 3) navigator.vibrate?.(30);
     } else {
@@ -682,7 +683,7 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
     live?.setTalking(null);
     const end = show.heat >= 70 ? 3 : show.heat >= 45 ? 2 : 1;
     live?.cheer(end, show.heat >= 85);
-    SFX.play(end === 3 ? 'applause' : 'clap');
+    SFX.play(end === 3 ? 'ovation' : end === 2 ? 'applause' : 'clap');
     render();
   }
 
