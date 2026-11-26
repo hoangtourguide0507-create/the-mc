@@ -40,6 +40,8 @@ export interface LessonOptions {
   perform?: boolean;
   /** Bối cảnh sân khấu, dùng để chọn sự cố đúng thể loại */
   theme?: string;
+  /** Bài kế tiếp trong danh sách: hiện nút "Bài tiếp" ở màn kết quả */
+  next?: { title: string; start: () => void };
 }
 
 let pickHintShown = false;
@@ -1150,7 +1152,8 @@ export function mountLesson(root: HTMLElement, sceneId: string, opts: LessonOpti
           h('div', { class: 'cell' }, h('b', null, `Lv.${charisma.lv}`), h('span', null, 'Cấp hiện tại'))
         ),
         recapBox(),
-        h('button', { class: 'btn', onclick: () => opts.onExit(true) }, perform ? 'Diễn lại bài này' : 'Tập lại bài này'),
+        opts.next ? h('button', { class: 'btn', onclick: () => opts.next!.start() }, `Bài tiếp: ${opts.next.title}`) : null,
+        h('button', { class: `btn${opts.next ? ' quiet' : ''}`, style: { width: '100%' }, onclick: () => opts.onExit(true) }, perform ? 'Diễn lại bài này' : 'Tập lại bài này'),
         h('button', { class: 'btn quiet', style: { width: '100%' }, onclick: () => opts.onExit(false) }, 'Về danh sách')
       )
     );

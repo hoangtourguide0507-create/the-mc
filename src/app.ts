@@ -10,7 +10,7 @@ import { LiveStage } from './scenes/LiveStage';
 import { StageBackdrop, type StageTheme } from './scenes/StageBackdrop';
 import { h } from './ui/dom';
 import { watch } from './engine/watch';
-import { mountHome, sceneTheme } from './ui/screens/home';
+import { markJustPlayed, mountHome, nextScript, sceneTheme } from './ui/screens/home';
 import { SCENES } from './data/content';
 import { mountLesson } from './ui/screens/lesson';
 import { mountNotebook } from './ui/screens/notebook';
@@ -223,14 +223,19 @@ function showLesson(sceneId: string, scriptKey: string | null = null, perform = 
   engine.register('live', () => stage);
   stage.setShow(sceneTheme(sceneId), SCENES[sceneId]?.title ?? '');
   void engine.show('live');
+  const nextUp = scriptKey ? nextScript(sceneId, scriptKey) : null;
   unmount = mountLesson(ui, sceneId, {
     live: stage,
     perform,
     theme: sceneTheme(sceneId),
+    // Bài tiếp luôn mở bằng Tập: Diễn chỉ mở sau khi đã Tập bài đó
+    next: nextUp ? { title: nextUp.title, start: () => { gameStore.getState().closeLesson(); if (scriptKey) markJustPlayed(sceneId, scriptKey, perform); showLesson(sceneId, nextUp.key, false); } } : undefined,
     onExit: (again) => {
       gameStore.getState().closeLesson();
-      if (again) showLesson(sceneId, scriptKey, perform);
-      else showTab('home');
+      if (again) return showLesson(sceneId, scriptKey, perform);
+      // Về danh sách: mở đúng tình huống và cuộn tới bài vừa học
+      if (scriptKey) markJustPlayed(sceneId, scriptKey, perform);
+      showTab('home');
     },
   });
   ui.append(toast);

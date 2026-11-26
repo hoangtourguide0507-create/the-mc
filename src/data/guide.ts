@@ -113,6 +113,7 @@ export const GUIDE: GuideEntry[] = [
       'Dùng hàng nút lọc (Cưới, Thương hiệu và triển lãm, Hội nghị và nghi thức…) để thu gọn danh sách.',
       'Vuốt ngang hàng poster, chạm một poster để xem các bài của sự kiện đó.',
       'Mỗi bài có hai nút: "Tập" và "Diễn". Bắt đầu bằng Tập.',
+      'Học xong một bài, màn kết quả có nút "Bài tiếp" để học ngay bài kế. Bấm "Về danh sách" thì quay lại đúng sự kiện đó: bài vừa học có dấu ✓ "Vừa Tập" hoặc "Vừa Diễn", bài kế có nhãn "Bài tiếp theo".',
       'Thẻ thang nghề ở đầu màn hình cho biết cấp hiện tại, danh hiệu và tiến độ lên cấp.',
     ],
     tips: ['Nút "Nền tối" hoặc "Nền sáng" ở góc trên đổi màu giao diện cho dịu mắt.'],

@@ -336,3 +336,9 @@ button:disabled { cursor: default; opacity: 0.45; }
 .gn-line { font-size: 15.5px; line-height: 1.5; }
 .gn-line s { opacity: 0.75; }
 .gn-why { display: block; font-size: 14px; opacity: 0.85; }
+/* Bài vừa học xong và bài tiếp theo trong danh sách (home.ts, markJustPlayed) */
+.script.just { background: var(--accent-soft); border-radius: 12px; box-shadow: inset 3px 0 0 var(--accent); }
+.script.just + .script { border-top-color: transparent; }
+.script.just .num { background: var(--accent); color: var(--panel); }
+.script .badge { justify-self: start; font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--accent); }
+.script.next .num { box-shadow: 0 0 0 2px var(--accent); }

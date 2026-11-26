@@ -35,6 +35,24 @@ const GROUPS: { id: string; label: string; scenes: string[] }[] = [
 ];
 /** Nhóm đang chọn, giữ lại khi quay về màn chính */
 let activeGroup = 'all';
+/** Poster đang mở, giữ lại khi quay về màn chính */
+let selectedScene: string | null = null;
+/** Bài vừa học xong: quay về thì mở đúng poster, cuộn tới bài này và đánh dấu */
+let justPlayed: { sceneId: string; scriptKey: string; perform: boolean } | null = null;
+
+export function markJustPlayed(sceneId: string, scriptKey: string, perform: boolean): void {
+  justPlayed = { sceneId, scriptKey, perform };
+  selectedScene = sceneId;
+  const group = GROUPS.find((g) => g.id === activeGroup);
+  if (group && group.id !== 'all' && !group.scenes.includes(sceneId)) activeGroup = 'all';
+}
+
+/** Bài kế tiếp trong danh sách của một tình huống (null nếu là bài cuối) */
+export function nextScript(sceneId: string, scriptKey: string): { key: string; title: string } | null {
+  const all = scriptList(sceneId);
+  const i = all.findIndex((s) => s.key === scriptKey);
+  return i >= 0 && i + 1 < all.length ? { key: all[i + 1].key, title: all[i + 1].title } : null;
+}
 
 /** Khởi động trước, rồi các sự kiện theo cấp mở khoá tăng dần */
 const ORDER = Object.values(SCENES)
@@ -78,7 +96,7 @@ export function mountHome(root: HTMLElement, opts: HomeOptions): () => void {
   // Hàng poster vuốt ngang; danh sách bài của poster đang chọn nằm bên dưới
   const list = h('div', { class: 'posters' });
   const scriptsBox = h('div', { class: 'col', style: { gap: '12px' } });
-  let selected: string | null = null;
+  let selected: string | null = selectedScene && SCENES[selectedScene] ? selectedScene : null;
   const filters = h('div', { class: 'filters', role: 'group', ariaLabel: 'Lọc theo nhóm sự kiện' });
   const paintFilters = () => {
     clear(filters);
@@ -92,7 +110,7 @@ export function mountHome(root: HTMLElement, opts: HomeOptions): () => void {
             ariaPressed: String(activeGroup === g.id),
             onclick: () => {
               activeGroup = g.id;
-              selected = null;
+              selected = selectedScene = null;
               opts.onTheme('lounge');
               paintFilters();
               renderList();
@@ -168,10 +186,10 @@ export function mountHome(root: HTMLElement, opts: HomeOptions): () => void {
         'button',
         {
           class: `poster${locked ? ' locked' : ''}`,
-          dataset: { theme: info.theme },
           ariaPressed: String(open),
+          dataset: { theme: info.theme, scene: id },
           onclick: () => {
-            selected = open ? null : id;
+            selected = selectedScene = open ? null : id;
             opts.onTheme(selected ? info.theme : 'lounge');
             const keep = list.scrollLeft;
             renderList();
@@ -190,14 +208,24 @@ export function mountHome(root: HTMLElement, opts: HomeOptions): () => void {
         const scripts = scriptList(id);
         const box = h('div', { class: 'panel scripts' });
         box.append(h('p', { class: 'hint' }, 'Tập: nói lại thoải mái, có gợi ý. Diễn: mỗi lượt một lần, không gợi ý, tính danh tiếng.'));
+        const just = justPlayed?.sceneId === id ? justPlayed : null;
+        const justIdx = just ? scripts.findIndex((x) => x.key === just.scriptKey) : -1;
         scripts.forEach((sc, i) => {
           const seen = learn.exposure[sc.key] || 0;
+          const isJust = i === justIdx;
+          const isNext = justIdx >= 0 && i === justIdx + 1;
           box.append(
             h(
               'div',
-              { class: 'script' },
-              h('span', { class: 'num' }, String(i + 1)),
-              h('span', { class: 'st' }, sc.title, h('small', null, `${sc.turns.length} lượt · ${seen > 0 ? `đã luyện ${seen} lần` : 'chưa luyện'}`)),
+              { class: `script${isJust ? ' just' : ''}${isNext ? ' next' : ''}`, dataset: { key: sc.key } },
+              h('span', { class: 'num' }, isJust ? '✓' : String(i + 1)),
+              h(
+                'span',
+                { class: 'st' },
+                isJust ? h('span', { class: 'badge' }, just!.perform ? 'Vừa Diễn' : 'Vừa Tập') : isNext ? h('span', { class: 'badge' }, 'Bài tiếp theo') : null,
+                sc.title,
+                h('small', null, `${sc.turns.length} lượt · ${seen > 0 ? `đã luyện ${seen} lần` : 'chưa luyện'}`)
+              ),
               h(
                 'span',
                 { class: 'acts' },
@@ -220,6 +248,17 @@ export function mountHome(root: HTMLElement, opts: HomeOptions): () => void {
   ];
   paintFilters();
   renderList();
+  if (selected) {
+    opts.onTheme(sceneTheme(selected));
+    // Quay về sau một bài: đưa poster vào giữa hàng và cuộn tới bài vừa học
+    const sceneId = selected;
+    requestAnimationFrame(() => {
+      const card = list.querySelector<HTMLElement>(`[data-scene="${sceneId}"]`);
+      if (card) list.scrollLeft = Math.max(0, card.offsetLeft - (list.clientWidth - card.offsetWidth) / 2);
+      const row = justPlayed?.sceneId === sceneId ? scriptsBox.querySelector<HTMLElement>(`[data-key="${CSS.escape(justPlayed.scriptKey)}"]`) : null;
+      (row ?? scriptsBox).scrollIntoView({ block: 'center' });
+    });
+  }
 
   return () => {
     offs.forEach((off) => off());
