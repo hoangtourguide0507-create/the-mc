@@ -6,6 +6,7 @@
  * Từ đã ghi được gạch chân nhẹ (.noted) ở mọi câu dùng fillPickable/bindPick.
  */
 import './wordpick.css';
+import { askPanel } from './askAi';
 import { Voice } from '../audio/audioSystem';
 import { lookupGloss, noteKey, notedMask, phraseOf, splitWords, type Glossary, type PickToken } from '../core/notes';
 import { gameStore } from '../core/store';
@@ -212,6 +213,14 @@ export function openWordSheet(o: SheetOpts): void {
   const key = () => noteKey(text());
   const note = () => store().state.notes?.[key()];
   const speak = (slow: boolean) => void Voice.speak(text(), { npcId: 'coach', slow });
+  // Khung hỏi AI: tạo một lần, giữ lịch sử hỏi khi thẻ vẽ lại; đổi cụm thì bắt đầu cuộc hỏi mới
+  let askOpen = false;
+  const asker = askPanel(() => ({
+    phrase: text(),
+    sentence: o.ctx.sentence,
+    sentenceVi: o.ctx.vi,
+    note: { text: text(), ctx: o.ctx.sentence, ctxVi: o.ctx.vi, npcId: o.ctx.npcId, speaker: o.ctx.speaker, scene: o.ctx.scene },
+  }));
 
   const close = () => {
     if (closeCurrent !== close) return;
@@ -273,8 +282,25 @@ export function openWordSheet(o: SheetOpts): void {
         h('button', { class: 'btn quiet', disabled: from <= 0, ariaLabel: 'Thêm từ đứng trước', onclick: () => { from -= 1; render(); } }, '← thêm'),
         h('button', { class: 'btn quiet', disabled: !many, ariaLabel: 'Bớt một từ', onclick: () => { to -= 1; render(); } }, 'bớt'),
         h('button', { class: 'btn quiet', disabled: to >= o.tokens.length - 1, ariaLabel: 'Thêm từ đứng sau', onclick: () => { to += 1; render(); } }, 'thêm →')
+      ),
+      h(
+        'button',
+        {
+          class: `btn quiet wp-ask${askOpen ? ' on' : ''}`,
+          ariaExpanded: String(askOpen),
+          onclick: () => {
+            askOpen = !askOpen;
+            render();
+            if (askOpen) asker.reveal();
+          },
+        },
+        askOpen ? 'Ẩn hỏi AI' : 'Hỏi AI: vì sao nói vậy?'
       )
     );
+    if (askOpen) {
+      asker.refresh();
+      card.append(asker.el);
+    }
     if (n) {
       const memo = h('input', { class: 'wp-memo', type: 'text', value: n.memo ?? '', placeholder: 'Ghi chú riêng của bạn (nghĩa, mẹo nhớ…)', autocomplete: 'off' });
       memo.addEventListener('change', () => store().memoNote(key(), memo.value));

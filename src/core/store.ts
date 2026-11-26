@@ -1,4 +1,4 @@
-import { realDay, removeNote, scheduleNote, setMemo, upsertNote, type NoteInput } from './notes';
+import { addQa, noteKey, realDay, removeNote, scheduleNote, setMemo, upsertNote, type NoteInput } from './notes';
 import { EMPTY_LEARN, type LearnState } from './cando';
 import { newChunkCard, scheduleChunk } from './chunks';
 import { createStore } from 'zustand/vanilla';
@@ -274,6 +274,8 @@ export interface GameStore {
   saveNote: (input: NoteInput) => void;
   dropNote: (key: string) => void;
   memoNote: (key: string, memo: string) => void;
+  /** Lưu hỏi đáp với AI vào sổ; chưa có mục thì ghi mục mới với nhãn Từ mới. */
+  qaNote: (input: NoteInput, q: string, a: string) => void;
   reviewNote: (key: string, correct: boolean) => void;
   skipNoteSuggest: (key: string) => void;
   /** Ghi kết quả một lượt nói dài; trả về XP vừa cộng. */
@@ -1045,6 +1047,18 @@ export const gameStore = createStore<GameStore>((set, get) => ({
   dropNote: (key) => {
     const st = get().state;
     const next = { ...st, notes: removeNote(st.notes ?? {}, key) };
+    set({ state: next });
+    persistStateNow(next);
+  },
+
+  qaNote: (input, q, a) => {
+    const st = get().state;
+    const key = noteKey(input.text);
+    let notes = st.notes ?? {};
+    if (!notes[key]) notes = upsertNote(notes, { ...input, vocab: true }, realDay());
+    notes = addQa(notes, key, q, a);
+    if (notes === st.notes) return;
+    const next = { ...st, notes };
     set({ state: next });
     persistStateNow(next);
   },

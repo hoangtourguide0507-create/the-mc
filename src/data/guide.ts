@@ -90,13 +90,15 @@ export const GUIDE: GuideEntry[] = [
       'Chọn nhãn "Từ mới" (học nghĩa và cách dùng) hoặc "Luyện phát âm", hoặc cả hai.',
       'Có thể gõ ghi chú riêng: nghĩa theo cách hiểu của bạn, mẹo nhớ.',
       'Từ đã ghi được gạch chân ở mọi câu khác, để bạn thấy mình gặp lại nó.',
+      'Thắc mắc vì sao câu dùng như vậy? Bấm "Hỏi AI: vì sao nói vậy?". Chọn câu hỏi nhanh hoặc tự gõ, ví dụ: sao không nói “we change plan”? AI trả lời bằng tiếng Việt và hỏi tiếp được. Bấm "Lưu vào Sổ tay" để giữ câu trả lời cùng từ đó.',
     ],
     tips: [
       'Nếu bạn đọc sai một từ từ 2 lần, máy sẽ hỏi có muốn thêm từ đó vào sổ không.',
       'Cuối mỗi bài có danh sách các từ bạn vừa ghi để ôn nhanh 30 giây.',
+      'Hỏi AI cần khoá Groq miễn phí (làm một lần: console.groq.com/keys, đăng nhập Google, tạo khoá, dán vào). Khoá chỉ lưu trên máy bạn. AI có thể nhầm, câu quan trọng nên kiểm tra lại.',
     ],
     target: { tab: 'notebook' },
-    keys: 'ghi chu tu moi so tu cham phien am nghia cum',
+    keys: 'ghi chu tu moi so tu cham phien am nghia cum hoi ai vi sao ngu phap groq',
   },
 
   /* ---------- Sân khấu ---------- */

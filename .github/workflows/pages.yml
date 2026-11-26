@@ -84,6 +84,8 @@ jobs:
         run: npm run test:notes
       - name: Hardword tests
         run: npm run test:hardword
+      - name: Ask AI tests
+        run: npm run test:ask
       - name: Long turn and interpreting test
         run: npm run test:longturn
       - name: Guide test

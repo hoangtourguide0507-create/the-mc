@@ -44,3 +44,8 @@
 }
 .wp-recap-item b { font-weight: 600; }
 .wp-recap-item span { font-size: 14.5px; color: var(--muted); }
+/* Nút mở khung hỏi AI (src/ui/askAi.ts) */
+.wp-ask { width: 100%; color: var(--accent); font-weight: 600; border: 1px dashed var(--accent); background: transparent; }
+.wp-ask.on { border-style: solid; }
+/* Cột lưới không được nở theo nội dung dài (câu trả lời AI, ô nhập), tránh cuộn ngang trên điện thoại */
+.wp-card { grid-template-columns: minmax(0, 1fr); }

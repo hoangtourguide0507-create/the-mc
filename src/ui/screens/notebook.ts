@@ -32,6 +32,7 @@ import {
   type WordNote,
 } from '../../core/notes';
 import { closeWordSheet, fillPickable, loadGlossary, openWordSheet } from '../wordpick';
+import { qaAnswer } from '../askAi';
 import { grammarErrors } from '../../core/grammar';
 
 interface Phrase {
@@ -347,6 +348,14 @@ export function mountNotebook(root: HTMLElement): () => void {
       g?.vi ? h('p', { class: 'notebook-meaning' }, g.lemma ? `${g.vi} (dạng của “${g.lemma}”)` : g.vi) : null,
       n.ctx ? h('p', { class: 'vi' }, `Câu gốc: “${n.ctx}”${n.ctxVi ? ` (${n.ctxVi})` : ''}`) : null,
       memo,
+      n.qa?.length
+        ? h(
+            'details',
+            { class: 'note-qa' },
+            h('summary', null, `Hỏi đáp với AI (${n.qa.length})`),
+            ...n.qa.map((t) => h('div', { class: 'ask-turn' }, h('p', { class: 'ask-q' }, t.q), qaAnswer(t.a)))
+          )
+        : null,
       h(
         'div',
         { class: 'chips' },

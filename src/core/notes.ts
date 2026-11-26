@@ -25,6 +25,8 @@ export interface WordNote {
   at: number;
   /** Ghi chú riêng người học tự gõ. */
   memo?: string;
+  /** Hỏi đáp với AI về từ này (mới nhất ở cuối, tối đa NOTE_QA_MAX). */
+  qa?: { q: string; a: string; at: number }[];
   /** Mục do máy gợi ý (đọc sai nhiều lần) và người học đã đồng ý thêm. */
   auto?: boolean;
   box: number;
@@ -133,6 +135,17 @@ export function removeNote(book: NoteBook, key: string): NoteBook {
   const out = { ...book };
   delete out[key];
   return out;
+}
+
+export const NOTE_QA_MAX = 6;
+
+/** Lưu một lượt hỏi đáp vào mục đã có; bỏ lượt trùng câu hỏi, giữ tối đa NOTE_QA_MAX lượt. */
+export function addQa(book: NoteBook, key: string, q: string, a: string, now = Date.now()): NoteBook {
+  const n = book[key];
+  if (!n || !q.trim() || !a.trim()) return book;
+  const same = (x: string) => x.trim().toLowerCase();
+  const qa = [...(n.qa ?? []).filter((t) => same(t.q) !== same(q)), { q: q.trim(), a: a.trim(), at: now }].slice(-NOTE_QA_MAX);
+  return { ...book, [key]: { ...n, qa } };
 }
 
 export function setMemo(book: NoteBook, key: string, memo: string): NoteBook {

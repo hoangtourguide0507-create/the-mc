@@ -1,0 +1,27 @@
+/* Khung hỏi AI trong thẻ từ (src/ui/askAi.ts) */
+.ask { min-width: 0; display: grid; gap: 10px; padding: 12px; border-radius: 14px; background: var(--panel-2); }
+.ask-title { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-weight: 700; color: var(--accent); }
+.ask-turn { display: grid; gap: 6px; }
+.ask-q { margin: 0; font-weight: 700; }
+.ask-a { display: grid; gap: 6px; line-height: 1.55; }
+.ask-a p, .ask-a ul { margin: 0; }
+.ask-a ul { padding-left: 20px; display: grid; gap: 4px; }
+.ask-a b { color: var(--accent); }
+.ask-wait { margin: 0; color: var(--muted); animation: ask-pulse 1.2s ease-in-out infinite; }
+@keyframes ask-pulse { 50% { opacity: 0.45; } }
+@media (prefers-reduced-motion: reduce) { .ask-wait { animation: none; } }
+.ask-save { width: auto; justify-self: start; min-height: var(--tap); }
+.ask-save.on { color: var(--ok-ink); }
+.ask-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.ask-chips .chip { min-height: var(--tap); }
+.ask-row { display: flex; gap: 8px; }
+.ask-row .btn { width: auto; flex: none; padding: 0 18px; }
+.ask-input { flex: 1; min-width: 0; min-height: var(--tap); padding: 0 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font: inherit; font-size: 16px; }
+.ask-err { margin: 0; color: var(--bad-ink); }
+.ask-note { margin: 0; font-size: 14px; color: var(--muted); }
+.ask-key { display: grid; gap: 8px; }
+.ask-key p, .ask-key ol { margin: 0; }
+.ask-key ol { padding-left: 20px; display: grid; gap: 4px; }
+/* Hỏi đáp đã lưu trong Sổ tay */
+.note-qa summary { cursor: pointer; font-weight: 600; color: var(--accent); min-height: var(--tap); display: flex; align-items: center; }
+.note-qa .ask-turn + .ask-turn { margin-top: 10px; }
