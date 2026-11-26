@@ -1,0 +1,10 @@
+{
+  "note": "Tiếng vỗ tay thu thật, giấy phép CC0 (không bắt buộc ghi nguồn) từ BigSoundBank, tác giả Joseph Sardin. Workflow fetch-sfx.yml tải các file này vào tools/sfx/raw/.",
+  "sources": [
+    { "id": "3518", "page": "https://bigsoundbank.com/applause-from-40-people-2-s3518.html", "title": "Applause from 40 People #2" },
+    { "id": "3521", "page": "https://bigsoundbank.com/applause-from-40-people-5-s3521.html", "title": "Applause from 40 People #5" },
+    { "id": "0019", "page": "https://bigsoundbank.com/applause-150-people-s0019.html", "title": "Applause: 150 People" },
+    { "id": "0020", "page": "https://bigsoundbank.com/applause-300-people-s0020.html", "title": "Applause: 300 People" },
+    { "id": "0021", "page": "https://bigsoundbank.com/applause-600-people-s0021.html", "title": "Applause: 600 People" }
+  ]
+}
