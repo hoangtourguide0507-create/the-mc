@@ -90,7 +90,7 @@ export function askPanel(source: () => AskSource): { el: HTMLElement; refresh: (
   }
 
   function keyForm() {
-    const keyIn = h('input', { class: 'ask-input', type: 'password', placeholder: 'AIza… hoặc gsk_…', autocomplete: 'off', value: getApiKey() }) as HTMLInputElement;
+    const keyIn = h('input', { class: 'ask-input', type: 'password', placeholder: 'AQ.…, AIza… hoặc gsk_…', autocomplete: 'off', value: getApiKey() }) as HTMLInputElement;
     const err = h('p', { class: 'ask-err', role: 'alert' });
     return h(
       'div',
@@ -99,7 +99,7 @@ export function askPanel(source: () => AskSource): { el: HTMLElement; refresh: (
       h(
         'ol',
         null,
-        h('li', null, h('b', null, 'Gemini: '), 'mở ', h('a', { href: 'https://aistudio.google.com/apikey', target: '_blank', rel: 'noopener' }, 'aistudio.google.com/apikey'), ', đăng nhập Google, bấm "Create API key", sao chép khoá (bắt đầu bằng AIza).'),
+        h('li', null, h('b', null, 'Gemini: '), 'mở ', h('a', { href: 'https://aistudio.google.com/apikey', target: '_blank', rel: 'noopener' }, 'aistudio.google.com/apikey'), ', đăng nhập Google, bấm "Create API key", sao chép khoá (bắt đầu bằng AQ. hoặc AIza).'),
         h('li', null, h('b', null, 'Hoặc Groq: '), 'mở ', h('a', { href: 'https://console.groq.com/keys', target: '_blank', rel: 'noopener' }, 'console.groq.com/keys'), ', bấm "Create API Key" (khoá bắt đầu bằng gsk_).'),
         h('li', null, 'Dán khoá vào ô dưới, game tự nhận ra loại khoá. Khoá chỉ lưu trên máy này, không gửi lên GitHub.')
       ),
@@ -115,7 +115,7 @@ export function askPanel(source: () => AskSource): { el: HTMLElement; refresh: (
             onclick: () => {
               const k = keyIn.value.trim();
               if (!looksLikeKey(k)) {
-                err.textContent = 'Khoá chưa đúng dạng. Khoá Gemini bắt đầu bằng AIza, khoá Groq bắt đầu bằng gsk_.';
+                err.textContent = 'Khoá chưa đúng dạng. Khoá Gemini bắt đầu bằng AQ. hoặc AIza, khoá Groq bắt đầu bằng gsk_.';
                 return;
               }
               setApiKey(k);

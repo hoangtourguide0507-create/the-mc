@@ -86,6 +86,9 @@ const GK = 'AIza' + 'b'.repeat(35);
 assert.equal(C.providerOf(GK), 'gemini');
 assert.equal(C.providerOf('gsk_' + 'a'.repeat(40)), 'groq');
 assert.equal(C.providerOf('sk-abc'), null);
+// Khoá Gemini dạng mới của AI Studio (AQ.…)
+assert.equal(C.providerOf('AQ.Ab8' + 'x_Y-z9'.repeat(8)), 'gemini');
+assert.equal(C.providerOf('AQ.'), null);
 const gOk = (text) => ({ ok: true, status: 200, json: async () => ({ candidates: [{ content: { parts: [{ text: 'nháp', thought: true }, { text }] } }] }) });
 const gFail = (status, message = '') => ({ ok: false, status, json: async () => ({ error: { message } }) });
 const grec = (replies) => {

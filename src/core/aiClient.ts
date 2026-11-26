@@ -17,10 +17,13 @@ const OLD_KEY_STORE = 'mclife.groq.key';
 
 export type AiProvider = 'gemini' | 'groq';
 
-/** Nhà cung cấp theo dạng khoá: Gemini bắt đầu bằng "AIza", Groq bằng "gsk_". */
+/**
+ * Nhà cung cấp theo dạng khoá. Gemini: khoá cũ "AIza…", khoá mới "AQ.…" (AI Studio chỉ còn cấp
+ * dạng này từ 2026; gửi qua header x-goog-api-key, không gửi kiểu Bearer). Groq: "gsk_…".
+ */
 export function providerOf(key: string): AiProvider | null {
   const k = key.trim();
-  if (/^AIza[0-9A-Za-z_-]{30,}$/.test(k)) return 'gemini';
+  if (/^AIza[0-9A-Za-z_-]{30,}$/.test(k) || /^AQ\.[0-9A-Za-z_.-]{20,}$/.test(k)) return 'gemini';
   if (/^gsk_[A-Za-z0-9]{20,}$/.test(k)) return 'groq';
   return null;
 }
