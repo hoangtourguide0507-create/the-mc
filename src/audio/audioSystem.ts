@@ -672,6 +672,9 @@ const NOVELTY_NAMES = ['albert', 'bubbles', 'zarvox', 'bad news', 'bahh', 'bells
 const EXTRA_VOICES: Record<string, VoiceConfig> = {
   coach: { lang: 'en-US', gender: 'f', pitch: 1, rate: 1 },
   passer: { lang: 'en-US', gender: 'm', pitch: 1, rate: 1 },
+  // Người dẫn podcast du lịch
+  nora: { lang: 'en-GB', gender: 'f', pitch: 1, rate: 1 },
+  owen: { lang: 'en-US', gender: 'm', pitch: 1, rate: 1 },
 };
 
 const SLOW_RATE = 0.8;

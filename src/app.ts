@@ -25,6 +25,7 @@ import { mountTalk } from './ui/screens/training/talk';
 import { mountLongTurn } from './ui/screens/training/longturn';
 import { mountInterpret, mountRegister } from './ui/screens/training/interpret';
 import { mountWarmup } from './ui/screens/training/warmup';
+import { mountPodcast } from './ui/screens/training/podcast';
 
 const canvas = document.getElementById('stage3d') as HTMLCanvasElement;
 const ui = document.getElementById('ui') as HTMLDivElement;
@@ -201,6 +202,7 @@ function showTab(tab: TabId) {
         { id: 'long', label: 'Nói dài', mount: mountLongTurn },
         { id: 'interp', label: 'Dịch', mount: mountInterpret },
         { id: 'register', label: 'Văn phong', mount: mountRegister },
+        { id: 'podcast', label: 'Podcast', mount: mountPodcast },
         { id: 'cando', label: 'Năng lực', mount: mountCando },
       ],
     });

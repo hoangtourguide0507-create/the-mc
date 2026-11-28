@@ -90,6 +90,8 @@ jobs:
         run: npm run test:longturn
       - name: Guide test
         run: npm run test:guide
+      - name: Podcast tests
+        run: npm run test:podcast
 
       - name: Build (typecheck + Vite)
         run: npm run build

@@ -31,6 +31,7 @@
     "test:ask": "node tests/ask.test.mjs",
     "test:longturn": "node tests/longturn.test.mjs",
     "test:guide": "node tests/guide.test.mjs",
+    "test:podcast": "node tests/podcast.test.mjs",
     "glossary": "node tools/build-glossary.mjs"
   },
   "dependencies": {

@@ -300,6 +300,31 @@ export const GUIDE: GuideEntry[] = [
     keys: 'dich noi tiep song ngu viet anh phien dich',
   },
   {
+    id: 'podcast',
+    group: 'train',
+    title: 'Podcast du lịch',
+    short: 'Nghe hai người dẫn kể chuyện ít người biết về địa danh Trung Quốc, rồi trả lời 5 câu hỏi nghe hiểu.',
+    what: '20 tập "Hidden Corners", mỗi tập khoảng 3 phút, đi từ B1 lên B2: Tử Cấm Thành, Vạn Lý Trường Thành, Lạc Sơn Đại Phật, Thổ lâu Phúc Kiến, Cáp Nhĩ Tân… Nora nói giọng Anh, Owen nói giọng Mỹ. Mỗi tập có một chuyện ít người biết và nhiều câu tả cảnh để học cách miêu tả.',
+    steps: [
+      'Chọn một tập. Dùng hàng lọc B1, B1+, B2 để chọn độ khó.',
+      'Bấm "Đọc trước câu hỏi" để biết cần nghe chi tiết gì (nên làm).',
+      'Bấm "Nghe tập này". Không có chữ: chưa rõ thì bấm "Lùi lại", "Lặp câu" hoặc bật "Chậm".',
+      'Nghe xong, trả lời 5 câu hỏi. Chọn sai thì máy phát lại đúng đoạn có đáp án để bạn chọn lại.',
+      'Xong thì đọc lời thoại, chạm vào từ hay để ghi Sổ tay, bấm "Dịch" ở câu chưa hiểu.',
+    ],
+    scoring: [
+      'Đúng ngay lần đầu: 2 điểm. Đúng sau khi nghe lại: 1 điểm. Sai lần hai: máy hiện đáp án, 0 điểm.',
+      '3 sao từ 9/10 điểm, 2 sao từ 6, 1 sao từ 3.',
+      'Mở lời thoại khi chưa trả lời xong thì tối đa 2 sao.',
+    ],
+    tips: [
+      'Nghe một lần không dừng để bắt ý chính, rồi mới nghe lại từng đoạn.',
+      'Chép lại các câu tả cảnh hay (ánh sáng, âm thanh, mùi) để dùng khi dẫn tiệc cưới hay sự kiện theo chủ đề.',
+    ],
+    target: { tab: 'train', section: 'podcast' },
+    keys: 'podcast du lich nghe hieu trung quoc dia danh ta canh hidden corners',
+  },
+  {
     id: 'register',
     group: 'train',
     title: 'Văn phong',

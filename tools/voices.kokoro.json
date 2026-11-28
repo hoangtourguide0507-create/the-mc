@@ -16,7 +16,8 @@
     "talk",
     "longturn",
     "interpret",
-    "register"
+    "register",
+    "podcast"
   ],
   "roles": {
     "leo": {
@@ -203,6 +204,16 @@
       "voice": "am_fenrir",
       "lang": "en-us",
       "speed": 0.98
+    },
+    "nora": {
+      "voice": "bf_emma:0.7+bf_isabella:0.3",
+      "lang": "en-gb",
+      "speed": 0.95
+    },
+    "owen": {
+      "voice": "am_michael:0.6+am_fenrir:0.4",
+      "lang": "en-us",
+      "speed": 0.96
     }
   },
   "_passerHelp": "Người qua đường: mỗi tình huống chọn cố định một giọng trong danh sách này (theo nội dung câu), để phố có nhiều giọng Mỹ và Anh khác nhau.",

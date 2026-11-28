@@ -73,7 +73,7 @@ async function main() {
   const entry = path.join(os.tmpdir(), `mc-gloss-entry-${process.pid}.ts`);
   const outfile = path.join(os.tmpdir(), `mc-gloss-${process.pid}.mjs`);
   const src = (f) => JSON.stringify(path.join(root, 'src', 'data', f));
-  const files = ['content.ts', 'talks.ts', 'chunks.ts', 'incidents.ts', 'rhythm.ts', 'pronunciation.ts', 'scenarios/index.ts', 'events/index.ts', 'longturns.ts', 'interpret.ts', 'register.ts'];
+  const files = ['content.ts', 'talks.ts', 'chunks.ts', 'incidents.ts', 'rhythm.ts', 'pronunciation.ts', 'scenarios/index.ts', 'events/index.ts', 'longturns.ts', 'interpret.ts', 'register.ts', 'podcasts.ts'];
   fs.writeFileSync(entry, files.map((f, i) => `export * as m${i} from ${src(f)};`).join('\n'));
   await build({ entryPoints: [entry], bundle: true, format: 'esm', platform: 'node', outfile, logLevel: 'silent' });
   const mod = await import(pathToFileURL(outfile).href);
